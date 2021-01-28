@@ -331,35 +331,38 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
             Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-            photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, propPV.ViewID);
+            photonView.RPC("RPC_BecomePropAfterAuthentication", RpcTarget.All, netPV.ViewID, propPV.ViewID);
         } else {
             Debug.Log("FAILURE Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
         }
     }
 
-    //Only runs on authenticated player.
+    //Runs on all players, but executes on target player.
     [PunRPC]
-    void RPC_BecomePropAfterAuthentication(int propID) {
+    void RPC_BecomePropAfterAuthentication(int plyID, int propID) {
+        PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
-        Debug.Log("You were authenticated and were granted the prop over anyone else!");
-        if (PPC.moveState == 1) {
-            ourRaycastTargerObj = prop.gameObject;
-            photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
-            ourPreviousProp = "";
-            foreach (char c in ourRaycastTargerObj.name) {
-                if (System.Char.IsDigit(c)) {
-                    ourPreviousProp += c;
+        if (tarPly.Owner == pv.Owner) { //Checking if we are tarPly.
+            Debug.Log("You were authenticated and were granted the prop over anyone else!");
+            if (PPC.moveState == 1) {
+                ourRaycastTargerObj = prop.gameObject;
+                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
+                ourPreviousProp = "";
+                foreach (char c in ourRaycastTargerObj.name) {
+                    if (System.Char.IsDigit(c)) {
+                        ourPreviousProp += c;
+                    }
                 }
-            }
-            PPC.moveState = 2;
-        } else if (PPC.moveState == 2) {
-            ourRaycastTargerObj = prop.gameObject;
-            photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
-            ourPreviousProp = "";
-            foreach (char c in ourRaycastTargerObj.name) {
-                if (System.Char.IsDigit(c)) {
-                    ourPreviousProp += c;
+                PPC.moveState = 2;
+            } else if (PPC.moveState == 2) {
+                ourRaycastTargerObj = prop.gameObject;
+                photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
+                ourPreviousProp = "";
+                foreach (char c in ourRaycastTargerObj.name) {
+                    if (System.Char.IsDigit(c)) {
+                        ourPreviousProp += c;
+                    }
                 }
             }
         }
