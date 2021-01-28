@@ -331,11 +331,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonView netPV = PhotonView.Find(plyID);
         PhotonView propPV = PhotonView.Find(propID);
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
-            Debug.LogError("SUCCESS! TarPlayer: " + netPV.Owner.NickName);
+            Debug.Log("SUCCESS! TarPlayer: " + netPV.Owner.NickName);
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-         //   photonView.RPC("RPC_BecomePropAfterAuthentication", RpcTarget.All, netPV.ViewID, propPV.ViewID);
+            photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, plyID, propID);
         } else {
-            Debug.LogError("FAILURE!");
+            Debug.Log("FAILURE!");
             //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
         }
     }
@@ -345,18 +345,18 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void RPC_BecomePropAfterAuthentication(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
-        if (tarPly.Owner == pv.Owner) { //Checking if we are tarPly.
-            Debug.Log("You were authenticated and were granted the prop over anyone else! Target player: " + tarPly.Owner.NickName);
+        //if (tarPly.Owner == pv.Owner) { //Checking if we are tarPly.
+            Debug.Log("Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
             if (PPC.moveState == 1) {
-                ourRaycastTargerObj = prop.gameObject;
-                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
-                ourPreviousProp = "";
-                foreach (char c in ourRaycastTargerObj.name) {
-                    if (System.Char.IsDigit(c)) {
-                        ourPreviousProp += c;
-                    }
-                }
-                PPC.moveState = 2;
+                //ourRaycastTargerObj = prop.gameObject;
+                //photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
+                //ourPreviousProp = "";
+                //foreach (char c in ourRaycastTargerObj.name) {
+                //    if (System.Char.IsDigit(c)) {
+                //        ourPreviousProp += c;
+                //    }
+                //}
+                //PPC.moveState = 2;
             } else if (PPC.moveState == 2) {
                 ourRaycastTargerObj = prop.gameObject;
                 photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
@@ -367,7 +367,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
-        }
+       // }
     }
 
     /*
