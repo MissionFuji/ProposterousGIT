@@ -4,7 +4,7 @@ using Photon.Realtime;
 using UnityEngine;
 
 
-public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
+public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunObservable {
 
     private PhotonView pv;
     private PlayerPropertiesController PPC;
@@ -36,12 +36,21 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject camTarFor3PC;
 
     //used only for outline in update.
+    [SerializeField]
     private GameObject outlinedObjectRef = null;
     private PropInteraction outlinePropInt = null;
     private Outline ol = null;
 
     //used for map loading
     public string mapToLoadName;
+
+    //rb networking
+    Vector3 latestPos;
+    Quaternion latestRot;
+    Vector3 velocity;
+    Vector3 angularVelocity;
+
+    bool valuesReceived = false;
 
 
     private void Start() {
@@ -63,8 +72,36 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
+        if (stream.IsWriting) {
+            //We own this player: send the others our data
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+            stream.SendNext(rb.velocity);
+            stream.SendNext(rb.angularVelocity);
+        } else {
+            //Network player, receive data
+            latestPos = (Vector3)stream.ReceiveNext();
+            latestRot = (Quaternion)stream.ReceiveNext();
+            velocity = (Vector3)stream.ReceiveNext();
+            angularVelocity = (Vector3)stream.ReceiveNext();
+
+            valuesReceived = true;
+        }
+    }
+
     private void Update() {
         if (pv.IsMine) {
+            //network player movement and velocities.
+            #region
+            if (!photonView.IsMine && valuesReceived) {
+                //Update Object position and Rigidbody parameters
+                transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 5);
+                transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 5);
+                rb.velocity = velocity;
+                rb.angularVelocity = angularVelocity;
+            }
+            #endregion
 
             //Grounded-Checker Object Mapping
             #region
@@ -126,15 +163,21 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         }
                         if (outlinedObjectRef != hoveredObject) {
                             outlinedObjectRef = hoveredObject;
-                            Outline ol = hoveredObject.GetComponent<Outline>();
+                            ol = hoveredObject.GetComponent<Outline>();
+                            outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
+                        }
+                        if (ol.enabled == false || ol.OutlineColor != Color.red) {
                             ol.enabled = true;
                             ol.OutlineColor = Color.red;
+                            Debug.Log("Trying to highlight player object.");
                         }
+
                     }
                 } else {
                     if (outlinedObjectRef != null) {
                         if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
                             outlinedObjectRef.GetComponent<Outline>().enabled = false;
+                            Debug.Log("Left range. reset");
                         }
                     }
                 }
@@ -142,6 +185,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (outlinedObjectRef != null) {
                     if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
                         outlinedObjectRef.GetComponent<Outline>().enabled = false;
+                        Debug.Log("Left moved cursor outside of object's hitbox. reset");
                     }
                 }
             }
