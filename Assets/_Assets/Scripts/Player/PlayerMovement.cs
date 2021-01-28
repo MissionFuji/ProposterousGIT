@@ -331,7 +331,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
             Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-            photonView.RPC("RPC_BecomePropAfterAuthentication", RpcTarget.All, netPV.ViewID, propPV.ViewID);
+            photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, netPV.ViewID, propPV.ViewID);
         } else {
             Debug.Log("FAILURE Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
