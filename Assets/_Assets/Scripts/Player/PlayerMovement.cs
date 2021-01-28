@@ -198,8 +198,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                         }
                                         if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                            //photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                            //BecomeProp(objectHit.collider.gameObject);
+                                            photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         }
                                     } else {
                                         Debug.Log("Tried to take over a host-only prop and a non-host client.");
@@ -359,7 +358,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             PPC.moveState = 2;
         } else if (PPC.moveState == 2) {
-            Debug.Log("PRE-PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
+            Debug.Log("PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
             ourRaycastTargerObj = prop.gameObject;
             photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
             ourPreviousProp = "";
