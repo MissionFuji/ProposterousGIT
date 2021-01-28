@@ -330,6 +330,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonView propPV = PhotonView.Find(propID);
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
             Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
+            Debug.LogError("testTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTEST");
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
             photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, netPV.ViewID, propPV.ViewID);
         } else {
