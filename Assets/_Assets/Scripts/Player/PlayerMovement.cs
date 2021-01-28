@@ -4,7 +4,7 @@ using Photon.Realtime;
 using UnityEngine;
 
 
-public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunObservable {
+public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private PhotonView pv;
     private PlayerPropertiesController PPC;
@@ -44,13 +44,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
     //used for map loading
     public string mapToLoadName;
 
-    //rb networking
-    Vector3 latestPos;
-    Quaternion latestRot;
-    Vector3 velocity;
-    Vector3 angularVelocity;
 
-    bool valuesReceived = false;
 
 
     private void Start() {
@@ -72,36 +66,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
         }
     }
 
-    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
-        if (stream.IsWriting) {
-            //We own this player: send the others our data
-            stream.SendNext(transform.position);
-            stream.SendNext(transform.rotation);
-            stream.SendNext(rb.velocity);
-            stream.SendNext(rb.angularVelocity);
-        } else {
-            //Network player, receive data
-            latestPos = (Vector3)stream.ReceiveNext();
-            latestRot = (Quaternion)stream.ReceiveNext();
-            velocity = (Vector3)stream.ReceiveNext();
-            angularVelocity = (Vector3)stream.ReceiveNext();
-
-            valuesReceived = true;
-        }
-    }
 
     private void Update() {
         if (pv.IsMine) {
-            //network player movement and velocities.
-            #region
-            if (!photonView.IsMine && valuesReceived) {
-                //Update Object position and Rigidbody parameters
-                transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 5);
-                transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 5);
-                rb.velocity = velocity;
-                rb.angularVelocity = angularVelocity;
-            }
-            #endregion
 
             //Grounded-Checker Object Mapping
             #region
