@@ -10,6 +10,8 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     Quaternion latestRot;
     Vector3 velocity;
     Vector3 angularVelocity;
+    [SerializeField]
+    float lerpSpeed;
 
     bool valuesReceived = false;
 
@@ -43,8 +45,8 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     {
         if (!pv.IsMine && valuesReceived) {
             //Update Object position and Rigidbody parameters
-            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 5);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 5);
+            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
             Debug.Log("Successfully applying vel, rot, pos vals from network sync.");
