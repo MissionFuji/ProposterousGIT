@@ -326,12 +326,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //Only runs on host.
     [PunRPC]
     void RPC_RequestPropPermission(int plyID, int propID) {
-        PhotonView pv = PhotonView.Find(plyID);
+        PhotonView netPV = PhotonView.Find(plyID);
         PhotonView propPV = PhotonView.Find(propID);
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
             Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-            photonView.RPC("RPC_BecomePropAfterAuthentication", pv.Owner, propPV.ViewID);
+            photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, propPV.ViewID);
         } else {
             Debug.Log("FAILURE Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
