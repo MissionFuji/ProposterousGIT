@@ -330,7 +330,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void RPC_RequestPropPermission(int plyID, int propID) {
         PhotonView netPV = PhotonView.Find(plyID);
         PhotonView propPV = PhotonView.Find(propID);
-        if (propPV.gameObject != null) {
+        if (propPV != null) {
             if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
                 propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
                 photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, plyID, propID);
