@@ -335,10 +335,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
                 photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, plyID, propID);
             } else {
-                photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, propPV.ViewID);
+                photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
             }
         } else {
-            photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, propPV.ViewID);
+            photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
         }
     }
 
@@ -388,7 +388,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     // Runs on the client that tried to takeover prop and failed to do so.
     [PunRPC]
     void RPC_KickBackTakeOverError(int takenPropID) {
-        Debug.Log("The prop you tried to takeover: " + takenPropID.ToString() + ", has already been taken over or destroyed.");
+        Debug.Log("The prop you tried to takeover has already been taken over or destroyed.");
     }
 
     [PunRPC]
