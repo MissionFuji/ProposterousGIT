@@ -27,7 +27,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(transform.rotation);
             stream.SendNext(rb.velocity);
             stream.SendNext(rb.angularVelocity);
-            Debug.Log("Sending vals on local.");
+
         } else {
             //Network player, receive data
             latestPos = (Vector3)stream.ReceiveNext();
@@ -36,7 +36,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             angularVelocity = (Vector3)stream.ReceiveNext();
 
             valuesReceived = true;
-            Debug.Log("Getting vals on client.");
+
         }
     }
 
@@ -49,7 +49,6 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
-            Debug.Log("Successfully applying vel, rot, pos vals from network sync.");
         }
     }
 }

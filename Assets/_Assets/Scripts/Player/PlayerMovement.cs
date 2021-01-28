@@ -197,7 +197,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                         }
                                         if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                            photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, PhotonNetwork.Time, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                            photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             //BecomeProp(objectHit.collider.gameObject);
                                         }
                                     } else {
@@ -205,7 +205,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     }
                                 } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                        photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, PhotonNetwork.Time, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         //BecomeProp(objectHit.collider.gameObject);
                                     }
                                 }
@@ -325,16 +325,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     //Only runs on host.
     [PunRPC]
-    void RPC_RequestPropPermission(double photonTimeStamp, int plyID, int propID) {
+    void RPC_RequestPropPermission(int plyID, int propID) {
         PhotonView pv = PhotonView.Find(plyID);
         PhotonView propPV = PhotonView.Find(propID);
-        Debug.Log("Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ", at: " + photonTimeStamp.ToString() + ".");
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
-            Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ", at: " + photonTimeStamp.ToString() + ".");
+            Debug.Log("SUCCESS Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
             photonView.RPC("RPC_BecomePropAfterAuthentication", pv.Owner, propPV.ViewID);
         } else {
-            Debug.Log("FAILURE Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ", at: " + photonTimeStamp.ToString() + ".");
+            Debug.Log("FAILURE Player: " + pv.Owner.NickName + ", is trying to take over: " + propPV.gameObject.name + ".");
+            //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
         }
     }
 
