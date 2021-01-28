@@ -331,14 +331,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonView netPV = PhotonView.Find(plyID);
         PhotonView propPV = PhotonView.Find(propID);
         if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
-            Debug.LogError("SUCCESS!");
+            Debug.LogError("SUCCESS! TarPlayer: " + netPV.Owner.NickName);
             propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-            photonView.RPC("RPC_BecomePropAfterAuthentication", RpcTarget.All, netPV.ViewID, propPV.ViewID);
+         //   photonView.RPC("RPC_BecomePropAfterAuthentication", RpcTarget.All, netPV.ViewID, propPV.ViewID);
         } else {
-            Debug.Log("FAILURE!");
+            Debug.LogError("FAILURE!");
             //we can kickback an RPC here to let the client know he wasn't able to take the prop over.
         }
-        Debug.LogError("testTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTESTtestTEST");
     }
 
     //sends to all, executes on target.

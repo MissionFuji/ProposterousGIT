@@ -117,8 +117,7 @@ MonoBehaviour:
   isAvailable: 1
   isHostOnly: 0
   isMapCartridge: 0
-  whoIsProp: 
-  distFromCamera: 5
+  isAlreadyClaimedOverNetwork: 0
 --- !u!54 &7620650725743527955
 Rigidbody:
   m_ObjectHideFlags: 0
