@@ -207,6 +207,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                 } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
                                         photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        Debug.Log("NEW DAY TEST. LOCAL CLIENT PLAYER TRIED TO TAKE PROP.");
                                         //BecomeProp(objectHit.collider.gameObject);
                                     }
                                 }
