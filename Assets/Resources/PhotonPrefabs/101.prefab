@@ -104,8 +104,7 @@ MonoBehaviour:
   isAvailable: 1
   isHostOnly: 1
   isMapCartridge: 1
-  whoIsProp: 
-  distFromCamera: 5
+  isAlreadyClaimedOverNetwork: 0
 --- !u!54 &1230160275985258009
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -223,7 +222,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230160275985258003}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 10560073cb8b91b4483f6a72ef91f026, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
