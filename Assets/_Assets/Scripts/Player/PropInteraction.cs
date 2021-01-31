@@ -24,7 +24,6 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (transform.parent == null) {
             if (rb != null) {
                 rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
-                Debug.Log("TESTTESTTEST");
             } else {
                 ResetRigidBodyAfterDetach();
             }

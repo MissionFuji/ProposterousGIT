@@ -17,12 +17,20 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     void Awake() {
         pv = GetComponent<PhotonView>();
+        ResetRB();
+    }
+
+
+    void ResetRB() {
         rb = GetComponent<Rigidbody>();
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
         if (stream.IsWriting) {
             //We own this player: send the others our data
+            if (rb == null) {
+                ResetRB();
+            }
             stream.SendNext(transform.position);
             stream.SendNext(transform.rotation);
             stream.SendNext(rb.velocity);
@@ -45,6 +53,9 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     {
         if (!pv.IsMine && valuesReceived) {
             //Update Object position and Rigidbody parameters
+            if (rb == null) {
+                ResetRB();
+            }
             transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
