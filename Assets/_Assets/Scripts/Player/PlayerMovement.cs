@@ -12,7 +12,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private float rotSpeed = 0.1f;
     [SerializeField]
     private LayerMask groudLayer;
-    private bool isGrounded;
     [SerializeField]
     private float playerSpeed = 2.0f;
     private GameObject mmc;
@@ -23,7 +22,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private float jumpForce;
     [SerializeField]
     private float rotForce;
-    private float groundCheckDist;
     private GameObject ourRaycastTargerObj;
     private string ourPreviousProp;
     private bool rotLocked = false;
@@ -33,7 +31,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [SerializeField] private LayerMask PropInteraction;
     private GameObject cursorObj;
     private GameObject LookFollowTar;
-    private Transform JumpRaycastOrigin;
     private GameObject camTarFor3PC;
 
     //used only for outline in update.
@@ -60,8 +57,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             cmflRef.Follow = camTarFor3PC.transform;
             cmflRef.LookAt = camTarFor3PC.transform;
             mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform;
-            JumpRaycastOrigin = new GameObject().transform;
-            JumpRaycastOrigin.name = "JumpRaycastObject";
             cursorObj = Camera.main.gameObject.transform.Find("CameraCenter").gameObject;
             LookFollowTar = transform.Find("LookFollowTar").gameObject;
         }
@@ -70,13 +65,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private void Update() {
         if (pv.IsMine) {
-
-            //Grounded-Checker Object Mapping
-            #region
-            if (JumpRaycastOrigin != null) {
-                JumpRaycastOrigin.transform.position = gameObject.transform.position;
-            }
-            #endregion
 
             //Highlighting Code
             #region
@@ -176,7 +164,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
-            if ((isGrounded) && (Input.GetKeyDown(KeyCode.Space))) {
+            if (Input.GetKeyDown(KeyCode.Space)) {
                 if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
                     rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
                     rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
@@ -229,14 +217,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (pv.IsMine == true) {
             // Movement Code.
             #region
-            groundCheckDist = transform.localScale.y * 1.25f;
-            Vector3 origin = JumpRaycastOrigin.transform.position;
-            Debug.DrawRay(origin, -Vector3.up * groundCheckDist, Color.cyan);
-            if (Physics.Raycast(origin, -Vector3.up, groundCheckDist, groudLayer)) {
-                isGrounded = true;
-            } else {
-                isGrounded = false;
-            }
             if (PPC.moveState != 0) { // 0 = Frozen
                 if (PPC.moveState == 1) { // 1 = Pre-Prop
 
@@ -379,64 +359,98 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
-        GameObject propToRef = PhotonView.Find(propID).gameObject;
+        //Store data for current prop/player.
+        GameObject targetPropRef = PhotonView.Find(propID).gameObject;
         GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
         GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
-        Rigidbody propRB = propToRef.GetComponent<Rigidbody>();
-        propRB.velocity = Vector3.zero;
-        propToRef.GetPhotonView().ObservedComponents.Clear();
-        propToRef.GetComponent<RigidbodyTransformView>().enabled = false;
-        Destroy(propRB);
-        Destroy(propToRef.GetPhotonView());
-        plyRB.velocity = Vector3.zero;
-        plyRB.isKinematic = true;
+        Rigidbody targetPropRB = targetPropRef.GetComponent<Rigidbody>();
+        //Let's make sure that our targetProp has no rigidbody. Also disabling network tracking of its velocity. CAN NOT SET isKinematic! This causes collider to not work! Must destroy RB!
+        targetPropRef.GetPhotonView().ObservedComponents.Clear();
+        targetPropRef.GetComponent<RigidbodyTransformView>().enabled = false;
+        Destroy(targetPropRB);
+        //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
         foreach (Transform child in propHolder.transform) {
             Destroy(child.gameObject);
         }
-        changingPly.transform.position = propToRef.transform.position;
-        Quaternion tempRot = propToRef.transform.rotation;
-        Vector3 tempScale = propToRef.transform.lossyScale;
-        propToRef.transform.parent = propHolder.transform;
-        propToRef.transform.rotation = tempRot;
-        propToRef.transform.localScale = tempScale;
-        propToRef.transform.localPosition = Vector3.zero;
+        //Let's temporaribly freeze our player and set move it to the target prop position before takeover.
+        plyRB.velocity = Vector3.zero;
+        plyRB.isKinematic = true;
+        changingPly.transform.position = targetPropRef.transform.position;
+        //We set our layer to 0 so we don't highlight ourselves while we are a prop.
+        if (pv.IsMine) {
+            targetPropRef.layer = 0;
+        }
+        //Let's ref some data from our target prop before takeover so we can apply changes to it.
+        Quaternion tempRot = targetPropRef.transform.rotation;
+        Vector3 tempScale = targetPropRef.transform.lossyScale;
+        //Prop takeover, parent, then apply transforms to it.
+        targetPropRef.transform.parent = propHolder.transform;
+        targetPropRef.transform.rotation = tempRot;
+        targetPropRef.transform.localScale = tempScale;
+        targetPropRef.transform.localPosition = Vector3.zero;
+        //re-enable rigidbody so we can move around again.
         plyRB.isKinematic = false;
+        
     }
 
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
-        GameObject propToRef = PhotonView.Find(propID).gameObject;
+        //Store data for current prop/player.
+        GameObject targetProp = PhotonView.Find(propID).gameObject;
         GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+        GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+        Rigidbody targetPropRB = targetProp.GetComponent<Rigidbody>();
         Vector3 velRef = plyRB.velocity;
+        //Clear un-needed network calls on photonview.
+        targetProp.GetPhotonView().ObservedComponents.Clear();
+        targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
+        //Destroy rigidbody before we parent this object.
+        Destroy(targetPropRB);
+        //freeze our player just before the swap.
         plyRB.velocity = Vector3.zero;
         plyRB.isKinematic = true;
-        Component.Destroy(changingPly.GetComponent<MeshCollider>());
-        Vector3 spawnOldPropPos = changingPly.transform.position;
-        Quaternion spawnOldPropRot = changingPly.transform.rotation;
-        string propName = propToRef.name.Substring(0, 1);
-        changingPly.transform.position = propToRef.transform.position;
-        changingPly.GetComponent<MeshFilter>().mesh = propToRef.GetComponent<MeshFilter>().mesh;
-        changingPly.GetComponent<MeshRenderer>().material = propToRef.GetComponent<MeshRenderer>().material;
-        if (changingPly.GetPhotonView().IsMine) {
-            GameObject detachingProp = PhotonNetwork.Instantiate("PhotonPrefabs/" + ourOldPropName.ToString(), spawnOldPropPos, spawnOldPropRot);
-            Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-            detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+        //set spawn pos and rot of current child object.
+        Vector3 spawnOldPropPos = propHolder.transform.position;
+        Quaternion spawnOldPropRot = propHolder.transform.rotation;
+        //Now we detach our current prop and unparent it.
+        int childrenDetached = 0;
+        GameObject detachingProp = null;
+        foreach (Transform child in propHolder.transform) {
+            child.parent = null;
+            detachingProp = child.gameObject;
+            detachingProp.layer = 11;
+            if (!detachingProp.GetComponent<Rigidbody>()) {
+                detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+            }
+            detachingProp.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = false;
+            childrenDetached++;
+            if (childrenDetached > 1) {
+                Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
+            }
         }
-        Quaternion tempRot = propToRef.transform.rotation;
-        Vector3 tempScale = propToRef.transform.lossyScale;
-        PhysicMaterial tempPhysMat = propToRef.GetComponent<Collider>().material;
-        Destroy(propToRef.gameObject);
-        changingPly.transform.rotation = tempRot;
-        changingPly.transform.localScale = tempScale;
-        MeshCollider plyMeshCol = changingPly.AddComponent<MeshCollider>();
-        plyMeshCol.material = tempPhysMat;
-        plyMeshCol.convex = true;
-        if (changingPly.GetComponent<PhotonView>().IsMine) {
-            LookFollowTar.transform.position = plyMeshCol.ClosestPoint(LookFollowTar.transform.position);
+        Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
+        RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+        rtv.enabled = true;
+        detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+        detPropRB.isKinematic = false;
+        detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+        //Now we move our player to the target prop location and set references to size and rotation of object.
+        changingPly.transform.position = targetProp.transform.position;
+        Quaternion tempRot = targetProp.transform.rotation;
+        Vector3 tempScale = targetProp.transform.lossyScale;
+        //We set our layer to 0 so we don't highlight ourselves while we are a prop.
+        if (pv.IsMine) {
+            targetProp.layer = 0;
         }
+        //apply all transform after we parent to keep everything accurate.
+        targetProp.transform.parent = propHolder.transform;
+        targetProp.transform.rotation = tempRot;
+        targetProp.transform.localScale = tempScale;
+        targetProp.transform.localPosition = Vector3.zero;
+        //Re-enable our rigidbody so we can move around again.
         plyRB.isKinematic = false;
     }
 

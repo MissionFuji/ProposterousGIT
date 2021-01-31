@@ -18,7 +18,13 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
 
     private void FixedUpdate() {
-        rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
+        if (transform.parent == null) {
+            if (rb == null) {
+                rb = gameObject.GetComponent<Rigidbody>();
+                Debug.LogWarning("Object was missing RigidBody, re-added one before applying force.");
+            }
+            rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
+        }
     }
 
 }
