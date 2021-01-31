@@ -370,19 +370,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
-    /*
-    void BecomePropFromPreProp() {
-        ourRaycastTargerObj = objectHit.collider.gameObject;
-        photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
-        ourPreviousProp = "";
-        foreach (char c in ourRaycastTargerObj.name) {
-            if (System.Char.IsDigit(c)) {
-                ourPreviousProp += c;
-            }
-        }
-        PPC.moveState = 2;
-    }
-    */
 
     // Runs on the client that tried to takeover prop and failed to do so.
     [PunRPC]
@@ -394,40 +381,29 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
         GameObject propToRef = PhotonView.Find(propID).gameObject;
         GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+        GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+        Rigidbody propRB = propToRef.GetComponent<Rigidbody>();
+        propRB.velocity = Vector3.zero;
+        propToRef.GetPhotonView().ObservedComponents.Clear();
+        propToRef.GetComponent<RigidbodyTransformView>().enabled = false;
+        Destroy(propRB);
+        Destroy(propToRef.GetPhotonView());
         plyRB.velocity = Vector3.zero;
         plyRB.isKinematic = true;
-        Component.Destroy(changingPly.GetComponent<MeshCollider>());
+        foreach (Transform child in propHolder.transform) {
+            Destroy(child.gameObject);
+        }
         changingPly.transform.position = propToRef.transform.position;
-        changingPly.GetComponent<MeshFilter>().mesh = propToRef.GetComponent<MeshFilter>().mesh;
-        changingPly.GetComponent<MeshRenderer>().material = propToRef.GetComponent<MeshRenderer>().material;
         Quaternion tempRot = propToRef.transform.rotation;
         Vector3 tempScale = propToRef.transform.lossyScale;
-        PhysicMaterial tempPhysMat = propToRef.GetComponent<Collider>().material;
-        Destroy(propToRef.gameObject);
-        changingPly.transform.rotation = tempRot;
-        changingPly.transform.localScale = tempScale;
-        MeshCollider plyMeshCol = changingPly.AddComponent<MeshCollider>();
-        plyMeshCol.material = tempPhysMat;
-        plyMeshCol.convex = true;
-        if (changingPly.GetComponent<PhotonView>().IsMine) {
-            LookFollowTar.transform.position = plyMeshCol.ClosestPoint(LookFollowTar.transform.position);
-        }
+        propToRef.transform.parent = propHolder.transform;
+        propToRef.transform.rotation = tempRot;
+        propToRef.transform.localScale = tempScale;
+        propToRef.transform.localPosition = Vector3.zero;
         plyRB.isKinematic = false;
     }
 
-    /*
-    void BecomePropFromProp() {
-        ourRaycastTargerObj = objectHit.collider.gameObject;
-        photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
-        ourPreviousProp = "";
-        foreach (char c in ourRaycastTargerObj.name) {
-            if (System.Char.IsDigit(c)) {
-                ourPreviousProp += c;
-            }
-        }
-    }
-    */
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
