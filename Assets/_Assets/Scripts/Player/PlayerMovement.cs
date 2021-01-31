@@ -24,7 +24,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private float rotForce;
     private GameObject ourRaycastTargerObj;
     private string ourPreviousProp;
-    private bool rotLocked = false;
+    [SerializeField]
+    private bool XYZRotLocked = false;
+    private bool XZRotLocked = false;
     [SerializeField]
     private int takeOverRange;
     private RaycastHit objectHit;
@@ -148,17 +150,17 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             #endregion
 
             if (Input.GetKeyDown(KeyCode.R)) {
-                if (rotLocked) {
-                    rotLocked = false;
+                if (XYZRotLocked) {
+                    XYZRotLocked = false;
                     photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                 } else {
-                    rotLocked = true;
+                    XYZRotLocked = true;
                     Quaternion rotRef = gameObject.transform.rotation;
                     photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
                 }
             }
             if (Input.GetKeyDown(KeyCode.Z)) {
-                if (rotLocked) {
+                if (XYZRotLocked) {
                     if (gameObject.transform.rotation != Quaternion.identity) {
                         photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     }
@@ -286,22 +288,22 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_UnlockRotationOverNetwork(int plyID) {
-        Rigidbody tarPlyRB = PhotonView.Find(plyID).gameObject.GetComponent<Rigidbody>();
-        tarPlyRB.freezeRotation = false;
+        Rigidbody targetRB = PhotonView.Find(plyID).gameObject.GetComponent<Rigidbody>();
+        targetRB.freezeRotation = false;
     }
 
     [PunRPC]
     void RPC_LockRotationOverNetwork(int plyID, Quaternion tarRot) {
         PhotonView tarPV = PhotonView.Find(plyID);
-        Rigidbody tarPlyRB = tarPV.gameObject.GetComponent<Rigidbody>();
-        tarPlyRB.freezeRotation = true;
+        Rigidbody targetRB = tarPV.gameObject.GetComponent<Rigidbody>();
+        targetRB.freezeRotation = true;
         tarPV.gameObject.transform.rotation = tarRot;
     }
 
     [PunRPC]
     void RPC_ResetRotationOverNetwork(int plyID) {
-        Transform tarPlyRB = PhotonView.Find(plyID).gameObject.transform;
-        tarPlyRB.rotation = Quaternion.identity;
+        Transform targetPly = PhotonView.Find(plyID).gameObject.transform.GetChild(0);
+        targetPly.rotation = Quaternion.identity;
     }
 
     //Only runs on host.
@@ -404,6 +406,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
         Rigidbody targetPropRB = targetProp.GetComponent<Rigidbody>();
         Vector3 velRef = plyRB.velocity;
+        Vector3 velAngVel = plyRB.angularVelocity;
+        float massRef = plyRB.mass;
         //Clear un-needed network calls on photonview.
         targetProp.GetPhotonView().ObservedComponents.Clear();
         targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
@@ -435,8 +439,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
         rtv.enabled = true;
         detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+        detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
         detPropRB.isKinematic = false;
+        detPropRB.mass = massRef;
         detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+        detPropRB.AddTorque(velAngVel * detPropRB.mass, ForceMode.Impulse);
         //Now we move our player to the target prop location and set references to size and rotation of object.
         changingPly.transform.position = targetProp.transform.position;
         Quaternion tempRot = targetProp.transform.rotation;

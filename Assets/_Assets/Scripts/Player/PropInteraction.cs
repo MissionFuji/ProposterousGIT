@@ -13,17 +13,21 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
 
     private void Awake() {
+        ResetRigidBodyAfterDetach();
+    }
+
+    public void ResetRigidBodyAfterDetach() {
         rb = gameObject.GetComponent<Rigidbody>();
     }
 
-
     private void FixedUpdate() {
         if (transform.parent == null) {
-            if (rb == null) {
-                rb = gameObject.GetComponent<Rigidbody>();
-                Debug.LogWarning("Object was missing RigidBody, re-added one before applying force.");
+            if (rb != null) {
+                rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
+                Debug.Log("TESTTESTTEST");
+            } else {
+                ResetRigidBodyAfterDetach();
             }
-            rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
         }
     }
 
