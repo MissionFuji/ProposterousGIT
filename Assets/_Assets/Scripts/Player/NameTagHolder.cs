@@ -8,8 +8,6 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [SerializeField]
     private int ownerID = -1;
     public GameObject tarPlayer = null;
-    [SerializeField]
-    private Vector3 offset;
 
     // Update is called once per frame
     void Update()
@@ -18,7 +16,7 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             if (ownerID == -1) {
                 ownerID = tarPlayer.GetComponent<PhotonView>().ViewID;
             }
-            gameObject.transform.position = tarPlayer.transform.position + offset;
+            gameObject.transform.position = tarPlayer.transform.position + new Vector3(0, tarPlayer.transform.localScale.y + 1f, 0);
         }
     }
 }

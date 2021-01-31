@@ -11,14 +11,12 @@ GameObject:
   - component: {fileID: 1230160275985258002}
   - component: {fileID: 1230160275985258007}
   - component: {fileID: 1230160275985258004}
-  - component: {fileID: 1230160275985258005}
   - component: {fileID: 1230160275985258006}
   - component: {fileID: 1230160275985258009}
   - component: {fileID: 4115016545922321599}
-  - component: {fileID: 1700502928455461187}
-  - component: {fileID: 2775950424392274099}
   - component: {fileID: 7457497936486292142}
-  - component: {fileID: 4186844196369555516}
+  - component: {fileID: 7643953212070347416}
+  - component: {fileID: 2922367894820051583}
   m_Layer: 11
   m_Name: 4
   m_TagString: Untagged
@@ -47,7 +45,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230160275985258003}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: bb331f0d0beaf85459452c620965dba4, type: 2}
 --- !u!23 &1230160275985258004
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -89,19 +87,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &1230160275985258005
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230160275985258003}
-  m_Material: {fileID: 13400000, guid: 10560073cb8b91b4483f6a72ef91f026, type: 2}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1230160275985258006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,8 +102,7 @@ MonoBehaviour:
   isAvailable: 1
   isHostOnly: 0
   isMapCartridge: 0
-  whoIsProp: 
-  distFromCamera: 5
+  isAlreadyClaimedOverNetwork: 0
 --- !u!54 &1230160275985258009
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -153,45 +137,7 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   ObservedComponents:
-  - {fileID: 1700502928455461187}
-  - {fileID: 4186844196369555516}
-  viewIdField: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
---- !u!114 &1700502928455461187
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230160275985258003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SynchronizePosition: 1
-  m_SynchronizeRotation: 1
-  m_SynchronizeScale: 0
---- !u!114 &2775950424392274099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230160275985258003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 0
-  OwnershipTransfer: 0
-  ObservedComponents:
-  - {fileID: 0}
+  - {fileID: 2922367894820051583}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -213,7 +159,21 @@ MonoBehaviour:
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
---- !u!114 &4186844196369555516
+--- !u!64 &7643953212070347416
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230160275985258003}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: bb331f0d0beaf85459452c620965dba4, type: 2}
+--- !u!114 &2922367894820051583
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -222,10 +182,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1230160275985258003}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64179f3720bbfe947b7724caa67b7c1d, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b713282856f26e4eb1b64ecc2f68b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SynchronizeVelocity: 1
-  m_SynchronizeAngularVelocity: 0
-  m_TeleportEnabled: 1
-  m_TeleportIfDistanceGreaterThan: 3
+  lerpSpeed: 0

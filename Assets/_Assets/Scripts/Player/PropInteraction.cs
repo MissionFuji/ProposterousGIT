@@ -7,8 +7,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public bool isAvailable = true;
     public bool isHostOnly = false;
     public bool isMapCartridge = false;
-    public string whoIsProp = "";
-    public int distFromCamera = 5;
+    public bool isAlreadyClaimedOverNetwork = false;
     private Rigidbody rb;
 
 

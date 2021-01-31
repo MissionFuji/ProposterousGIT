@@ -7,6 +7,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private PhotonView pv;
+    [SerializeField]
     private PlayerPropertiesController PPC;
     private float rotSpeed = 0.1f;
     [SerializeField]
@@ -36,12 +37,15 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject camTarFor3PC;
 
     //used only for outline in update.
+    [SerializeField]
     private GameObject outlinedObjectRef = null;
     private PropInteraction outlinePropInt = null;
     private Outline ol = null;
 
     //used for map loading
     public string mapToLoadName;
+
+
 
 
     private void Start() {
@@ -62,6 +66,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             LookFollowTar = transform.Find("LookFollowTar").gameObject;
         }
     }
+
 
     private void Update() {
         if (pv.IsMine) {
@@ -126,15 +131,21 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         }
                         if (outlinedObjectRef != hoveredObject) {
                             outlinedObjectRef = hoveredObject;
-                            Outline ol = hoveredObject.GetComponent<Outline>();
+                            ol = hoveredObject.GetComponent<Outline>();
+                            outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
+                        }
+                        if (ol.enabled == false || ol.OutlineColor != Color.red) {
                             ol.enabled = true;
                             ol.OutlineColor = Color.red;
+                            Debug.Log("Trying to highlight player object.");
                         }
+
                     }
                 } else {
                     if (outlinedObjectRef != null) {
                         if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
                             outlinedObjectRef.GetComponent<Outline>().enabled = false;
+                            Debug.Log("Left range. reset");
                         }
                     }
                 }
@@ -142,6 +153,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (outlinedObjectRef != null) {
                     if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
                         outlinedObjectRef.GetComponent<Outline>().enabled = false;
+                        Debug.Log("Left moved cursor outside of object's hitbox. reset");
                     }
                 }
             }
@@ -179,38 +191,27 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
                             propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
                             if (propInt.isAvailable) { // if it does, let's see if prop is available.
-
                                 if (propInt.isHostOnly) {
                                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
                                         if (propInt.isMapCartridge) {
                                             mapToLoadName = propInt.gameObject.name;
                                             Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                         }
-                                        if (PPC.moveState == 1) { //pre-prop
-                                            BecomePropFromPreProp();
-                                            Debug.Log("As a PRE-PROP, you tried to possess a host-only prop: " + objectHit.collider.gameObject.name + ", successful takeover.");
-
-                                        } else if (PPC.moveState == 2) { // prop
-                                            BecomePropFromProp();
-                                            Debug.Log("As a PROP, you tried to possess a host-only prop: " + objectHit.collider.gameObject.name + ", successful takeover.");
-
+                                        if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                            photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         }
                                     } else {
                                         Debug.Log("Tried to take over a host-only prop and a non-host client.");
                                     }
-                                } else {
-                                    if (PPC.moveState == 1) { //pre-prop
-                                        BecomePropFromPreProp();
-                                        Debug.Log("As a PRE-PROP, you tried to possess: " + objectHit.collider.gameObject.name + ", successful takeover.");
-
-                                    } else if (PPC.moveState == 2) { // prop
-                                        BecomePropFromProp();
-                                        Debug.Log("As a PROP, you tried to possess: " + objectHit.collider.gameObject.name + ", successful takeover.");
-
+                                } else { // NOT host-only section.
+                                    if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                        photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        Debug.Log("NEW DAY TEST. LOCAL CLIENT PLAYER TRIED TO TAKE PROP.");
+                                        //BecomeProp(objectHit.collider.gameObject);
                                     }
                                 }
 
-                            } else if (!propInt.isAvailable) { // It wasn't available, so let's check to see if it isn't.
+                            } else if (!propInt.isAvailable) {
                                 Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                             }
                         } else {
@@ -323,60 +324,89 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         tarPlyRB.rotation = Quaternion.identity;
     }
 
+    //Only runs on host.
+    [PunRPC]
+    void RPC_RequestPropPermission(int plyID, int propID) {
+        PhotonView netPV = PhotonView.Find(plyID);
+        PhotonView propPV = PhotonView.Find(propID);
+        if (propPV != null) {
+            if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
+                propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
+                photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, plyID, propID);
+            } else {
+                photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
+            }
+        } else {
+            photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
+        }
+    }
 
-    void BecomePropFromPreProp() {
-        ourRaycastTargerObj = objectHit.collider.gameObject;
-        photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
-        ourPreviousProp = "";
-        foreach (char c in ourRaycastTargerObj.name) {
-            if (System.Char.IsDigit(c)) {
-                ourPreviousProp += c;
+    //executes on target player.
+    [PunRPC]
+    void RPC_BecomePropAfterAuthentication(int plyID, int propID) {
+        PhotonView tarPly = PhotonView.Find(plyID);
+        PhotonView prop = PhotonView.Find(propID);
+        if (PPC.moveState == 1) {
+            Debug.Log("PRE-PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
+            ourRaycastTargerObj = prop.gameObject;
+            photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
+            ourPreviousProp = "";
+            foreach (char c in ourRaycastTargerObj.name) {
+                if (System.Char.IsDigit(c)) {
+                    ourPreviousProp += c;
+                }
+            }
+            PPC.moveState = 2;
+        } else if (PPC.moveState == 2) {
+            Debug.Log("PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
+            ourRaycastTargerObj = prop.gameObject;
+            photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
+            ourPreviousProp = "";
+            foreach (char c in ourRaycastTargerObj.name) {
+                if (System.Char.IsDigit(c)) {
+                    ourPreviousProp += c;
+                }
             }
         }
-        PPC.moveState = 2;
+    }
+
+
+    // Runs on the client that tried to takeover prop and failed to do so.
+    [PunRPC]
+    void RPC_KickBackTakeOverError(int takenPropID) {
+        Debug.Log("The prop you tried to takeover has already been taken over or destroyed.");
     }
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
-        Debug.LogWarning("RUNNING: BecomePropFrom - PRE - Prop.");
         GameObject propToRef = PhotonView.Find(propID).gameObject;
         GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+        GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+        Rigidbody propRB = propToRef.GetComponent<Rigidbody>();
+        propRB.velocity = Vector3.zero;
+        propToRef.GetPhotonView().ObservedComponents.Clear();
+        propToRef.GetComponent<RigidbodyTransformView>().enabled = false;
+        Destroy(propRB);
+        Destroy(propToRef.GetPhotonView());
         plyRB.velocity = Vector3.zero;
         plyRB.isKinematic = true;
-        Component.Destroy(changingPly.GetComponent<MeshCollider>());
+        foreach (Transform child in propHolder.transform) {
+            Destroy(child.gameObject);
+        }
         changingPly.transform.position = propToRef.transform.position;
-        changingPly.GetComponent<MeshFilter>().mesh = propToRef.GetComponent<MeshFilter>().mesh;
-        changingPly.GetComponent<MeshRenderer>().material = propToRef.GetComponent<MeshRenderer>().material;
         Quaternion tempRot = propToRef.transform.rotation;
         Vector3 tempScale = propToRef.transform.lossyScale;
-        PhysicMaterial tempPhysMat = propToRef.GetComponent<Collider>().material;
-        Destroy(propToRef.gameObject);
-        changingPly.transform.rotation = tempRot;
-        changingPly.transform.localScale = tempScale;
-        MeshCollider plyMeshCol = changingPly.AddComponent<MeshCollider>();
-        plyMeshCol.material = tempPhysMat;
-        plyMeshCol.convex = true;
-        if (changingPly.GetComponent<PhotonView>().IsMine) {
-            LookFollowTar.transform.position = plyMeshCol.ClosestPoint(LookFollowTar.transform.position);
-        }
+        propToRef.transform.parent = propHolder.transform;
+        propToRef.transform.rotation = tempRot;
+        propToRef.transform.localScale = tempScale;
+        propToRef.transform.localPosition = Vector3.zero;
         plyRB.isKinematic = false;
     }
 
-    void BecomePropFromProp() {
-        ourRaycastTargerObj = objectHit.collider.gameObject;
-        photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
-        ourPreviousProp = "";
-        foreach (char c in ourRaycastTargerObj.name) {
-            if (System.Char.IsDigit(c)) {
-                ourPreviousProp += c;
-            }
-        }
-    }
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
-        Debug.LogWarning("RUNNING: BecomePropFromProp.");
         GameObject propToRef = PhotonView.Find(propID).gameObject;
         GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
