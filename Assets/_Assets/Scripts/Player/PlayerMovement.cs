@@ -369,7 +369,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Quaternion propTempRot = targetPropRef.transform.rotation;
             Vector3 propTempScale = targetPropRef.transform.lossyScale;
             Vector3 propTempPos = targetPropRef.transform.position;
-
+            
 
             //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
             foreach (Transform child in propHolder.transform) {
@@ -386,8 +386,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     propToSpawn += c;
                 }
             }
-            Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                PhotonNetwork.Destroy(targetPropRef);
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
@@ -422,65 +422,73 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
         //Store data for current prop/player.
-        GameObject targetProp = PhotonView.Find(propID).gameObject;
-        GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
-        GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
-        Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
-        Rigidbody targetPropRB = targetProp.GetComponent<Rigidbody>();
-        Vector3 velRef = plyRB.velocity;
-        Vector3 velAngRef = plyRB.angularVelocity;
-        float massRef = plyRB.mass;
-        //Clear un-needed network calls on photonview.
-        targetProp.GetPhotonView().ObservedComponents.Clear();
-        targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
-        //Destroy rigidbody before we parent this object.
-        Destroy(targetPropRB);
-        //freeze our player just before the swap.
-        plyRB.velocity = Vector3.zero;
-        plyRB.isKinematic = true;
-        //set spawn pos and rot of current child object.
-        Vector3 spawnOldPropPos = propHolder.transform.position;
-        Quaternion spawnOldPropRot = propHolder.transform.rotation;
-        //Now we detach our current prop and unparent it.
-        int childrenDetached = 0;
-        GameObject detachingProp = null;
-        foreach (Transform child in propHolder.transform) {
-            child.parent = null;
-            detachingProp = child.gameObject;
-            detachingProp.layer = 11;
-            if (!detachingProp.GetComponent<Rigidbody>()) {
-                detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+        PhotonView tarPropPV = PhotonView.Find(propID);
+        if (tarPropPV != null) {
+            GameObject targetProp = tarPropPV.gameObject;
+            GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+            GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
+            GameObject newNetworkProp = null;
+            Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+            Rigidbody targetPropRB = targetProp.GetComponent<Rigidbody>();
+            Vector3 velRef = plyRB.velocity;
+            Vector3 velAngRef = plyRB.angularVelocity;
+            Quaternion propTempRot = targetProp.transform.rotation;
+            float propTempScale = targetProp.transform.lossyScale.x;
+            Vector3 propTempPos = targetProp.transform.position;
+            float massRef = plyRB.mass;
+            string tarPropName = "";
+            //Clear un-needed network calls on photonview.
+            targetProp.GetPhotonView().ObservedComponents.Clear();
+            targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
+            //Destroy rigidbody before we parent this object.
+            Destroy(targetPropRB);
+            //freeze our player just before the swap.
+            plyRB.velocity = Vector3.zero;
+            plyRB.isKinematic = true;
+            //Now we detach our current prop and unparent it.
+            int childrenDetached = 0;
+            GameObject detachingProp = null;
+            foreach (Transform child in propHolder.transform) {
+                child.parent = null;
+                detachingProp = child.gameObject;
+                detachingProp.layer = 11;
+                if (!detachingProp.GetComponent<Rigidbody>()) {
+                    detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+                    Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
+                    RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+                    rtv.enabled = true;
+                    detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+                    detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                    detPropRB.isKinematic = false;
+                    detPropRB.mass = massRef;
+                    detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+                    detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
+                } else {
+                    Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
+                }
+                detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+                childrenDetached++;
+                if (childrenDetached > 1) {
+                    Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
+                }
             }
-            detachingProp.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = false;
-            childrenDetached++;
-            if (childrenDetached > 1) {
-                Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
+            //Now we move our player to the target prop location. Player has already been "frozen".
+            changingPly.transform.position = targetProp.transform.position;
+            //Gotta have ref to prop name after it is destroyed.
+            string propToSpawn = "";
+            foreach (char c in tarPropName) {
+                if (System.Char.IsDigit(c)) {
+                    propToSpawn += c;
+                }
             }
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                PhotonNetwork.Destroy(targetProp);
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                newNetworkProp.layer = 0;
+            }
+        } else { //duplicate issue!
+            Debug.LogError("Prop-To-Prop Duplication Prevented!");
         }
-        Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-        RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
-        rtv.enabled = true;
-        detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
-        detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
-        detPropRB.isKinematic = false;
-        detPropRB.mass = massRef;
-        detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
-        detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
-        //Now we move our player to the target prop location and set references to size and rotation of object.
-        changingPly.transform.position = targetProp.transform.position;
-        Quaternion tempRot = targetProp.transform.rotation;
-        Vector3 tempScale = targetProp.transform.lossyScale;
-        //We set our layer to 0 so we don't highlight ourselves while we are a prop.
-        if (pv.IsMine) {
-            targetProp.layer = 0;
-        }
-        //apply all transform after we parent to keep everything accurate.
-        targetProp.transform.parent = propHolder.transform;
-        targetProp.transform.rotation = tempRot;
-        targetProp.transform.localScale = tempScale;
-        targetProp.transform.localPosition = Vector3.zero;
-        //Re-enable our rigidbody so we can move around again.
-        plyRB.isKinematic = false;
     }
 
 }

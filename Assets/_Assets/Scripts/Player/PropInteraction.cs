@@ -33,20 +33,20 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
     void IPunInstantiateMagicCallback.OnPhotonInstantiate(PhotonMessageInfo info) {
         if (gameObject.GetComponent<PropInteraction>()) { // Are we a prop?
-            Debug.Log(info.Sender.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
-            GameObject plyObject = (GameObject)info.Sender.TagObject;
-            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
-            Destroy(gameObject.GetComponent<Rigidbody>());
-            gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
-            gameObject.GetComponent<RigidbodyTransformView>().enabled = false;
-            //Update PropInteraction on this newly spawned network object.
-            gameObject.GetComponent<PropInteraction>().isAvailable = false;
-            //Prop takeover, parent, then apply transforms to it.
-            gameObject.transform.parent = plyObject.transform.Find("PropHolder");
-            gameObject.transform.localPosition = Vector3.zero;
-            //re-enable rigidbody so we can move around again.
-            Debug.LogError("info.sender is: " + plyObject.gameObject.name);
-            plyObject.GetComponent<Rigidbody>().isKinematic = false;
+                Debug.Log(info.Sender.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
+                GameObject plyObject = (GameObject)info.Sender.TagObject;
+                //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
+                Destroy(gameObject.GetComponent<Rigidbody>());
+                gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
+                gameObject.GetComponent<RigidbodyTransformView>().enabled = false;
+                //Update PropInteraction on this newly spawned network object.
+                gameObject.GetComponent<PropInteraction>().isAvailable = false;
+                //Prop takeover, parent, then apply transforms to it.
+                gameObject.transform.parent = plyObject.transform.Find("PropHolder");
+                gameObject.transform.localPosition = Vector3.zero;
+                //re-enable rigidbody so we can move around again.
+                Debug.LogError("info.sender is: " + plyObject.gameObject.name);
+                plyObject.GetComponent<Rigidbody>().isKinematic = false;
         } 
     }
 }
