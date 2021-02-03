@@ -4,12 +4,16 @@ using UnityEngine;
 using System.IO;
 using TMPro;
 
-public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks {
+public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback {
 
     private PhotonView pv;
     private PlayerPropertiesController ppc;
     private TextMeshProUGUI nameText;
     private GameObject localPlayerNameTag;
+
+    void IPunInstantiateMagicCallback.OnPhotonInstantiate(PhotonMessageInfo info) { //This allows us to access our player's "P" prefabs from the PhotonPlayer level. (the level with no viewID.)
+        info.Sender.TagObject = this.gameObject;
+    }
 
     private void Awake() {
         pv = gameObject.GetComponent<PhotonView>();
@@ -55,7 +59,5 @@ public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
 
     }
-
-
 
 }

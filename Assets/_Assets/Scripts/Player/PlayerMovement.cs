@@ -1,6 +1,7 @@
 using Cinemachine;
 using Photon.Pun;
 using Photon.Realtime;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -49,7 +50,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject propWeTryToTake = null;
     private string propWeTryToTakeName = "";
     private GameObject propWeWantToPNInst;
-
 
 
 
@@ -387,24 +387,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
-            GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
+            //GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
+            GameObject newNetworkProp = null;
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
-                PhotonNetwork.AllocateViewID(newNetworkProp.GetPhotonView());
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
-            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
-            Destroy(newNetworkProp.GetComponent<Rigidbody>());
-            newNetworkProp.GetComponent<PhotonView>().ObservedComponents.Clear();
-            newNetworkProp.GetComponent<RigidbodyTransformView>().enabled = false;
-            //Update PropInteraction on this newly spawned network object.
-            newNetworkProp.GetComponent<PropInteraction>().isAvailable = false;
-            //Prop takeover, parent, then apply transforms to it.
-            newNetworkProp.transform.parent = propHolder.transform;
-            newNetworkProp.transform.rotation = propTempRot;
-            newNetworkProp.transform.localScale = propTempScale;
-            newNetworkProp.transform.localPosition = Vector3.zero;
-            //re-enable rigidbody so we can move around again.
-            plyRB.isKinematic = false;
+            // The rest gets handled from the callback created by instantiating this object.
         } else {
             Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
