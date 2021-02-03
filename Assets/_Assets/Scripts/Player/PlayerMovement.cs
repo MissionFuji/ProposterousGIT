@@ -195,7 +195,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     }
                                 } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        } else {
+                                            Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+                                        }
                                     }
                                 }
 
@@ -308,25 +312,29 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
-        if (PPC.moveState == 1) {
-            ourRaycastTargerObj = prop.gameObject;
-            photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
-            ourPreviousProp = "";
-            foreach (char c in ourRaycastTargerObj.name) {
-                if (System.Char.IsDigit(c)) {
-                    ourPreviousProp += c;
+        if (prop.gameObject != null && tarPly.gameObject != null) {
+            if (PPC.moveState == 1) {
+                ourRaycastTargerObj = prop.gameObject;
+                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
+                ourPreviousProp = "";
+                foreach (char c in ourRaycastTargerObj.name) {
+                    if (System.Char.IsDigit(c)) {
+                        ourPreviousProp += c;
+                    }
+                }
+                PPC.moveState = 2;
+            } else if (PPC.moveState == 2) {
+                ourRaycastTargerObj = prop.gameObject;
+                photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
+                ourPreviousProp = "";
+                foreach (char c in ourRaycastTargerObj.name) {
+                    if (System.Char.IsDigit(c)) {
+                        ourPreviousProp += c;
+                    }
                 }
             }
-            PPC.moveState = 2;
-        } else if (PPC.moveState == 2) {
-            ourRaycastTargerObj = prop.gameObject;
-            photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
-            ourPreviousProp = "";
-            foreach (char c in ourRaycastTargerObj.name) {
-                if (System.Char.IsDigit(c)) {
-                    ourPreviousProp += c;
-                }
-            }
+        } else {
+            Debug.LogError("The prop or target player you're referencing is null. Maybe prop was taken?");
         }
     }
 
@@ -342,6 +350,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
         // Let's make sure our prop is still active after sending this command over the network.
         if (targetPropRef != null) {
+
+            //Set the object to unavailable over the network.
+            targetPropRef.gameObject.GetComponent<PropInteraction>().isAvailable = false;
             //Let's make sure that our targetProp has no rigidbody. Also disabling network tracking of its velocity. CAN NOT SET isKinematic! This causes collider to not work! Must destroy RB!
             targetPropRef.GetPhotonView().ObservedComponents.Clear();
             targetPropRef.GetComponent<RigidbodyTransformView>().enabled = false;
