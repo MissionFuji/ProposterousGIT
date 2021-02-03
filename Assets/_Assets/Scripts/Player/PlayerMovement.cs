@@ -386,8 +386,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     propToSpawn += c;
                 }
             }
+            Destroy(targetPropRef);
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
-                PhotonNetwork.Destroy(targetPropRef);
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
@@ -481,8 +481,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     propToSpawn += c;
                 }
             }
+            Destroy(targetProp);
+            Debug.LogError("TESTESTEST: " + propToSpawn); // THIS NEVER GETS SETTTTT
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
-                PhotonNetwork.Destroy(targetProp);
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
