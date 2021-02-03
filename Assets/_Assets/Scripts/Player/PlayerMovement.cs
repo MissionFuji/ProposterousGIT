@@ -388,8 +388,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
             GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
-            PhotonNetwork.AllocateViewID(newNetworkProp.GetPhotonView());
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                PhotonNetwork.AllocateViewID(newNetworkProp.GetPhotonView());
                 newNetworkProp.layer = 0;
             }
             //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
