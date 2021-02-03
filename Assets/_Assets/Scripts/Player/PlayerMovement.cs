@@ -341,7 +341,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
-
+        Debug.LogError("BROKEN?: " + propID.ToString() + ", " + changingPlyID.ToString());
         if (PhotonView.Find(propID).gameObject != null && PhotonView.Find(changingPlyID).gameObject != null) {
             //Store data for current prop/player.
             GameObject targetPropRef = PhotonView.Find(propID).gameObject;
