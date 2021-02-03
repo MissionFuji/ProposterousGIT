@@ -366,6 +366,7 @@ MonoBehaviour:
   playerSpeed: 20
   jumpForce: 30
   rotForce: 30
+  XYZRotLocked: 0
   takeOverRange: 20
   PropInteraction:
     serializedVersion: 2

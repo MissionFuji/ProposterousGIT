@@ -181,23 +181,21 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
                             propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
                             if (propInt.isAvailable) { // if it does, let's see if prop is available.
-                                if (propInt.isHostOnly) {
+                                if (propInt.isHostOnly) { // Are we the host for this host-only selection?
                                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
                                         if (propInt.isMapCartridge) {
                                             mapToLoadName = propInt.gameObject.name;
                                             Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                         }
                                         if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                            photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, photonView.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         }
                                     } else {
                                         Debug.Log("Tried to take over a host-only prop and a non-host client.");
                                     }
                                 } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                        photonView.RPC("RPC_RequestPropPermission", RpcTarget.MasterClient, pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                        Debug.Log("NEW DAY TEST. LOCAL CLIENT PLAYER TRIED TO TAKE PROP.");
-                                        //BecomeProp(objectHit.collider.gameObject);
+                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                     }
                                 }
 
@@ -306,30 +304,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         targetPly.rotation = Quaternion.identity;
     }
 
-    //Only runs on host.
-    [PunRPC]
-    void RPC_RequestPropPermission(int plyID, int propID) {
-        PhotonView netPV = PhotonView.Find(plyID);
-        PhotonView propPV = PhotonView.Find(propID);
-        if (propPV != null) {
-            if (propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork == false) {
-                propPV.gameObject.GetComponent<PropInteraction>().isAlreadyClaimedOverNetwork = true;
-                photonView.RPC("RPC_BecomePropAfterAuthentication", netPV.Owner, plyID, propID);
-            } else {
-                photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
-            }
-        } else {
-            photonView.RPC("RPC_KickBackTakeOverError", netPV.Owner, 0);
-        }
-    }
 
-    //executes on target player.
-    [PunRPC]
-    void RPC_BecomePropAfterAuthentication(int plyID, int propID) {
+    void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
         if (PPC.moveState == 1) {
-            Debug.Log("PRE-PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
             ourRaycastTargerObj = prop.gameObject;
             photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
             ourPreviousProp = "";
@@ -340,7 +319,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             PPC.moveState = 2;
         } else if (PPC.moveState == 2) {
-            Debug.Log("PROP Kickback from MasterClient! Following user will take over the prop: " + tarPly.Owner.NickName);
             ourRaycastTargerObj = prop.gameObject;
             photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
             ourPreviousProp = "";
@@ -353,12 +331,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
 
-    // Runs on the client that tried to takeover prop and failed to do so.
-    [PunRPC]
-    void RPC_KickBackTakeOverError(int takenPropID) {
-        Debug.Log("The prop you tried to takeover has already been taken over or destroyed.");
-    }
-
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
         //Store data for current prop/player.
@@ -367,33 +339,38 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
         Rigidbody targetPropRB = targetPropRef.GetComponent<Rigidbody>();
-        //Let's make sure that our targetProp has no rigidbody. Also disabling network tracking of its velocity. CAN NOT SET isKinematic! This causes collider to not work! Must destroy RB!
-        targetPropRef.GetPhotonView().ObservedComponents.Clear();
-        targetPropRef.GetComponent<RigidbodyTransformView>().enabled = false;
-        Destroy(targetPropRB);
-        //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
-        foreach (Transform child in propHolder.transform) {
-            Destroy(child.gameObject);
+
+        // Let's make sure our prop is still active after sending this command over the network.
+        if (targetPropRef != null) {
+            //Let's make sure that our targetProp has no rigidbody. Also disabling network tracking of its velocity. CAN NOT SET isKinematic! This causes collider to not work! Must destroy RB!
+            targetPropRef.GetPhotonView().ObservedComponents.Clear();
+            targetPropRef.GetComponent<RigidbodyTransformView>().enabled = false;
+            Destroy(targetPropRB);
+            //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
+            foreach (Transform child in propHolder.transform) {
+                Destroy(child.gameObject);
+            }
+            //Let's temporaribly freeze our player and set move it to the target prop position before takeover.
+            plyRB.velocity = Vector3.zero;
+            plyRB.isKinematic = true;
+            changingPly.transform.position = targetPropRef.transform.position;
+            //We set our layer to 0 so we don't highlight ourselves while we are a prop.
+            if (pv.IsMine) {
+                targetPropRef.layer = 0;
+            }
+            //Let's ref some data from our target prop before takeover so we can apply changes to it.
+            Quaternion tempRot = targetPropRef.transform.rotation;
+            Vector3 tempScale = targetPropRef.transform.lossyScale;
+            //Prop takeover, parent, then apply transforms to it.
+            targetPropRef.transform.parent = propHolder.transform;
+            targetPropRef.transform.rotation = tempRot;
+            targetPropRef.transform.localScale = tempScale;
+            targetPropRef.transform.localPosition = Vector3.zero;
+            //re-enable rigidbody so we can move around again.
+            plyRB.isKinematic = false;
+        } else {
+            Debug.LogError("The prop we tried to take over was taken! We can try here to rectify this issue.");
         }
-        //Let's temporaribly freeze our player and set move it to the target prop position before takeover.
-        plyRB.velocity = Vector3.zero;
-        plyRB.isKinematic = true;
-        changingPly.transform.position = targetPropRef.transform.position;
-        //We set our layer to 0 so we don't highlight ourselves while we are a prop.
-        if (pv.IsMine) {
-            targetPropRef.layer = 0;
-        }
-        //Let's ref some data from our target prop before takeover so we can apply changes to it.
-        Quaternion tempRot = targetPropRef.transform.rotation;
-        Vector3 tempScale = targetPropRef.transform.lossyScale;
-        //Prop takeover, parent, then apply transforms to it.
-        targetPropRef.transform.parent = propHolder.transform;
-        targetPropRef.transform.rotation = tempRot;
-        targetPropRef.transform.localScale = tempScale;
-        targetPropRef.transform.localPosition = Vector3.zero;
-        //re-enable rigidbody so we can move around again.
-        plyRB.isKinematic = false;
-        
     }
 
 
