@@ -342,55 +342,60 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
-        //Store data for current prop/player.
-        GameObject targetPropRef = PhotonView.Find(propID).gameObject;
-        GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
-        GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
-        Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
-        Rigidbody targetPropRB = targetPropRef.GetComponent<Rigidbody>();
 
-        string tarPropName = targetPropRef.name;
-        Quaternion propTempRot = targetPropRef.transform.rotation;
-        Vector3 propTempScale = targetPropRef.transform.lossyScale;
-        Vector3 propTempPos = targetPropRef.transform.position;
+        if (!PhotonView.Find(propID)) {
+            //Store data for current prop/player.
+            GameObject targetPropRef = PhotonView.Find(propID).gameObject;
+            GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+            GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
+            Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+            Rigidbody targetPropRB = targetPropRef.GetComponent<Rigidbody>();
+
+            string tarPropName = targetPropRef.name;
+            Quaternion propTempRot = targetPropRef.transform.rotation;
+            Vector3 propTempScale = targetPropRef.transform.lossyScale;
+            Vector3 propTempPos = targetPropRef.transform.position;
 
 
-        // Let's make sure our prop is still active after sending this command over the network.
-        if (targetPropRef != null) {
+            // Let's make sure our prop is still active after sending this command over the network.
+            if (targetPropRef != null) {
 
-            //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
-            foreach (Transform child in propHolder.transform) {
-                Destroy(child.gameObject);
-            }
-            //Let's temporarily freeze our player and set move it to the target prop position before takeover.
-            plyRB.velocity = Vector3.zero;
-            plyRB.isKinematic = true;
-            changingPly.transform.position = propTempPos;
-            // Let's spawn our object PER client, not PN.Inst(). This is because we can't reference new GO on all clients. So we must instantiate separately.
-            string propToSpawn = "";
-            foreach (char c in tarPropName) {
-                if (System.Char.IsDigit(c)) {
-                    propToSpawn += c;
+                //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
+                foreach (Transform child in propHolder.transform) {
+                    Destroy(child.gameObject);
                 }
+                //Let's temporarily freeze our player and set move it to the target prop position before takeover.
+                plyRB.velocity = Vector3.zero;
+                plyRB.isKinematic = true;
+                changingPly.transform.position = propTempPos;
+                // Let's spawn our object PER client, not PN.Inst(). This is because we can't reference new GO on all clients. So we must instantiate separately.
+                string propToSpawn = "";
+                foreach (char c in tarPropName) {
+                    if (System.Char.IsDigit(c)) {
+                        propToSpawn += c;
+                    }
+                }
+                Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
+                GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
+                if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                    newNetworkProp.layer = 0;
+                }
+                //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
+                Destroy(newNetworkProp.GetComponent<Rigidbody>());
+                newNetworkProp.GetComponent<PhotonView>().ObservedComponents.Clear();
+                newNetworkProp.GetComponent<RigidbodyTransformView>().enabled = false;
+                //Update PropInteraction on this newly spawned network object.
+                newNetworkProp.GetComponent<PropInteraction>().isAvailable = false;
+                //Prop takeover, parent, then apply transforms to it.
+                newNetworkProp.transform.parent = propHolder.transform;
+                newNetworkProp.transform.rotation = propTempRot;
+                newNetworkProp.transform.localScale = propTempScale;
+                newNetworkProp.transform.localPosition = Vector3.zero;
+                //re-enable rigidbody so we can move around again.
+                plyRB.isKinematic = false;
+            } else {
+                Debug.LogError("The prop we tried to take over was taken! We can try here to rectify this issue.");
             }
-            Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
-            GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
-            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
-                newNetworkProp.layer = 0;
-            }
-            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
-            Destroy(newNetworkProp.GetComponent<Rigidbody>());
-            newNetworkProp.GetComponent<PhotonView>().ObservedComponents.Clear();
-            newNetworkProp.GetComponent<RigidbodyTransformView>().enabled = false;
-            //Update PropInteraction on this newly spawned network object.
-            newNetworkProp.GetComponent<PropInteraction>().isAvailable = false;
-            //Prop takeover, parent, then apply transforms to it.
-            newNetworkProp.transform.parent = propHolder.transform;
-            newNetworkProp.transform.rotation = propTempRot;
-            newNetworkProp.transform.localScale = propTempScale;
-            newNetworkProp.transform.localPosition = Vector3.zero;
-            //re-enable rigidbody so we can move around again.
-            plyRB.isKinematic = false;
         } else {
             Debug.LogError("The prop we tried to take over was taken! We can try here to rectify this issue.");
         }
