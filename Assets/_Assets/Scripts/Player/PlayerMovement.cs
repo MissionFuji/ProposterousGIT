@@ -1,6 +1,7 @@
 using Cinemachine;
 using Photon.Pun;
 using Photon.Realtime;
+using System.IO;
 using UnityEngine;
 
 
@@ -47,6 +48,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //used for anti-dupe.
     private GameObject propWeTryToTake = null;
     private string propWeTryToTakeName = "";
+    private GameObject propWeWantToPNInst;
 
 
 
@@ -386,6 +388,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
             GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
+            PhotonNetwork.AllocateViewID(newNetworkProp.GetPhotonView());
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp.layer = 0;
             }
@@ -447,7 +450,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
         Rigidbody targetPropRB = targetProp.GetComponent<Rigidbody>();
         Vector3 velRef = plyRB.velocity;
-        Vector3 velAngVel = plyRB.angularVelocity;
+        Vector3 velAngRef = plyRB.angularVelocity;
         float massRef = plyRB.mass;
         //Clear un-needed network calls on photonview.
         targetProp.GetPhotonView().ObservedComponents.Clear();
@@ -484,7 +487,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         detPropRB.isKinematic = false;
         detPropRB.mass = massRef;
         detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
-        detPropRB.AddTorque(velAngVel * detPropRB.mass, ForceMode.Impulse);
+        detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
         //Now we move our player to the target prop location and set references to size and rotation of object.
         changingPly.transform.position = targetProp.transform.position;
         Quaternion tempRot = targetProp.transform.rotation;
