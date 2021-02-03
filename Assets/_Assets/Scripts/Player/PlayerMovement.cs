@@ -44,6 +44,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //used for map loading
     public string mapToLoadName;
 
+    //used for anti-dupe.
+    private GameObject propWeTryToTake = null;
+    private string propWeTryToTakeName = "";
+
 
 
 
@@ -196,6 +200,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                 } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
                                         if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                            propWeTryToTake = propInt.gameObject;
+                                            propWeTryToTakeName = propWeTryToTake.name;
                                             BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         } else {
                                             Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
@@ -341,9 +347,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
-        Debug.LogError("BROKEN?: " + propID.ToString() + ", " + changingPlyID.ToString());
-        if (PhotonView.Find(propID).gameObject != null && PhotonView.Find(changingPlyID).gameObject != null) {
-            //Store data for current prop/player.
+
+        PhotonView tarPropPV = PhotonView.Find(propID);
+        if (tarPropPV != null) {
             GameObject targetPropRef = PhotonView.Find(propID).gameObject;
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
