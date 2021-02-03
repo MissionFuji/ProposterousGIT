@@ -364,7 +364,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
             Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
             Rigidbody targetPropRB = targetPropRef.GetComponent<Rigidbody>();
-
+            GameObject newNetworkProp = null;
             string tarPropName = targetPropRef.name;
             Quaternion propTempRot = targetPropRef.transform.rotation;
             Vector3 propTempScale = targetPropRef.transform.lossyScale;
@@ -387,18 +387,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             Destroy(targetPropRef); //Destroy OBJ right as we create the new one.
-            //GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
-            GameObject newNetworkProp = null;
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
-            // The rest gets handled from the callback created by instantiating this object.
+            // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         } else {
             Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
+
+            //Setup needed variables.
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
             Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+            GameObject newNetworkProp = null;
 
             //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
             foreach (Transform child in propHolder.transform) {
@@ -407,25 +408,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's temporarily freeze our player and keep it where it is. This is due to a dupe.
             plyRB.velocity = Vector3.zero;
             plyRB.isKinematic = true;
-            // Let's spawn our object PER client, not PN.Inst(). This is because we can't reference new GO on all clients. So we must instantiate separately.
+            //We need to use a backup string to instantiate our prop, as it was destroyed or stolen from us.
             string propToSpawn = targetPropBackup.ToString();
-            GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity);
                 newNetworkProp.layer = 0;
             }
-            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
-            Destroy(newNetworkProp.GetComponent<Rigidbody>());
-            newNetworkProp.GetComponent<PhotonView>().ObservedComponents.Clear();
-            newNetworkProp.GetComponent<RigidbodyTransformView>().enabled = false;
-            //Update PropInteraction on this newly spawned network object.
-            newNetworkProp.GetComponent<PropInteraction>().isAvailable = false;
-            //Prop takeover, parent, then apply transforms to it.
-            newNetworkProp.transform.parent = propHolder.transform;
-            newNetworkProp.transform.rotation = Quaternion.identity;
-            newNetworkProp.transform.localScale = new Vector3(backupScale, backupScale, backupScale);
-            newNetworkProp.transform.localPosition = Vector3.zero;
-            //re-enable rigidbody so we can move around again.
-            plyRB.isKinematic = false;
+            // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
     }
 
