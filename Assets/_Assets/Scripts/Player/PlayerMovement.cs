@@ -318,10 +318,17 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
+        float backupScale = prop.gameObject.transform.lossyScale.x;
         if (prop.gameObject != null && tarPly.gameObject != null) {
             if (PPC.moveState == 1) {
                 ourRaycastTargerObj = prop.gameObject;
-                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID);
+                string backupTargetPropName = "";
+                foreach (char c in ourRaycastTargerObj.name) { // this is purely for backup duplication purposes.
+                    if (System.Char.IsDigit(c)) {
+                        backupTargetPropName += c;
+                    }
+                }
+                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(backupTargetPropName), backupScale);
                 ourPreviousProp = "";
                 foreach (char c in ourRaycastTargerObj.name) {
                     if (System.Char.IsDigit(c)) {
@@ -346,7 +353,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
 
     [PunRPC]
-    void RPC_BecomePropFromPreProp(int propID, int changingPlyID) {
+    void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup, float backupScale) {
 
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
@@ -397,6 +404,36 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             plyRB.isKinematic = false;
         } else {
             Debug.LogError("The prop we tried to take over was taken! We can try here to rectify this issue.");
+            GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+            GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
+            Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+
+            //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
+            foreach (Transform child in propHolder.transform) {
+                Destroy(child.gameObject);
+            }
+            //Let's temporarily freeze our player and keep it where it is. This is due to a dupe.
+            plyRB.velocity = Vector3.zero;
+            plyRB.isKinematic = true;
+            // Let's spawn our object PER client, not PN.Inst(). This is because we can't reference new GO on all clients. So we must instantiate separately.
+            string propToSpawn = targetPropBackup.ToString();
+            GameObject newNetworkProp = Instantiate((GameObject)Resources.Load("PhotonPrefabs/" + propToSpawn));
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                newNetworkProp.layer = 0;
+            }
+            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
+            Destroy(newNetworkProp.GetComponent<Rigidbody>());
+            newNetworkProp.GetComponent<PhotonView>().ObservedComponents.Clear();
+            newNetworkProp.GetComponent<RigidbodyTransformView>().enabled = false;
+            //Update PropInteraction on this newly spawned network object.
+            newNetworkProp.GetComponent<PropInteraction>().isAvailable = false;
+            //Prop takeover, parent, then apply transforms to it.
+            newNetworkProp.transform.parent = propHolder.transform;
+            newNetworkProp.transform.rotation = Quaternion.identity;
+            newNetworkProp.transform.localScale = new Vector3(backupScale, backupScale, backupScale);
+            newNetworkProp.transform.localPosition = Vector3.zero;
+            //re-enable rigidbody so we can move around again.
+            plyRB.isKinematic = false;
         }
     }
 
