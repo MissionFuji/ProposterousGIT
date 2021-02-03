@@ -403,7 +403,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //re-enable rigidbody so we can move around again.
             plyRB.isKinematic = false;
         } else {
-            Debug.LogError("The prop we tried to take over was taken! We can try here to rectify this issue.");
+            Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
             Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
