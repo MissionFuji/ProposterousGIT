@@ -514,8 +514,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
                     RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+                    PhotonView detPropPV = detachingProp.GetComponent<PhotonView>();
                     rtv.enabled = true;
-                    detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+                    detPropPV.ObservedComponents.Add(rtv);
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;

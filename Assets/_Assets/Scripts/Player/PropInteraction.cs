@@ -32,7 +32,10 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
 
     void IPunInstantiateMagicCallback.OnPhotonInstantiate(PhotonMessageInfo info) {
-        if (gameObject.GetComponent<PropInteraction>()) { // Are we a prop?
+        if (gameObject.GetComponent<PropInteraction>()) { // Are we a prop? 
+
+            //This is used for when a new prop is PhotonNetwork.Instantiated for the sake of being taken-over. 
+
             Debug.Log(info.Sender.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
             GameObject plyObject = (GameObject)info.Sender.TagObject;
             Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
@@ -46,7 +49,6 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");
             gameObject.transform.localPosition = Vector3.zero;
             //re-enable rigidbody so we can move around again.
-            Debug.LogError("info.sender is: " + plyObject.gameObject.name);
             plyRB.freezeRotation = false;
             plyRB.isKinematic = false;
         }
