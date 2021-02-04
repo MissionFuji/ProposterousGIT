@@ -45,6 +45,12 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             gameObject.GetComponent<RigidbodyTransformView>().enabled = false;
             //Update PropInteraction on this newly spawned network object.
             gameObject.GetComponent<PropInteraction>().isAvailable = false;
+            //We make sure the prop is on PropInteraction layer. Unless we're the owner, then we remove it.
+            if (info.Sender.IsLocal) {
+                gameObject.layer = 0;
+            } else {
+                gameObject.layer = 11;
+            }
             //Prop takeover, parent, then apply transforms to it.
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");
             gameObject.transform.localPosition = Vector3.zero;

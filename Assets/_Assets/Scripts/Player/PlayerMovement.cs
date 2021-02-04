@@ -391,7 +391,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Destroy(targetPropRef);
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
-                newNetworkProp.layer = 0;
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         } else {
@@ -414,7 +413,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             string propToSpawn = targetPropBackup.ToString();
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity);
-                newNetworkProp.layer = 0;
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
@@ -490,9 +488,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             Destroy(targetProp);
-            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
-                newNetworkProp.layer = 0;
             }
             //The rest gets handled on a callback from photon instantiation.
         } else { 
@@ -542,9 +539,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
 
-            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
-                newNetworkProp.layer = 0;
             }
         }
     }

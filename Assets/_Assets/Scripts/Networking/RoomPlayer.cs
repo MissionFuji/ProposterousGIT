@@ -19,14 +19,12 @@ public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInsta
         pv = gameObject.GetComponent<PhotonView>();
         if (pv.IsMine) {
             gameObject.tag = "LocalPlayer";
-            gameObject.layer = 0;
             ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
             ppc.LocalRoomPlayer = gameObject.GetComponent<RoomPlayer>();
             localPlayerNameTag = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "NameTagHolder"), gameObject.transform.position, Quaternion.identity, 0);
             photonView.RPC("RPC_SetNameTagTarget", RpcTarget.AllBuffered, localPlayerNameTag.GetPhotonView().ViewID, pv.ViewID);
         } else {
             gameObject.tag = "ClientPlayer";
-            gameObject.layer = 13;
             gameObject.transform.Find("3PC").gameObject.SetActive(false);
         }
 
