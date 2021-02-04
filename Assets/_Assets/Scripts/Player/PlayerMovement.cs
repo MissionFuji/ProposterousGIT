@@ -48,7 +48,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //used for anti-dupe.
     private GameObject propWeTryToTake = null;
     private string propWeTryToTakeName = "";
-    private GameObject propWeWantToPNInst;
 
 
 
