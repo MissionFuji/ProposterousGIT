@@ -110,28 +110,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                 }
                             }
                         } else {
-                            if (ol.enabled || ol.OutlineColor != Color.red) {
+                            if (ol.enabled != true) {
                                 ol.enabled = true;
+                            }
+                            if (ol.OutlineColor != Color.red) {
                                 ol.OutlineColor = Color.red;
                             }
-                        }
-
-                    } else if (objectHit.collider.gameObject.layer == 13) { // if it's a player.
-                        GameObject hoveredObject = objectHit.collider.gameObject;
-                        if (outlinedObjectRef != null) {
-                            if (outlinedObjectRef != hoveredObject) {
-                                outlinedObjectRef.GetComponent<Outline>().enabled = false;
-                            }
-                        }
-                        if (outlinedObjectRef != hoveredObject) {
-                            outlinedObjectRef = hoveredObject;
-                            ol = hoveredObject.GetComponent<Outline>();
-                            outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
-                        }
-                        if (ol.enabled == false || ol.OutlineColor != Color.red) {
-                            ol.enabled = true;
-                            ol.OutlineColor = Color.red;
-                            Debug.Log("Trying to highlight player object.");
                         }
 
                     }
@@ -154,20 +138,20 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             #endregion
 
             if (Input.GetKeyDown(KeyCode.R)) {
-                    if (XYZRotLocked) {
-                        XYZRotLocked = false;
-                        photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                    } else {
-                        XYZRotLocked = true;
-                        Quaternion rotRef = gameObject.transform.rotation;
-                        photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
-                    }
+                if (XYZRotLocked) {
+                    XYZRotLocked = false;
+                    photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                } else {
+                    XYZRotLocked = true;
+                    Quaternion rotRef = gameObject.transform.rotation;
+                    photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
+                }
             }
             if (Input.GetKeyDown(KeyCode.Z)) {
                 if (XYZRotLocked) {
-                        if (gameObject.transform.rotation != Quaternion.identity) {
-                            photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                        }
+                    if (gameObject.transform.rotation != Quaternion.identity) {
+                        photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    }
                 }
             }
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -492,7 +476,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
             }
             //The rest gets handled on a callback from photon instantiation.
-        } else { 
+        } else {
             Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
 
             //Setup initially needed references.
