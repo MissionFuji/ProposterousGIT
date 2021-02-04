@@ -1,7 +1,6 @@
 using Cinemachine;
 using Photon.Pun;
 using Photon.Realtime;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -156,20 +155,20 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             #endregion
 
             if (Input.GetKeyDown(KeyCode.R)) {
-                if (XYZRotLocked) {
-                    XYZRotLocked = false;
-                    photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                } else {
-                    XYZRotLocked = true;
-                    Quaternion rotRef = gameObject.transform.rotation;
-                    photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
-                }
+                    if (XYZRotLocked) {
+                        XYZRotLocked = false;
+                        photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    } else {
+                        XYZRotLocked = true;
+                        Quaternion rotRef = gameObject.transform.rotation;
+                        photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
+                    }
             }
             if (Input.GetKeyDown(KeyCode.Z)) {
                 if (XYZRotLocked) {
-                    if (gameObject.transform.rotation != Quaternion.identity) {
-                        photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                    }
+                        if (gameObject.transform.rotation != Quaternion.identity) {
+                            photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                        }
                 }
             }
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -298,29 +297,28 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_UnlockRotationOverNetwork(int plyID) {
-        Rigidbody targetRB = PhotonView.Find(plyID).gameObject.GetComponent<Rigidbody>();
-        targetRB.freezeRotation = false;
+        Rigidbody plyRB = PhotonView.Find(plyID).gameObject.GetComponent<Rigidbody>();
+        plyRB.freezeRotation = false;
     }
 
     [PunRPC]
     void RPC_LockRotationOverNetwork(int plyID, Quaternion tarRot) {
-        PhotonView tarPV = PhotonView.Find(plyID);
-        Rigidbody targetRB = tarPV.gameObject.GetComponent<Rigidbody>();
-        targetRB.freezeRotation = true;
-        tarPV.gameObject.transform.rotation = tarRot;
+        PhotonView plyPV = PhotonView.Find(plyID);
+        Rigidbody plyRB = plyPV.gameObject.GetComponent<Rigidbody>();
+        plyRB.freezeRotation = true;
+        plyPV.gameObject.transform.rotation = tarRot;
     }
 
     [PunRPC]
     void RPC_ResetRotationOverNetwork(int plyID) {
         Transform targetPly = PhotonView.Find(plyID).gameObject.transform.GetChild(0);
-        targetPly.rotation = Quaternion.identity;
+        targetPly.gameObject.transform.rotation = Quaternion.identity;
     }
 
 
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
-        float backupScale = prop.gameObject.transform.lossyScale.x;
         if (prop.gameObject != null && tarPly.gameObject != null) {
             if (PPC.moveState == 1) {
                 ourRaycastTargerObj = prop.gameObject;
@@ -330,7 +328,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         backupTargetPropName += c;
                     }
                 }
-                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(backupTargetPropName), backupScale);
+                photonView.RPC("RPC_BecomePropFromPreProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(backupTargetPropName));
                 ourPreviousProp = "";
                 foreach (char c in ourRaycastTargerObj.name) {
                     if (System.Char.IsDigit(c)) {
@@ -355,7 +353,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
 
     [PunRPC]
-    void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup, float backupScale) {
+    void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup) {
 
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
@@ -369,7 +367,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Quaternion propTempRot = targetPropRef.transform.rotation;
             Vector3 propTempScale = targetPropRef.transform.lossyScale;
             Vector3 propTempPos = targetPropRef.transform.position;
-            
+
 
             //We can DESTROY our current child object because it is pre-prop. We don't want to leave this one behind anywhere.
             foreach (Transform child in propHolder.transform) {
@@ -436,7 +434,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             float propTempScale = targetProp.transform.lossyScale.x;
             Vector3 propTempPos = targetProp.transform.position;
             float massRef = plyRB.mass;
-            string tarPropName = "";
+            string tarPropName = targetProp.name;
             //Clear un-needed network calls on photonview.
             targetProp.GetPhotonView().ObservedComponents.Clear();
             targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
@@ -482,13 +480,61 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             Destroy(targetProp);
-            Debug.LogError("TESTESTEST: " + propToSpawn); // THIS NEVER GETS SETTTTT
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 newNetworkProp.layer = 0;
             }
-        } else { //duplicate issue!
-            Debug.LogError("Prop-To-Prop Duplication Prevented!");
+            //The rest gets handled on a callback from photon instantiation.
+        } else { 
+            Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
+
+            //Setup initially needed references.
+            GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
+            GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
+            GameObject newNetworkProp = null;
+            Rigidbody plyRB = changingPly.GetComponent<Rigidbody>();
+
+            //Keep velocity info to later apply it to the detachingprop.
+            Vector3 velRef = plyRB.velocity;
+            Vector3 velAngRef = plyRB.angularVelocity;
+            float massRef = plyRB.mass;
+
+            //freeze our player just before the swap.
+            plyRB.velocity = Vector3.zero;
+            plyRB.isKinematic = true;
+
+            //Now we detach our current prop and unparent it.
+            int childrenDetached = 0;
+            GameObject detachingProp = null;
+            foreach (Transform child in propHolder.transform) {
+                child.parent = null;
+                detachingProp = child.gameObject;
+                detachingProp.layer = 11;
+                if (!detachingProp.GetComponent<Rigidbody>()) {
+                    detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+                    Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
+                    RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+                    rtv.enabled = true;
+                    detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+                    detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                    detPropRB.isKinematic = false;
+                    detPropRB.mass = massRef;
+                    detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+                    detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
+                } else {
+                    Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
+                }
+                detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+                childrenDetached++;
+                if (childrenDetached > 1) {
+                    Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
+                }
+            }
+
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
+                newNetworkProp.layer = 0;
+            }
         }
     }
 
