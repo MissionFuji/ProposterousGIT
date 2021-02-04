@@ -44,7 +44,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         if (!PhotonNetwork.IsConnected) {
             PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.SerializationRate = 10;
-            PhotonNetwork.SendRate = 20;
+            PhotonNetwork.SendRate = 18;
         } else {
             Debug.Log("Exception Caught: Tried connecting to master with an active connection already established.");
         }

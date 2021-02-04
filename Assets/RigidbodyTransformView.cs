@@ -49,15 +49,15 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     }
 
 
-    void Update()
+    void FixedUpdate()
     {
         if (!pv.IsMine && valuesReceived) {
             //Update Object position and Rigidbody parameters
             if (rb == null) {
                 ResetRB();
             }
-            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
+            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 15f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 15f);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
         }

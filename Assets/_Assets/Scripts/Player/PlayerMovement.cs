@@ -311,8 +311,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_ResetRotationOverNetwork(int plyID) {
-        Transform targetPly = PhotonView.Find(plyID).gameObject.transform.GetChild(0);
-        targetPly.gameObject.transform.rotation = Quaternion.identity;
+        GameObject targetPly = PhotonView.Find(plyID).gameObject;
+        Transform targetPlyProp = targetPly.transform.Find("PropHolder").GetChild(0);
+        Rigidbody targetPlyRigidbody = targetPly.GetComponent<Rigidbody>();
+        targetPlyRigidbody.isKinematic = true;
+        targetPly.transform.rotation = Quaternion.identity;
+        targetPlyProp.gameObject.transform.rotation = Quaternion.identity;
+        targetPlyRigidbody.isKinematic = false;
     }
 
 
@@ -450,12 +455,18 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 child.parent = null;
                 detachingProp = child.gameObject;
                 detachingProp.layer = 11;
+
                 if (!detachingProp.GetComponent<Rigidbody>()) {
                     detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
                     RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
                     rtv.enabled = true;
-                    detPropRB.gameObject.GetPhotonView().ObservedComponents.Add(rtv);
+                    PhotonView detachPropPV = detPropRB.GetComponent<PhotonView>();
+                    //We need to make sure the masterclient "owns" these detached props via PhotonView. So we can have better cleanup when the round ends.
+                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                        detachPropPV.RequestOwnership();
+                    }
+                    detachPropPV.ObservedComponents.Add(rtv);
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;
