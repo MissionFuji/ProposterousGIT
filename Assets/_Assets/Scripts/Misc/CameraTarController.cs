@@ -1,26 +1,28 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraTarController : MonoBehaviour
-{
+public class CameraTarController : MonoBehaviour {
 
     private GameObject ourPlayer;
     [SerializeField]
     private float lerpSpeed;
     [SerializeField]
     private float offset;
+    [SerializeField]
+    private bool lerpMovement = false;
 
-
-    public void SetFollowCamTarget(GameObject ourPly) {
-        ourPlayer = ourPly;
+    
+    public void SetCamFollowToPlayer(GameObject ply) {
+        ourPlayer = ply;
     }
 
-    // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
         if (ourPlayer != null) {
-            gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, ourPlayer.transform.position + new Vector3(0, offset, 0), Time.deltaTime * lerpSpeed);
+            if (lerpMovement) {
+                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, ourPlayer.transform.position + new Vector3(0, offset, 0), Time.smoothDeltaTime * lerpSpeed);
+            } else {
+                gameObject.transform.position = ourPlayer.transform.position + new Vector3(0, offset, 0);
+            }
         }
     }
 }

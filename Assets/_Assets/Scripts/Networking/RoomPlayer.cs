@@ -25,7 +25,6 @@ public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInsta
             photonView.RPC("RPC_SetNameTagTarget", RpcTarget.AllBuffered, localPlayerNameTag.GetPhotonView().ViewID, pv.ViewID);
         } else {
             gameObject.tag = "ClientPlayer";
-            gameObject.transform.Find("3PC").gameObject.SetActive(false);
         }
 
 

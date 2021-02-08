@@ -56,8 +56,8 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             if (rb == null) {
                 ResetRB();
             }
-            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 15f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 15f);
+            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 10f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 10f);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
         }

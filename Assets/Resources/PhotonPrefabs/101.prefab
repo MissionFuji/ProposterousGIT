@@ -102,7 +102,6 @@ MonoBehaviour:
   isAvailable: 1
   isHostOnly: 1
   isMapCartridge: 1
-  isAlreadyClaimedOverNetwork: 0
 --- !u!54 &1230160275985258009
 Rigidbody:
   m_ObjectHideFlags: 0

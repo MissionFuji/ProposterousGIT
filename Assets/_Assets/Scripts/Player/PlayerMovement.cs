@@ -1,6 +1,7 @@
-using Cinemachine;
 using Photon.Pun;
 using Photon.Realtime;
+using System.Collections.Generic;
+using UnityEngine.UI;
 using System.IO;
 using UnityEngine;
 
@@ -8,8 +9,9 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private PhotonView pv;
-    [SerializeField]
+    private CameraController camController;
     private PlayerPropertiesController PPC;
+    [SerializeField]
     private float rotSpeed = 0.1f;
     [SerializeField]
     private LayerMask groudLayer;
@@ -26,21 +28,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject ourRaycastTargerObj;
     private string ourPreviousProp;
     [SerializeField]
-    private bool XYZRotLocked = false;
-    private bool XZRotLocked = false;
+    private bool RotLocked = false;
     [SerializeField]
     private int takeOverRange;
     private RaycastHit objectHit;
     [SerializeField] private LayerMask PropInteraction;
     private GameObject cursorObj;
-    private GameObject LookFollowTar;
-    private GameObject camTarFor3PC;
 
     //used only for outline in update.
     [SerializeField]
     private GameObject outlinedObjectRef = null;
     private PropInteraction outlinePropInt = null;
     private Outline ol = null;
+    private List<GameObject> highlightList = new List<GameObject>();
 
     //used for map loading
     public string mapToLoadName;
@@ -49,163 +49,229 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject propWeTryToTake = null;
     private string propWeTryToTakeName = "";
 
+    //used for smooth move in update. rotation online.
+    private float xDir;
+    private float yDir;
+    private float angle;
+    private float targetAngle;
+    private GameObject rotPropHolder;
 
+    //use for lock/unlock rot image.
+
+    public Sprite lockedSprite;
+    public Sprite unlockedSprite;
+    private GameObject rootCanvas;
+    private Image rotLockImg;
+
+
+    // recursive search for children of children for highlighting.
+    private void AddDescendantsWithTag(Transform parent, List<GameObject> list) {
+        foreach (Transform child in parent) {
+            if (child.gameObject.GetComponent<Outline>()) {
+                list.Add(child.gameObject);
+            }
+            AddDescendantsWithTag(child, list);
+        }
+    }
 
     private void Start() {
         pv = gameObject.GetComponent<PhotonView>();
         if (pv.IsMine) {
             PPC = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
             mmc = Camera.main.gameObject;
+            rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
+            rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
+            rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
+            camController = mmc.GetComponent<CameraController>();
             rb = gameObject.GetComponent<Rigidbody>();
-            camTarFor3PC = GameObject.FindGameObjectWithTag("CamFollowTarget");
-            camTarFor3PC.GetComponent<CameraTarController>().SetFollowCamTarget(gameObject);
-            CinemachineFreeLook cmflRef = gameObject.transform.Find("3PC").GetComponent<CinemachineFreeLook>();
-            cmflRef.Follow = camTarFor3PC.transform;
-            cmflRef.LookAt = camTarFor3PC.transform;
-            mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform;
-            cursorObj = Camera.main.gameObject.transform.Find("CameraCenter").gameObject;
-            LookFollowTar = transform.Find("LookFollowTar").gameObject;
+            mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform; // this is what gives us accurate y rotation for player.
+            mmcCamTransRef.GetComponent<CameraTarController>().SetCamFollowToPlayer(this.gameObject);
+            camController.ReadyCamera(gameObject.transform);
+            cursorObj = mmc.transform.GetChild(0).gameObject;
         }
     }
 
 
     private void Update() {
         if (pv.IsMine) {
+            xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
+            yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
+            mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
+            //angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, mmcCamTransRef.eulerAngles.y, ref turnSmoothVelocity, rotSpeed);
+            //angle = Mathf.Lerp(transform.eulerAngles.y, mmcCamTransRef.eulerAngles.y, Time.deltaTime * rotSpeed);
+            targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
+            if (PPC.moveState == 1) {
+                if (rotPropHolder.transform.childCount > 0) {
+                    GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
+                    prop.transform.rotation = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
+                }
+            } else if (PPC.moveState == 2) {
+                if (rotPropHolder.transform.childCount > 0) {
+                    if (RotLocked) {
+                        if ((xDir != 0f) || (yDir != 0f)) {
+                            GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
+                            prop.transform.rotation = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
+                        }
+                    }
+                }
+            }
+        }
 
-            //Highlighting Code
-            #region
-            Vector3 fwd = cursorObj.transform.TransformDirection(Vector3.forward);
-            Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.magenta);
-            if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
-                if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
-                    if (objectHit.collider.gameObject.layer == 11) { // if it's a regular prop.
-                        GameObject hoveredObject = objectHit.collider.gameObject;
-                        if (outlinedObjectRef != null) {
-                            if (outlinedObjectRef != hoveredObject) {
-                                outlinedObjectRef.GetComponent<Outline>().enabled = false;
-                            }
-                        }
+        //Highlighting Code
+        #region
+        Vector3 fwd = cursorObj.transform.TransformDirection(Vector3.forward);
+        Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.magenta);
+        if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
+            if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
+                if (objectHit.collider.gameObject.layer == 11) { // if it's a regular prop.
+                    GameObject hoveredObject = objectHit.collider.gameObject;
+
+                    //Beginning of each frame, Let's check to see if we're hovering a new object. If not, let's clear last highlight.
+                    if (outlinedObjectRef != null) {
                         if (outlinedObjectRef != hoveredObject) {
-                            outlinedObjectRef = hoveredObject;
-                            ol = hoveredObject.GetComponent<Outline>();
-                            outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
-                        }
-                        if (outlinePropInt.isAvailable) {
-                            if (ol.enabled != true) {
-                                ol.enabled = true;
+                            foreach (GameObject obj in highlightList) {
+                                if (obj != null)
+                                    obj.GetComponent<Outline>().enabled = false;
                             }
-                            if (!outlinePropInt.isHostOnly) {
-                                if (ol.OutlineColor != Color.white) {
-                                    ol.OutlineColor = Color.white;
+                            highlightList.Clear();
+                        }
+                    }
+
+                    //If we're hovering an object that isn't currently highlighted, let's set up to highlight it.
+                    if (outlinedObjectRef != hoveredObject) {
+                        outlinedObjectRef = hoveredObject;
+                        highlightList.Add(outlinedObjectRef);
+                        outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
+                        AddDescendantsWithTag(outlinedObjectRef.transform, highlightList);
+                    }
+
+
+                    foreach (GameObject obj in highlightList) {
+                        if (obj != null) {
+                            ol = obj.GetComponent<Outline>();
+                            if (outlinePropInt.isAvailable) {
+                                if (ol.enabled != true) {
+                                    ol.enabled = true;
                                 }
-                            } else {
-                                if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+
+                                if (!outlinePropInt.isHostOnly) {
                                     if (ol.OutlineColor != Color.white) {
                                         ol.OutlineColor = Color.white;
                                     }
                                 } else {
-                                    if (ol.OutlineColor != Color.red) {
-                                        ol.OutlineColor = Color.red;
+                                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                                        if (ol.OutlineColor != Color.white) {
+                                            ol.OutlineColor = Color.white;
+                                        }
+                                    } else {
+                                        if (ol.OutlineColor != Color.red) {
+                                            ol.OutlineColor = Color.red;
+                                        }
                                     }
                                 }
-                            }
-                        } else {
-                            if (ol.enabled != true) {
-                                ol.enabled = true;
-                            }
-                            if (ol.OutlineColor != Color.red) {
-                                ol.OutlineColor = Color.red;
-                            }
-                        }
 
-                    }
-                } else {
-                    if (outlinedObjectRef != null) {
-                        if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
-                            outlinedObjectRef.GetComponent<Outline>().enabled = false;
-                            Debug.Log("Left range. reset");
+                            } else {
+                                if (ol.enabled != true) {
+                                    ol.enabled = true;
+                                }
+                                if (ol.OutlineColor != Color.red) {
+                                    ol.OutlineColor = Color.red;
+                                }
+                            }
                         }
                     }
+
+
+
                 }
             } else {
                 if (outlinedObjectRef != null) {
-                    if (outlinedObjectRef.GetComponent<Outline>().enabled == true) {
-                        outlinedObjectRef.GetComponent<Outline>().enabled = false;
-                        Debug.Log("Left moved cursor outside of object's hitbox. reset");
+                    foreach (GameObject obj in highlightList) {
+                        if (obj != null)
+                            obj.GetComponent<Outline>().enabled = false;
                     }
                 }
             }
-            #endregion
+        } else {
+            if (outlinedObjectRef != null) {
+                foreach (GameObject obj in highlightList) {
+                    if (obj != null)
+                        obj.GetComponent<Outline>().enabled = false;
+                }
+            }
+        }
+        #endregion
 
-            if (Input.GetKeyDown(KeyCode.R)) {
-                if (XYZRotLocked) {
-                    XYZRotLocked = false;
+        if (Input.GetKeyDown(KeyCode.R)) {
+            if (PPC.moveState == 2) {
+                if (RotLocked) {
+                    RotLocked = false;
+                    rotLockImg.sprite = unlockedSprite;
                     photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                 } else {
-                    XYZRotLocked = true;
-                    Quaternion rotRef = gameObject.transform.rotation;
-                    photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID, rotRef);
+                    RotLocked = true;
+                    rotLockImg.sprite = lockedSprite;
+                    photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                 }
             }
-            if (Input.GetKeyDown(KeyCode.Z)) {
-                if (XYZRotLocked) {
-                    if (gameObject.transform.rotation != Quaternion.identity) {
-                        photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                    }
-                }
+        }
+        if (Input.GetKeyDown(KeyCode.Z)) {
+            if (RotLocked) {
+                photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
             }
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
-                    rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
-                    rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
-                    Debug.Log("JUMP!");
-                }
+        }
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
+                rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
+                rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
+                Debug.Log("JUMP!");
             }
-            if (Input.GetKeyDown(KeyCode.E)) {
-                Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.green);
-                if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
-                    if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
-                        PropInteraction propInt;
-                        if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
-                            propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
-                            if (propInt.isAvailable) { // if it does, let's see if prop is available.
-                                if (propInt.isHostOnly) { // Are we the host for this host-only selection?
-                                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
-                                        if (propInt.isMapCartridge) {
-                                            mapToLoadName = propInt.gameObject.name;
-                                            Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
-                                        }
-                                        if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                        }
-                                    } else {
-                                        Debug.Log("Tried to take over a host-only prop and a non-host client.");
+        }
+        if (Input.GetKeyDown(KeyCode.E)) {
+            Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.green);
+            if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
+                if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
+                    PropInteraction propInt;
+                    if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
+                        propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
+                        if (propInt.isAvailable) { // if it does, let's see if prop is available.
+                            if (propInt.isHostOnly) { // Are we the host for this host-only selection?
+                                if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                                    if (propInt.isMapCartridge) {
+                                        mapToLoadName = propInt.gameObject.name;
+                                        Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                     }
-                                } else { // NOT host-only section.
                                     if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                        if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
-                                            propWeTryToTake = propInt.gameObject;
-                                            propWeTryToTakeName = propWeTryToTake.name;
-                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                        } else {
-                                            Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
-                                        }
+                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                    }
+                                } else {
+                                    Debug.Log("Tried to take over a host-only prop and a non-host client.");
+                                }
+                            } else { // NOT host-only section.
+                                if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                    if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                        propWeTryToTake = propInt.gameObject;
+                                        propWeTryToTakeName = propWeTryToTake.name;
+                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                    } else {
+                                        Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
                                     }
                                 }
-
-                            } else if (!propInt.isAvailable) {
-                                Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                             }
-                        } else {
-                            Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop is not Posessable.");
+
+                        } else if (!propInt.isAvailable) {
+                            Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                         }
+                    } else {
+                        Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop is not Posessable.");
                     }
                 }
             }
-
         }
 
     }
+
+
 
     void FixedUpdate() {
         if (pv.IsMine == true) {
@@ -213,28 +279,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             #region
             if (PPC.moveState != 0) { // 0 = Frozen
                 if (PPC.moveState == 1) { // 1 = Pre-Prop
-
-                    float xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
-                    float yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
-                    mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
-                    float targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-                    float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, rotSpeed);
-                    if ((xDir != 0f) || (yDir != 0f)) {
-                        transform.rotation = Quaternion.Euler(0f, angle, 0f);
-                    }
                     rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
-                    Vector3 movePos = mmc.transform.right * xDir + mmcCamTransRef.forward * yDir;
+                    Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
                     Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
                     rb.velocity = newMovePos;
 
                 } else if (PPC.moveState == 2) { // 2 = Prop
-                    float xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
-                    float yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
-                    mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
-                    float targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-                    float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, rotSpeed);
                     rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
-                    Vector3 movePos = mmc.transform.right * xDir + mmcCamTransRef.forward * yDir;
+                    Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
                     Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
 
                     if (xDir != 0 || yDir != 0) {
@@ -242,6 +294,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     } else {
                         rb.velocity = rb.velocity;
                     }
+
                     /*
                     if (!rotLocked) {
                         if (xDir != 0 && yDir != 0) {
@@ -273,7 +326,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
-            #endregion 
+            #endregion
         }
     }
 
@@ -285,11 +338,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
     [PunRPC]
-    void RPC_LockRotationOverNetwork(int plyID, Quaternion tarRot) {
+    void RPC_LockRotationOverNetwork(int plyID) {
         PhotonView plyPV = PhotonView.Find(plyID);
         Rigidbody plyRB = plyPV.gameObject.GetComponent<Rigidbody>();
         plyRB.freezeRotation = true;
-        plyPV.gameObject.transform.rotation = tarRot;
     }
 
     [PunRPC]
@@ -375,6 +427,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Destroy(targetPropRef);
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                RotLocked = false;
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         } else {
@@ -397,6 +450,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             string propToSpawn = targetPropBackup.ToString();
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity);
+                RotLocked = false;
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
@@ -474,6 +528,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Destroy(targetProp);
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                RotLocked = false;
             }
             //The rest gets handled on a callback from photon instantiation.
         } else {
@@ -525,6 +580,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
+                RotLocked = false;
             }
         }
     }

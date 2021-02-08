@@ -49,6 +49,7 @@ MonoBehaviour:
   - RPC_UnlockRotationOverNetwork
   - RPC_UpdatePlayerSpawnedInCount
   - RPC_KickBackTakeOverError
+  - RPC_VoidResetPosition
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
