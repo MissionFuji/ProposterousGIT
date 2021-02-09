@@ -7,7 +7,6 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
     public bool isAvailable = true;
     public bool isHostOnly = false;
     public bool isMapCartridge = false;
-    public bool isAlreadyClaimedOverNetwork = false;
     private Rigidbody rb;
 
 
@@ -55,6 +54,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");
             gameObject.transform.localPosition = Vector3.zero;
             //re-enable rigidbody so we can move around again.
+            plyRB.interpolation = RigidbodyInterpolation.Interpolate;
             plyRB.freezeRotation = false;
             plyRB.isKinematic = false;
         }

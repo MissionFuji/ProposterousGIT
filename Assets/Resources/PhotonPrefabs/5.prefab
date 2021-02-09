@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6914055631238083775}
   - component: {fileID: 1613059761805182976}
   - component: {fileID: 2274439823022304023}
+  - component: {fileID: 364362987842193742}
   m_Layer: 0
   m_Name: Cube.005
   m_TagString: Untagged
@@ -81,6 +82,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &364362987842193742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126556782456837096}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 0
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 8
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &3260620233000227980
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,6 +111,7 @@ GameObject:
   - component: {fileID: 6845833398982345501}
   - component: {fileID: 4910332614063415254}
   - component: {fileID: 4992095794114269571}
+  - component: {fileID: 2637632893645471681}
   m_Layer: 0
   m_Name: Cube.003
   m_TagString: Untagged
@@ -163,6 +183,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2637632893645471681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3260620233000227980}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  outlineMode: 0
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 8
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &4418895069991044524
 GameObject:
   m_ObjectHideFlags: 0
@@ -215,7 +253,6 @@ MonoBehaviour:
   isAvailable: 1
   isHostOnly: 0
   isMapCartridge: 0
-  isAlreadyClaimedOverNetwork: 0
 --- !u!54 &4635579211304813626
 Rigidbody:
   m_ObjectHideFlags: 0
