@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
   AppSettings:
-    AppIdRealtime: 6139a2da-fbc5-429f-9b20-ca15abdd85dc
+    AppIdRealtime: 
     AppIdChat: 
     AppIdVoice: 
     AppVersion: 
@@ -27,7 +27,7 @@ MonoBehaviour:
     AuthMode: 0
     EnableLobbyStatistics: 0
     NetworkLogging: 1
-  DevRegion: usw
+  DevRegion: 
   PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
@@ -41,6 +41,7 @@ MonoBehaviour:
   - RPC_ClientConnected
   - RPC_ClientDisconnected
   - RPC_HostLeftCloseRoom
+  - RPC_KickBackTakeOverError
   - RPC_LockRotationOverNetwork
   - RPC_RemovePlayer
   - RPC_RequestPropPermission
@@ -48,7 +49,6 @@ MonoBehaviour:
   - RPC_SetNameTagTarget
   - RPC_UnlockRotationOverNetwork
   - RPC_UpdatePlayerSpawnedInCount
-  - RPC_KickBackTakeOverError
   DisableAutoOpenWizard: 1
   ShowSettings: 0
-  DevRegionSetOnce: 1
+  DevRegionSetOnce: 0
