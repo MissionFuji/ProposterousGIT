@@ -35,7 +35,6 @@ MonoBehaviour:
   RpcList:
   - ClickRpc
   - DestroyRpc
-  - RPC_BecomePropAfterAuthentication
   - RPC_BecomePropFromPreProp
   - RPC_BecomePropFromProp
   - RPC_ClientConnected
@@ -43,12 +42,10 @@ MonoBehaviour:
   - RPC_HostLeftCloseRoom
   - RPC_LockRotationOverNetwork
   - RPC_RemovePlayer
-  - RPC_RequestPropPermission
   - RPC_ResetRotationOverNetwork
   - RPC_SetNameTagTarget
   - RPC_UnlockRotationOverNetwork
   - RPC_UpdatePlayerSpawnedInCount
-  - RPC_KickBackTakeOverError
   - RPC_VoidResetPosition
   DisableAutoOpenWizard: 1
   ShowSettings: 0

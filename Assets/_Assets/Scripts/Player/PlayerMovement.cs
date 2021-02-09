@@ -115,74 +115,82 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
-        }
-
-        //Highlighting Code
-        #region
-        Vector3 fwd = cursorObj.transform.TransformDirection(Vector3.forward);
-        Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.magenta);
-        if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
-            if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
-                if (objectHit.collider.gameObject.layer == 11) { // if it's a regular prop.
-                    GameObject hoveredObject = objectHit.collider.gameObject;
-
-                    //Beginning of each frame, Let's check to see if we're hovering a new object. If not, let's clear last highlight.
-                    if (outlinedObjectRef != null) {
-                        if (outlinedObjectRef != hoveredObject) {
-                            foreach (GameObject obj in highlightList) {
-                                if (obj != null)
-                                    obj.GetComponent<Outline>().enabled = false;
-                            }
-                            highlightList.Clear();
-                        }
-                    }
-
-                    //If we're hovering an object that isn't currently highlighted, let's set up to highlight it.
-                    if (outlinedObjectRef != hoveredObject) {
-                        outlinedObjectRef = hoveredObject;
-                        highlightList.Add(outlinedObjectRef);
-                        outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
-                        AddDescendantsWithTag(outlinedObjectRef.transform, highlightList);
-                    }
 
 
-                    foreach (GameObject obj in highlightList) {
-                        if (obj != null) {
-                            ol = obj.GetComponent<Outline>();
-                            if (outlinePropInt.isAvailable) {
-                                if (ol.enabled != true) {
-                                    ol.enabled = true;
+            //Highlighting Code
+            #region
+            Vector3 fwd = cursorObj.transform.TransformDirection(Vector3.forward);
+            Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.magenta);
+            if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
+                if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
+                    if (objectHit.collider.gameObject.layer == 11) { // if it's a regular prop.
+                        GameObject hoveredObject = objectHit.collider.gameObject;
+
+                        //Beginning of each frame, Let's check to see if we're hovering a new object. If not, let's clear last highlight.
+                        if (outlinedObjectRef != null) {
+                            if (outlinedObjectRef != hoveredObject) {
+                                foreach (GameObject obj in highlightList) {
+                                    if (obj != null)
+                                        obj.GetComponent<Outline>().enabled = false;
                                 }
+                                highlightList.Clear();
+                            }
+                        }
 
-                                if (!outlinePropInt.isHostOnly) {
-                                    if (ol.OutlineColor != Color.white) {
-                                        ol.OutlineColor = Color.white;
+                        //If we're hovering an object that isn't currently highlighted, let's set up to highlight it.
+                        if (outlinedObjectRef != hoveredObject) {
+                            outlinedObjectRef = hoveredObject;
+                            highlightList.Add(outlinedObjectRef);
+                            outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
+                            AddDescendantsWithTag(outlinedObjectRef.transform, highlightList);
+                        }
+
+
+                        foreach (GameObject obj in highlightList) {
+                            if (obj != null) {
+                                ol = obj.GetComponent<Outline>();
+                                if (outlinePropInt.isAvailable) {
+                                    if (ol.enabled != true) {
+                                        ol.enabled = true;
                                     }
-                                } else {
-                                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+
+                                    if (!outlinePropInt.isHostOnly) {
                                         if (ol.OutlineColor != Color.white) {
                                             ol.OutlineColor = Color.white;
                                         }
                                     } else {
-                                        if (ol.OutlineColor != Color.red) {
-                                            ol.OutlineColor = Color.red;
+                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                                            if (ol.OutlineColor != Color.white) {
+                                                ol.OutlineColor = Color.white;
+                                            }
+                                        } else {
+                                            if (ol.OutlineColor != Color.red) {
+                                                ol.OutlineColor = Color.red;
+                                            }
                                         }
                                     }
-                                }
 
-                            } else {
-                                if (ol.enabled != true) {
-                                    ol.enabled = true;
-                                }
-                                if (ol.OutlineColor != Color.red) {
-                                    ol.OutlineColor = Color.red;
+                                } else {
+                                    if (ol.enabled != true) {
+                                        ol.enabled = true;
+                                    }
+                                    if (ol.OutlineColor != Color.red) {
+                                        ol.OutlineColor = Color.red;
+                                    }
                                 }
                             }
                         }
+
+
+
                     }
-
-
-
+                } else {
+                    if (outlinedObjectRef != null) {
+                        foreach (GameObject obj in highlightList) {
+                            if (obj != null)
+                                obj.GetComponent<Outline>().enabled = false;
+                        }
+                    }
                 }
             } else {
                 if (outlinedObjectRef != null) {
@@ -192,78 +200,71 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
-        } else {
-            if (outlinedObjectRef != null) {
-                foreach (GameObject obj in highlightList) {
-                    if (obj != null)
-                        obj.GetComponent<Outline>().enabled = false;
-                }
-            }
-        }
-        #endregion
+            #endregion
 
-        if (Input.GetKeyDown(KeyCode.R)) {
-            if (PPC.moveState == 2) {
-                if (RotLocked) {
-                    RotLocked = false;
-                    rotLockImg.sprite = unlockedSprite;
-                    photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                } else {
-                    RotLocked = true;
-                    rotLockImg.sprite = lockedSprite;
-                    photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                }
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Z)) {
-            if (RotLocked) {
-                photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
-                rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
-                rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
-                Debug.Log("JUMP!");
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.E)) {
-            Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.green);
-            if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
-                if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
-                    PropInteraction propInt;
-                    if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
-                        propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
-                        if (propInt.isAvailable) { // if it does, let's see if prop is available.
-                            if (propInt.isHostOnly) { // Are we the host for this host-only selection?
-                                if (PhotonNetwork.LocalPlayer.IsMasterClient) {
-                                    if (propInt.isMapCartridge) {
-                                        mapToLoadName = propInt.gameObject.name;
-                                        Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
-                                    }
-                                    if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                    }
-                                } else {
-                                    Debug.Log("Tried to take over a host-only prop and a non-host client.");
-                                }
-                            } else { // NOT host-only section.
-                                if (PPC.moveState != 0 || PPC.moveState != 3) {
-                                    if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
-                                        propWeTryToTake = propInt.gameObject;
-                                        propWeTryToTakeName = propWeTryToTake.name;
-                                        BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                    } else {
-                                        Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
-                                    }
-                                }
-                            }
-
-                        } else if (!propInt.isAvailable) {
-                            Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
-                        }
+            if (Input.GetKeyDown(KeyCode.R)) {
+                if (PPC.moveState == 2) {
+                    if (RotLocked) {
+                        RotLocked = false;
+                        rotLockImg.sprite = unlockedSprite;
+                        photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     } else {
-                        Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop is not Posessable.");
+                        RotLocked = true;
+                        rotLockImg.sprite = lockedSprite;
+                        photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    }
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.Z)) {
+                if (RotLocked) {
+                    photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.Space)) {
+                if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
+                    rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
+                    rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
+                    Debug.Log("JUMP!");
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.E)) {
+                Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.green);
+                if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
+                    if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
+                        PropInteraction propInt;
+                        if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
+                            propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
+                            if (propInt.isAvailable) { // if it does, let's see if prop is available.
+                                if (propInt.isHostOnly) { // Are we the host for this host-only selection?
+                                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                                        if (propInt.isMapCartridge) {
+                                            mapToLoadName = propInt.gameObject.name;
+                                            Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
+                                        }
+                                        if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        }
+                                    } else {
+                                        Debug.Log("Tried to take over a host-only prop and a non-host client.");
+                                    }
+                                } else { // NOT host-only section.
+                                    if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                        if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                            propWeTryToTake = propInt.gameObject;
+                                            propWeTryToTakeName = propWeTryToTake.name;
+                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                        } else {
+                                            Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+                                        }
+                                    }
+                                }
+
+                            } else if (!propInt.isAvailable) {
+                                Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+                            }
+                        } else {
+                            Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop is not Posessable.");
+                        }
                     }
                 }
             }
