@@ -56,10 +56,13 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             if (rb == null) {
                 ResetRB();
             }
-            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * 10f);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * 10f);
-            rb.velocity = velocity;
-            rb.angularVelocity = angularVelocity;
+
+            Debug.Log("Sending data:   " + latestPos + "   "  + latestRot + "   " + velocity + "   " + angularVelocity);
+
+            transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
+            rb.velocity = Vector3.Lerp(rb.velocity, velocity, Time.deltaTime * lerpSpeed);
+            rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, angularVelocity, Time.deltaTime * lerpSpeed);
         }
     }
 }
