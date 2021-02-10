@@ -40,7 +40,11 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
             //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
             Destroy(gameObject.GetComponent<Rigidbody>());
-            gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
+
+
+            //gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
+
+
             gameObject.GetComponent<RigidbodyTransformView>().enabled = false;
             //Update PropInteraction on this newly spawned network object.
             gameObject.GetComponent<PropInteraction>().isAvailable = false;

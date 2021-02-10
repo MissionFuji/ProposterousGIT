@@ -477,8 +477,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             float massRef = plyRB.mass;
             string tarPropName = targetProp.name;
             //Clear un-needed network calls on photonview.
-            targetProp.GetPhotonView().ObservedComponents.Clear();
-            targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
+
+
+            //targetProp.GetPhotonView().ObservedComponents.Clear();
+            //targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
+
+
             //Destroy rigidbody before we parent this object.
             Destroy(targetPropRB);
             //freeze our player just before the swap.
@@ -495,14 +499,18 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (!detachingProp.GetComponent<Rigidbody>()) {
                     detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-                    RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
-                    rtv.enabled = true;
+
+
+                    //RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+                    //rtv.enabled = true;
+
+
                     PhotonView detachPropPV = detPropRB.GetComponent<PhotonView>();
                     //We need to make sure the masterclient "owns" these detached props via PhotonView. So we can have better cleanup when the round ends.
                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
                         detachPropPV.RequestOwnership();
                     }
-                    detachPropPV.ObservedComponents.Add(rtv);
+                    //detachPropPV.ObservedComponents.Add(rtv);
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;
@@ -560,10 +568,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (!detachingProp.GetComponent<Rigidbody>()) {
                     detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-                    RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+
+
+                   // RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
                     PhotonView detPropPV = detachingProp.GetComponent<PhotonView>();
-                    rtv.enabled = true;
-                    detPropPV.ObservedComponents.Add(rtv);
+                   // rtv.enabled = true;
+
+
+                    //detPropPV.ObservedComponents.Add(rtv);
+
+
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;
