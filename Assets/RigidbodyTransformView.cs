@@ -39,7 +39,8 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             //We own this player: send the others our data
             if (rb == null) {
                 ResetRB();
-            } else if (propHolder == null) {
+            }
+            if (propHolder == null) {
                 ResetPropHolder();
             }
             //Player
@@ -49,11 +50,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.angularVelocity);
             //Child Prop
             stream.SendNext(isRotLocked);
-            if (isRotLocked) {
-                if (propHolder.transform.childCount > 0) {
-                    stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
-                }
-            }
+            stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
 
 
         } else {
