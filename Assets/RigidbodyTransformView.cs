@@ -10,7 +10,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     Quaternion latestRot;
     Vector3 velocity;
     Vector3 angularVelocity;
-    Quaternion latestPropRot;
+    float latestPropRotY;
     GameObject propHolder;
     [SerializeField]
     float lerpSpeed;
@@ -57,7 +57,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             velocity = (Vector3)stream.ReceiveNext();
             angularVelocity = (Vector3)stream.ReceiveNext();
             //Child Prop
-            latestPropRot = (Quaternion)stream.ReceiveNext();
+            latestPropRotY = (float)stream.ReceiveNext();
 
 
             valuesReceived = true;
@@ -83,7 +83,8 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             //Prop
             //Child Prop
             if (propHolder.transform.childCount > 0) {
-                propHolder.transform.GetChild(0).rotation = Quaternion.Lerp(transform.rotation, latestPropRot, Time.deltaTime * lerpSpeed);
+                float newY = Mathf.Lerp(propHolder.transform.GetChild(0).eulerAngles.y, latestPropRotY, Time.deltaTime * lerpSpeed);
+                propHolder.transform.GetChild(0).eulerAngles = new Vector3(0f, newY, 0f);
             }
 
             // Lerping player's rb values resulted in small amounts of rubber banding. This could likely be tweaked to fix if necessary.
