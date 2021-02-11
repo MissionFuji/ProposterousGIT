@@ -10,7 +10,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     Quaternion latestRot;
     Vector3 velocity;
     Vector3 angularVelocity;
-    float latestPropRotY;
+    Quaternion latestPropRot;
     GameObject propHolder;
     [SerializeField]
     float lerpSpeed;
@@ -50,7 +50,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.angularVelocity);
             //Child Prop
             stream.SendNext(isRotLocked);
-            stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
+            stream.SendNext(propHolder.transform.GetChild(0).transform.rotation);
 
 
         } else {
@@ -61,7 +61,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             angularVelocity = (Vector3)stream.ReceiveNext();
             //Child Prop
             netRotLocked = (bool)stream.ReceiveNext();
-            latestPropRotY = (float)stream.ReceiveNext();
+            latestPropRot = (Quaternion)stream.ReceiveNext();
 
 
             valuesReceived = true;
@@ -90,10 +90,9 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             //Child Prop
             if (netRotLocked) {
                 if (propHolder.transform.childCount > 0) {
-                    float newY = Mathf.Lerp(propHolder.transform.GetChild(0).eulerAngles.y, latestPropRotY, Time.deltaTime * lerpSpeed);
                     Transform child = propHolder.transform.GetChild(0);
                     if (child != null) {
-                        child.eulerAngles = new Vector3(child.eulerAngles.x, newY, child.eulerAngles.z);
+                        child.transform.rotation = Quaternion.Slerp(child.transform.rotation, latestPropRot, Time.deltaTime * lerpSpeed);
                     }
                 }
             }
