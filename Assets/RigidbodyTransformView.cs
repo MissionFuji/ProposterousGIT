@@ -49,7 +49,6 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.velocity);
             stream.SendNext(rb.angularVelocity);
             //Child Prop
-            Debug.Log("Client-side:" + isRotLocked);
             stream.SendNext(isRotLocked);
             stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
 
@@ -87,9 +86,9 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
             //Prop
-            Debug.Log(isRotLocked);
+
             //Child Prop
-            if (isRotLocked) {
+            if (netRotLocked) {
                 if (propHolder.transform.childCount > 0) {
                     float newY = Mathf.Lerp(propHolder.transform.GetChild(0).eulerAngles.y, latestPropRotY, Time.deltaTime * lerpSpeed);
                     Transform child = propHolder.transform.GetChild(0);
