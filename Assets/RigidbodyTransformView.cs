@@ -46,7 +46,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.angularVelocity);
             //Child Prop
             if (propHolder.transform.childCount > 0) {
-                stream.SendNext(propHolder.transform.GetChild(0).rotation);
+                stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
             }
 
 
