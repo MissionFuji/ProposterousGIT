@@ -86,6 +86,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
             //Prop
+            Debug.Log(isRotLocked);
             //Child Prop
             if (isRotLocked) {
                 if (propHolder.transform.childCount > 0) {
