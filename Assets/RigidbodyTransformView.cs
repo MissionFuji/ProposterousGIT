@@ -83,7 +83,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             //Prop
             //Child Prop
             if (propHolder.transform.childCount > 0) {
-                propHolder.transform.GetChild(0).rotation = latestPropRot;
+                propHolder.transform.GetChild(0).rotation = Quaternion.Lerp(transform.rotation, latestPropRot, Time.deltaTime * lerpSpeed);
             }
 
             // Lerping player's rb values resulted in small amounts of rubber banding. This could likely be tweaked to fix if necessary.
