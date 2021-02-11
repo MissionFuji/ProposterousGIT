@@ -212,10 +212,10 @@ GameObject:
   - component: {fileID: 3898077734642573078}
   - component: {fileID: 7650794033554098146}
   - component: {fileID: 4635579211304813626}
-  - component: {fileID: 4491920697007634002}
   - component: {fileID: 1240735845701454525}
   - component: {fileID: 798260301525742928}
   - component: {fileID: 6820231369257571809}
+  - component: {fileID: 3620379578978435719}
   m_Layer: 11
   m_Name: 5
   m_TagString: Untagged
@@ -269,19 +269,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4491920697007634002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4418895069991044524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b713282856f26e4eb1b64ecc2f68b00, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lerpSpeed: 20
 --- !u!114 &1240735845701454525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,7 +287,7 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 1
   ObservedComponents:
-  - {fileID: 4491920697007634002}
+  - {fileID: 3620379578978435719}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -335,3 +322,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 2.950919, y: 1.3926747, z: 1.8557657}
   m_Center: {x: 0.0119514465, y: 0.6463374, z: -0.014577448}
+--- !u!114 &3620379578978435719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4418895069991044524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SynchronizePosition: 1
+  m_SynchronizeRotation: 1
+  m_SynchronizeScale: 0
