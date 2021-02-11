@@ -206,10 +206,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (PPC.moveState == 2) {
                     if (RotLocked) {
                         RotLocked = false;
+                        gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = false;
                         rotLockImg.sprite = unlockedSprite;
                         photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     } else {
                         RotLocked = true;
+                        gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = true;
                         rotLockImg.sprite = lockedSprite;
                         photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     }
@@ -481,7 +483,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             //targetProp.GetPhotonView().ObservedComponents.Clear();
             //targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
-
 
             //Destroy rigidbody before we parent this object.
             Destroy(targetPropRB);

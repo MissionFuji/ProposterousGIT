@@ -15,6 +15,9 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
     [SerializeField]
     float lerpSpeed;
 
+    public bool isRotLocked = false;
+    bool netRotLocked = false;
+
     bool valuesReceived = false;
 
     void Awake() {
@@ -45,8 +48,11 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.velocity);
             stream.SendNext(rb.angularVelocity);
             //Child Prop
-            if (propHolder.transform.childCount > 0) {
-                stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
+            stream.SendNext(isRotLocked);
+            if (isRotLocked) {
+                if (propHolder.transform.childCount > 0) {
+                    stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
+                }
             }
 
 
@@ -57,6 +63,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             velocity = (Vector3)stream.ReceiveNext();
             angularVelocity = (Vector3)stream.ReceiveNext();
             //Child Prop
+            netRotLocked = (bool)stream.ReceiveNext();
             latestPropRotY = (float)stream.ReceiveNext();
 
 
@@ -73,18 +80,24 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             //Player
             if (rb == null) {
                 ResetRB();
-            } else if (propHolder == null) {
+            }
+            if (propHolder == null) {
                 ResetPropHolder();
             }
             transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed); 
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
             //Prop
             //Child Prop
-            if (propHolder.transform.childCount > 0) {
-                float newY = Mathf.Lerp(propHolder.transform.GetChild(0).eulerAngles.y, latestPropRotY, Time.deltaTime * lerpSpeed);
-                propHolder.transform.GetChild(0).eulerAngles = new Vector3(0f, newY, 0f);
+            if (isRotLocked) {
+                if (propHolder.transform.childCount > 0) {
+                    float newY = Mathf.Lerp(propHolder.transform.GetChild(0).eulerAngles.y, latestPropRotY, Time.deltaTime * lerpSpeed);
+                    Transform child = propHolder.transform.GetChild(0);
+                    if (child != null) {
+                        child.eulerAngles = new Vector3(child.eulerAngles.x, newY, child.eulerAngles.z);
+                    }
+                }
             }
 
             // Lerping player's rb values resulted in small amounts of rubber banding. This could likely be tweaked to fix if necessary.
