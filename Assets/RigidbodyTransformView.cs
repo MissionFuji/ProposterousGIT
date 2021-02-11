@@ -49,6 +49,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.velocity);
             stream.SendNext(rb.angularVelocity);
             //Child Prop
+            Debug.Log("Client-side:" + isRotLocked);
             stream.SendNext(isRotLocked);
             stream.SendNext(propHolder.transform.GetChild(0).eulerAngles.y);
 
