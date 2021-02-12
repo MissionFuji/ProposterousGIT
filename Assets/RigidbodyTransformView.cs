@@ -79,7 +79,7 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             if (propHolder == null) {
                 ResetPropHolder();
             }
-            // Update Transform and physics.
+            // Update Transform and Physics under same update cycle. If we put transform changes under regular update, this causes the movement to become in-organic.
             transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed); 
             rb.velocity = velocity;

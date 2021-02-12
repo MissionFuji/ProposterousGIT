@@ -1,38 +1,41 @@
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
-using UnityEngine.UI;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
-    private PhotonView pv;
-    private CameraController camController;
-    private PlayerPropertiesController PPC;
+    // Modifiable in editor, invisible to cheaters.
     [SerializeField]
     private float rotSpeed = 0.1f;
     [SerializeField]
     private LayerMask groudLayer;
     [SerializeField]
     private float playerSpeed = 2.0f;
-    private GameObject mmc;
-    private float turnSmoothVelocity;
-    private Rigidbody rb;
-    private Transform mmcCamTransRef;
     [SerializeField]
     private float jumpForce;
     [SerializeField]
     private float rotForce;
-    private GameObject ourRaycastTargerObj;
-    private string ourPreviousProp;
     [SerializeField]
     private bool RotLocked = false;
     [SerializeField]
     private int takeOverRange;
+    [SerializeField]
+    private LayerMask PropInteraction;
+
+    private PhotonView pv;
+    private CameraController camController;
+    private PlayerPropertiesController PPC;
+    private GameObject mmc;
+    private float turnSmoothVelocity;
+    private Rigidbody rb;
+    private Transform mmcCamTransRef;
+    private GameObject ourRaycastTargerObj;
+    private string ourPreviousProp;
     private RaycastHit objectHit;
-    [SerializeField] private LayerMask PropInteraction;
     private GameObject cursorObj;
 
     //used only for outline in update.
@@ -97,8 +100,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
             yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
-            //angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, mmcCamTransRef.eulerAngles.y, ref turnSmoothVelocity, rotSpeed);
-            //angle = Mathf.Lerp(transform.eulerAngles.y, mmcCamTransRef.eulerAngles.y, Time.deltaTime * rotSpeed);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
             if (PPC.moveState == 1) {
                 if (rotPropHolder.transform.childCount > 0) {
@@ -449,6 +450,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's temporarily freeze our player and keep it where it is. This is due to a dupe.
             plyRB.velocity = Vector3.zero;
             plyRB.isKinematic = true;
+
             //We need to use a backup string to instantiate our prop, as it was destroyed or stolen from us.
             string propToSpawn = targetPropBackup.ToString();
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer",  let's make sure we can't highlight ourself by setting our layer to default.
@@ -465,6 +467,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         //Store data for current prop/player.
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
+            //Setup needed vars.
             GameObject targetProp = tarPropPV.gameObject;
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
@@ -478,41 +481,57 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Vector3 propTempPos = targetProp.transform.position;
             float massRef = plyRB.mass;
             string tarPropName = targetProp.name;
+
             //Clear un-needed network calls on photonview.
-
-
-            //targetProp.GetPhotonView().ObservedComponents.Clear();
-            //targetProp.GetComponent<RigidbodyTransformView>().enabled = false;
+            targetProp.GetPhotonView().ObservedComponents.Clear();
+            targetProp.GetComponent<PropRigidbodyTransformView>().enabled = false;
 
             //Destroy rigidbody before we parent this object.
             Destroy(targetPropRB);
+
             //freeze our player just before the swap.
             plyRB.velocity = Vector3.zero;
             plyRB.isKinematic = true;
+
             //Now we detach our current prop and unparent it.
             int childrenDetached = 0;
             GameObject detachingProp = null;
-            foreach (Transform child in propHolder.transform) {
-                child.parent = null;
-                detachingProp = child.gameObject;
-                detachingProp.layer = 11;
 
+            foreach (Transform child in propHolder.transform) {
+                //Unparent Object.
+                child.parent = null;
+                //Add reference to detaching object.
+                detachingProp = child.gameObject;
+                //re-add the object to propInteraction layer for highlights.
+                detachingProp.layer = 11;
+                // Check to see if the prop doesn't have a rigidbody before we fully detach. (At this point, prop SHOULD NOT have a rigidbody. We should add one before detach) 
                 if (!detachingProp.GetComponent<Rigidbody>()) {
-                    detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+
+                    //re-adding rb to detaching prop.
+                    detachingProp.AddComponent<Rigidbody>();
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
 
+                    //Make sure we re-enable the networking script directly.
+                    PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
+                    if (prtv != null) {
+                        prtv.enabled = true;
+                    } else {
+                        Debug.LogError("Detaching prop did not have a PRTV on it!");
+                    }
 
-                    //RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
-                    //rtv.enabled = true;
-
-
+                    //Make a reference to the PV on the object.
                     PhotonView detachPropPV = detPropRB.GetComponent<PhotonView>();
+                    //Ensure the prop's PV is observing and update position/rot/physics over the network.
+                    detachPropPV.ObservedComponents.Add(prtv);
+
                     //We need to make sure the masterclient "owns" these detached props via PhotonView. So we can have better cleanup when the round ends.
                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
                         detachPropPV.RequestOwnership();
                     }
-                    //detachPropPV.ObservedComponents.Add(rtv);
+
+                    //Run a function on the PropInteraction Script to make sure RigidBody is enabled.
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                    //Apply RB momentum and velocities and unfreeze RB before we do that.
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;
                     detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
@@ -520,11 +539,15 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 } else {
                     Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
                 }
+
+                //Set prop to be available for takeover across the network.
                 detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+                //Track how many children we detach. If we find ourselves detaching more than one child, that's an issue.
                 childrenDetached++;
                 if (childrenDetached > 1) {
                     Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
                 }
+
             }
             //Now we move our player to the target prop location. Player has already been "frozen".
             changingPly.transform.position = targetProp.transform.position;
@@ -535,16 +558,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     propToSpawn += c;
                 }
             }
+            //Destroy the target prop we're attempting to take over.
             Destroy(targetProp);
+            //Spawn a new prop to take over!
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                //After spawning the prop, we disable rotation lock. 
                 RotLocked = false;
             }
             //The rest gets handled on a callback from photon instantiation.
         } else {
             Debug.LogWarning("PROP TAKEOVER FAILSAFE: Prop you tried to take was unavailable. Creating a copy for you.");
 
-            //Setup initially needed references.
+            //Setup initially needed vars.
             GameObject changingPly = PhotonView.Find(changingPlyID).gameObject;
             GameObject propHolder = changingPly.transform.Find("PropHolder").gameObject;
             GameObject newNetworkProp = null;
@@ -559,27 +585,33 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             plyRB.velocity = Vector3.zero;
             plyRB.isKinematic = true;
 
-            //Now we detach our current prop and unparent it.
+            //We're going to need to count how many props we detach and make a var for them.
             int childrenDetached = 0;
             GameObject detachingProp = null;
+            //Loop through all children props, we really should only have one. BUT, just in-case...
             foreach (Transform child in propHolder.transform) {
+                //Unparent prop.
                 child.parent = null;
+                //Set reference to detaching prop.
                 detachingProp = child.gameObject;
+                //Set prop layer to PropInteraction Layer to make sure we highlight it after it's detached.
                 detachingProp.layer = 11;
+                //Check to see if we have a rigidbody on the detaching object. We shouldn't, so let's add one.
                 if (!detachingProp.GetComponent<Rigidbody>()) {
-                    detachingProp.AddComponent<Rigidbody>(); //re-adding rb to detaching prop.
+
+                    //re-adding rb to detaching prop.
+                    detachingProp.AddComponent<Rigidbody>(); 
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-
-
-                   // RigidbodyTransformView rtv = detPropRB.GetComponent<RigidbodyTransformView>();
+                    //Re-enable networked movement/physics script on object.
+                    PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
+                    prtv.enabled = true;
+                    //Get reference to prop's PV.
                     PhotonView detPropPV = detachingProp.GetComponent<PhotonView>();
-                   // rtv.enabled = true;
-
-
-                    //detPropPV.ObservedComponents.Add(rtv);
-
-
+                    //Set that networking script to be observed over the network.
+                    detPropPV.ObservedComponents.Add(prtv);
+                    //Make sure this detached prop has a RB, so we run a function under PropInteraction to ensure this.
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                    //Set values of newly added RB. Add velocities after we unfreeze it.
                     detPropRB.isKinematic = false;
                     detPropRB.mass = massRef;
                     detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
@@ -587,17 +619,22 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 } else {
                     Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
                 }
+                //Make sure the newly detached prop is available over the network.
                 detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+                //We need to count the children we detach. It should never detach more than one child. If we do, that's an issue.
                 childrenDetached++;
                 if (childrenDetached > 1) {
                     Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
                 }
             }
 
+            //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the "tarPlayer"
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
+                //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
                 RotLocked = false;
             }
+            //The rest gets handled from the PropInteraction script on the object when it spawn. This will parent it to us.
         }
     }
 

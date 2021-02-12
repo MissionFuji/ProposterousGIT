@@ -31,32 +31,37 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
 
     void IPunInstantiateMagicCallback.OnPhotonInstantiate(PhotonMessageInfo info) {
+
+        /* THIS ENTIRE SECTION IS FOR WHEN YOU BECOME A PROP. WE SPAWN A NEW PROP BEFORE WE TAKE IT OVER */
         if (gameObject.GetComponent<PropInteraction>()) { // Are we a prop? 
-
             //This is used for when a new prop is PhotonNetwork.Instantiated for the sake of being taken-over. 
-
             Debug.Log(info.Sender.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
+
+            //Build our vars.
+            //PhotonNetwork let's us save a networked reference of any object we want on the PhotonPlayer level. So each players saves a reference of their Player GameObject.
             GameObject plyObject = (GameObject)info.Sender.TagObject;
             Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
-            //We need to destroy the rigidbody, disable rigidbodytransformview, and clear observed components on photonview.
+
+            //We need to destroy the rigidbody, disable proprigidbodytransformview, and clear observed components on photonview.
             Destroy(gameObject.GetComponent<Rigidbody>());
-
-
-            //gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
-            //gameObject.GetComponent<RigidbodyTransformView>().enabled = false;
+            gameObject.GetComponent<PhotonView>().ObservedComponents.Clear();
+            gameObject.GetComponent<PropRigidbodyTransformView>().enabled = false;
 
             //Update PropInteraction on this newly spawned network object.
             gameObject.GetComponent<PropInteraction>().isAvailable = false;
-            //We make sure the prop is on PropInteraction layer. Unless we're the owner, then we remove it.
+
+            //We make sure the prop is on PropInteraction layer. Unless we're the owner, then we remove it so we don't highlight our own prop.
             if (info.Sender.IsLocal) {
                 gameObject.layer = 0;
             } else {
                 gameObject.layer = 11;
             }
+
             //Prop takeover, parent, then apply transforms to it.
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");
             gameObject.transform.localPosition = Vector3.zero;
-            //re-enable rigidbody so we can move around again.
+
+            //re-enable -PLAYER- rigidbody so we can move around again.
             plyRB.interpolation = RigidbodyInterpolation.Interpolate;
             plyRB.freezeRotation = false;
             plyRB.isKinematic = false;
