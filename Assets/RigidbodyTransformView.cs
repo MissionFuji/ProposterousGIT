@@ -1,5 +1,4 @@
 using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine;
 
 public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
@@ -69,25 +68,20 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
         }
     }
 
-
-    void FixedUpdate()
-    {
+    private void Update() {
         if (!pv.IsMine && valuesReceived) {
-            //Update Object position and Rigidbody parameters
-            //Player
+            // Let's make sure var don't come back null.
             if (rb == null) {
                 ResetRB();
             }
             if (propHolder == null) {
                 ResetPropHolder();
             }
+            // We move the position and modify rotation under Update.
             transform.position = Vector3.Lerp(transform.position, latestPos, Time.deltaTime * lerpSpeed);
-            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed); 
-            rb.velocity = velocity;
-            rb.angularVelocity = angularVelocity;
-            //Prop
+            transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
 
-            //Child Prop
+            //Child Prop. We update this rotation over Update as well as it is not a physics change.
             if (netRotLocked) {
                 if (propHolder.transform.childCount > 0) {
                     Transform child = propHolder.transform.GetChild(0);
@@ -96,6 +90,23 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
                     }
                 }
             }
+        }
+    }
+
+
+    void FixedUpdate()
+    {
+        if (!pv.IsMine && valuesReceived) {
+            // Let's make sure var don't come back null.
+            if (rb == null) {
+                ResetRB();
+            }
+            if (propHolder == null) {
+                ResetPropHolder();
+            }
+            // Update out physics changes under fixed update.
+            rb.velocity = velocity;
+            rb.angularVelocity = angularVelocity;
 
             // Lerping player's rb values resulted in small amounts of rubber banding. This could likely be tweaked to fix if necessary.
             //rb.velocity = Vector3.Lerp(rb.velocity, velocity, Time.deltaTime * lerpSpeed);
