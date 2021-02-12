@@ -61,6 +61,9 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");
             gameObject.transform.localPosition = Vector3.zero;
 
+            //Let's give it a tag so we can better check against other objects in other scripts.
+            gameObject.tag = "AttachedProp";
+
             //re-enable -PLAYER- rigidbody so we can move around again.
             plyRB.interpolation = RigidbodyInterpolation.Interpolate;
             plyRB.freezeRotation = false;

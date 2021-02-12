@@ -26,19 +26,19 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
-            if (stream.IsWriting) {
-                stream.SendNext(transform.position);
-                stream.SendNext(transform.rotation);
-                stream.SendNext(rb.velocity);
-                stream.SendNext(rb.angularVelocity);
-            } else {
-                latestPos = (Vector3)stream.ReceiveNext();
-                latestRot = (Quaternion)stream.ReceiveNext();
-                velocity = (Vector3)stream.ReceiveNext();
-                angularVelocity = (Vector3)stream.ReceiveNext();
+        if (stream.IsWriting) {
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+            stream.SendNext(rb.velocity);
+            stream.SendNext(rb.angularVelocity);
+        } else {
+            latestPos = (Vector3)stream.ReceiveNext();
+            latestRot = (Quaternion)stream.ReceiveNext();
+            velocity = (Vector3)stream.ReceiveNext();
+            angularVelocity = (Vector3)stream.ReceiveNext();
 
-                valuesReceived = true;
-            }
+            valuesReceived = true;
+        }
     }
 
 
@@ -55,6 +55,33 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.gameObject != null) {
+            if (other.gameObject.tag == "AttachedProp") {
+                if (other.GetComponent<PhotonView>().Owner.IsLocal) {
+                    PhotonView touchingPV = other.GetComponent<PhotonView>();
+                    Debug.Log("Taking ownership of this prop so we can manipulate it client-side better.");
+                    touchingPV.RequestOwnership();
+                }
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.gameObject != null) {
+            if (other.gameObject.tag == "AttachedProp") {
+                if (other.GetComponent<PhotonView>().Owner.IsLocal) {
+                    PhotonView touchingPV = other.GetComponent<PhotonView>();
+                    PhotonView propPV = gameObject.GetComponent<PhotonView>();
+                    if (touchingPV.Owner == propPV.Owner) {
+                        Debug.Log("Transfered ownership back to the host.");
+                        touchingPV.TransferOwnership(PhotonNetwork.MasterClient);
+                    }
+                }
+            }
         }
     }
 }

@@ -178,20 +178,41 @@ Transform:
   m_Father: {fileID: 3949736360279864741}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &6391779054856863691
-CapsuleCollider:
+--- !u!65 &3346284845731065042
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7830150080657481706}
-  m_Material: {fileID: 13400000, guid: 10560073cb8b91b4483f6a72ef91f026, type: 2}
+  m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 3.05
-  m_Direction: 1
-  m_Center: {x: 0, y: 1.27, z: 0}
+  serializedVersion: 2
+  m_Size: {x: 1, y: 2.42, z: 1}
+  m_Center: {x: 0, y: 1.17, z: 0}
+--- !u!114 &4212119586248908361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7830150080657481706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 0
+  OwnershipTransfer: 0
+  ObservedComponents:
+  - {fileID: 0}
+  viewIdField: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &8300729997953124450
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,6 +310,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: a51f7b4d222ec354fbb6c05ecd160a99, type: 3}
       propertyPath: m_Name
       value: Character Model Smooth 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a51f7b4d222ec354fbb6c05ecd160a99, type: 3}
+      propertyPath: m_TagString
+      value: AttachedProp
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 5866666021909216657, guid: a51f7b4d222ec354fbb6c05ecd160a99, type: 3}

@@ -504,6 +504,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 detachingProp = child.gameObject;
                 //re-add the object to propInteraction layer for highlights.
                 detachingProp.layer = 11;
+                //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
+                detachingProp.tag = "Untagged";
                 // Check to see if the prop doesn't have a rigidbody before we fully detach. (At this point, prop SHOULD NOT have a rigidbody. We should add one before detach) 
                 if (!detachingProp.GetComponent<Rigidbody>()) {
 
@@ -596,6 +598,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 detachingProp = child.gameObject;
                 //Set prop layer to PropInteraction Layer to make sure we highlight it after it's detached.
                 detachingProp.layer = 11;
+                //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
+                detachingProp.tag = "Untagged";
                 //Check to see if we have a rigidbody on the detaching object. We shouldn't, so let's add one.
                 if (!detachingProp.GetComponent<Rigidbody>()) {
 

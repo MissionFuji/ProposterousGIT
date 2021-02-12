@@ -17,6 +17,7 @@ TagManager:
   - CamFollowTarget
   - mmcCamHelper
   - RootCanvas
+  - AttachedProp
   layers:
   - Default
   - TransparentFX
