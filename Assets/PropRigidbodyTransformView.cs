@@ -1,4 +1,5 @@
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
@@ -61,25 +62,11 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
     private void OnTriggerEnter(Collider other) {
         if (other.gameObject != null) {
             if (other.gameObject.tag == "AttachedProp") {
-                if (other.GetComponent<PhotonView>().Owner.IsLocal) {
-                    PhotonView touchingPV = other.GetComponent<PhotonView>();
+                //We need to get the PV of the player itself.
+                PhotonView playPV = other.gameObject.transform.parent.transform.parent.GetComponent<PhotonView>();
+                if (playPV.Owner.IsLocal) {
                     Debug.Log("Taking ownership of this prop so we can manipulate it client-side better.");
-                    touchingPV.RequestOwnership();
-                }
-            }
-        }
-    }
-
-    private void OnTriggerExit(Collider other) {
-        if (other.gameObject != null) {
-            if (other.gameObject.tag == "AttachedProp") {
-                if (other.GetComponent<PhotonView>().Owner.IsLocal) {
-                    PhotonView touchingPV = other.GetComponent<PhotonView>();
-                    PhotonView propPV = gameObject.GetComponent<PhotonView>();
-                    if (touchingPV.Owner == propPV.Owner) {
-                        Debug.Log("Transfered ownership back to the host.");
-                        touchingPV.TransferOwnership(PhotonNetwork.MasterClient);
-                    }
+                    playPV.RequestOwnership();
                 }
             }
         }
