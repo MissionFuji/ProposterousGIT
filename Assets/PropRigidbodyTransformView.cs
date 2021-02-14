@@ -1,5 +1,4 @@
 using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine;
 
 public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
@@ -56,19 +55,6 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
-        }
-    }
-
-    private void OnTriggerEnter(Collider other) {
-        if (other.gameObject != null) {
-            if (other.gameObject.tag == "AttachedProp") {
-                //We need to get the PV of the player itself.
-                PhotonView playPV = other.gameObject.transform.parent.transform.parent.GetComponent<PhotonView>();
-                if (playPV.Owner.IsLocal) {
-                    Debug.Log("Taking ownership of this prop so we can manipulate it client-side better.");
-                    playPV.RequestOwnership();
-                }
-            }
         }
     }
 }
