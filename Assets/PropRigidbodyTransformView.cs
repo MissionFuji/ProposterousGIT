@@ -27,25 +27,23 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
         if (stream.IsWriting) {
-            if (pv.Owner.IsMasterClient) {
-                stream.SendNext(transform.position);
-                stream.SendNext(transform.rotation);
-                stream.SendNext(rb.velocity);
-                stream.SendNext(rb.angularVelocity);
-            }
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+            stream.SendNext(rb.velocity);
+            stream.SendNext(rb.angularVelocity);
         } else {
-                latestPos = (Vector3)stream.ReceiveNext();
-                latestRot = (Quaternion)stream.ReceiveNext();
-                velocity = (Vector3)stream.ReceiveNext();
-                angularVelocity = (Vector3)stream.ReceiveNext();
+            latestPos = (Vector3)stream.ReceiveNext();
+            latestRot = (Quaternion)stream.ReceiveNext();
+            velocity = (Vector3)stream.ReceiveNext();
+            angularVelocity = (Vector3)stream.ReceiveNext();
 
-                valuesReceived = true;
+            valuesReceived = true;
         }
     }
 
 
     void FixedUpdate() {
-        if (!pv.Owner.IsMasterClient && valuesReceived) {
+        if (!pv.IsMine && valuesReceived) {
             //Let's make sure our vars are up-to-date and gtg.
             if (rb == null) {
                 ResetRB();
@@ -57,6 +55,19 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
             transform.rotation = Quaternion.Lerp(transform.rotation, latestRot, Time.deltaTime * lerpSpeed);
             rb.velocity = velocity;
             rb.angularVelocity = angularVelocity;
+        }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.gameObject != null) {
+            if (other.gameObject.tag == "AttachedProp") {
+                //We need to get the PV of the player itself.
+                PhotonView playPV = other.gameObject.transform.parent.transform.parent.GetComponent<PhotonView>();
+                if (playPV.Owner.IsLocal) {
+                    Debug.Log("Taking ownership of this prop so we can manipulate it client-side better.");
+                    playPV.RequestOwnership();
+                }
+            }
         }
     }
 }
