@@ -63,8 +63,7 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
             if (other.gameObject.tag == "AttachedProp") {
                 //We need to get the PV of the player itself.
                 PhotonView playPV = other.gameObject.transform.parent.transform.parent.GetComponent<PhotonView>();
-                if (playPV.Owner.IsLocal) {
-                    Debug.Log("Taking ownership of this prop so we can manipulate it client-side better.");
+                if (playPV.Owner.IsLocal && (playPV.Owner != pv.Owner)) {
                     pv.RequestOwnership();
                 }
             }

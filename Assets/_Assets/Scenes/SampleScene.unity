@@ -14357,6 +14357,10 @@ PrefabInstance:
       propertyPath: viewIdField
       value: 14
       objectReference: {fileID: 0}
+    - target: {fileID: 2377229661786771738, guid: e1cf4ef2f9a870d4b9f301c1161c304e, type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2377229661786771741, guid: e1cf4ef2f9a870d4b9f301c1161c304e, type: 3}
       propertyPath: m_Name
       value: 7
