@@ -27,23 +27,25 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
         if (stream.IsWriting) {
-            stream.SendNext(transform.position);
-            stream.SendNext(transform.rotation);
-            stream.SendNext(rb.velocity);
-            stream.SendNext(rb.angularVelocity);
+            if (pv.Owner.IsMasterClient) {
+                stream.SendNext(transform.position);
+                stream.SendNext(transform.rotation);
+                stream.SendNext(rb.velocity);
+                stream.SendNext(rb.angularVelocity);
+            }
         } else {
-            latestPos = (Vector3)stream.ReceiveNext();
-            latestRot = (Quaternion)stream.ReceiveNext();
-            velocity = (Vector3)stream.ReceiveNext();
-            angularVelocity = (Vector3)stream.ReceiveNext();
+                latestPos = (Vector3)stream.ReceiveNext();
+                latestRot = (Quaternion)stream.ReceiveNext();
+                velocity = (Vector3)stream.ReceiveNext();
+                angularVelocity = (Vector3)stream.ReceiveNext();
 
-            valuesReceived = true;
+                valuesReceived = true;
         }
     }
 
 
     void FixedUpdate() {
-        if (!pv.IsMine && valuesReceived) {
+        if (!pv.Owner.IsMasterClient && valuesReceived) {
             //Let's make sure our vars are up-to-date and gtg.
             if (rb == null) {
                 ResetRB();
