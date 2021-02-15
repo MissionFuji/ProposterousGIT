@@ -35,11 +35,16 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
         /* THIS ENTIRE SECTION IS FOR WHEN YOU BECOME A PROP. WE SPAWN A NEW PROP BEFORE WE TAKE IT OVER */
         if (gameObject.GetComponent<PropInteraction>()) { // Are we a prop? 
             //This is used for when a new prop is PhotonNetwork.Instantiated for the sake of being taken-over. 
-            Debug.Log(info.Sender.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
+
+            //Unpack the data we sent when we had the MasterClient instantiate this object.
+            object[] instData = info.photonView.InstantiationData;
+            int targetPlayerID = (int)instData[0];
+            PhotonView targetPlayerPV = PhotonView.Find(targetPlayerID);
+
+            Debug.Log(targetPlayerPV.Owner.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
 
             //Build our vars.
-            //PhotonNetwork let's us save a networked reference of any object we want on the PhotonPlayer level. So each players saves a reference of their Player GameObject.
-            GameObject plyObject = (GameObject)info.Sender.TagObject;
+            GameObject plyObject = targetPlayerPV.gameObject;
             Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
 
             //We need to destroy the rigidbody, disable proprigidbodytransformview, and clear observed components on photonview.
@@ -56,6 +61,9 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             } else {
                 gameObject.layer = 11;
             }
+
+            //Let's make sure our player "owns" the prop after our MC has spawned it.
+            targetPlayerPV.RequestOwnership();
 
             //Prop takeover, parent, then apply transforms to it.
             gameObject.transform.parent = plyObject.transform.Find("PropHolder");

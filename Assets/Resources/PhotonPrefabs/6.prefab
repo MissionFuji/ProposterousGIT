@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 7215448055995135735}
   - component: {fileID: 7215448055995135734}
   - component: {fileID: 7215448055995135733}
-  - component: {fileID: 6074721367762570430}
+  - component: {fileID: 8706937261468326400}
   m_Layer: 11
   m_Name: 6
   m_TagString: Untagged
@@ -105,7 +105,7 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   ObservedComponents:
-  - {fileID: 6074721367762570430}
+  - {fileID: 8706937261468326400}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -171,7 +171,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 7.2821302, y: 16.355576, z: 7.0520945}
   m_Center: {x: 0.04204433, y: 8.100775, z: -0.3715734}
---- !u!114 &6074721367762570430
+--- !u!114 &8706937261468326400
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -180,9 +180,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7215448055995135732}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Script: {fileID: 11500000, guid: 22c26e7e19b7db94baba12bc373d5ae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SynchronizePosition: 1
-  m_SynchronizeRotation: 1
-  m_SynchronizeScale: 0
+  lerpSpeed: 6

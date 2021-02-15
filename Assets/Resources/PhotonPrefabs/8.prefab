@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 9042409503380882690}
   - component: {fileID: 9042409503380882689}
   - component: {fileID: 9042409503380882688}
-  - component: {fileID: 7267214620793844080}
+  - component: {fileID: 3274657672963987748}
   m_Layer: 11
   m_Name: 8
   m_TagString: Untagged
@@ -105,7 +105,7 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   ObservedComponents:
-  - {fileID: 7267214620793844080}
+  - {fileID: 3274657672963987748}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -172,7 +172,7 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 2534964839176971238, guid: acc1796b5f19d034da47ffa8b0911e5c, type: 3}
---- !u!114 &7267214620793844080
+--- !u!114 &3274657672963987748
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -181,9 +181,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 9042409503380882703}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 627855c7f81362d41938ffe0b1475957, type: 3}
+  m_Script: {fileID: 11500000, guid: 22c26e7e19b7db94baba12bc373d5ae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SynchronizePosition: 1
-  m_SynchronizeRotation: 1
-  m_SynchronizeScale: 0
+  lerpSpeed: 6
