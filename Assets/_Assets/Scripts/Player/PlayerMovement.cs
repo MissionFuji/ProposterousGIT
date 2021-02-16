@@ -237,7 +237,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         PropInteraction propInt;
                         if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
                             propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
-                            if (propInt.isAvailable) { // if it does, let's see if prop is available.
+                            if (propInt.isAvailable) { // let's see if prop is available.
                                 if (propInt.isHostOnly) { // Are we the host for this host-only selection?
                                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
                                         if (propInt.isMapCartridge) {
@@ -434,15 +434,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
-            // We need to store object data and send it through photonnetwork.instantiate because we need to reference out player.
-            object[] InitData = new object[]
-            {
-                changingPly.GetPhotonView().ViewID
-            };
-
             //Let's spawn a prop now that we detached the old prop.
-            if (PhotonNetwork.IsMasterClient) { //If we are the MasterClient. We need to instantiate ALL props from MC, as they get deleted when the client leaves if they spawn them in.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, InitData);
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and target player.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
@@ -471,15 +465,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
-            // We need to store object data and send it through photonnetwork.instantiate because we need to reference out player.
-            object[] InitData = new object[]
-            {
-                changingPly.GetPhotonView().ViewID
-            };
-
             //Let's spawn a prop now that we detached the old prop.
-            if (PhotonNetwork.IsMasterClient) { //If we are the MasterClient. We need to instantiate ALL props from MC, as they get deleted when the client leaves if they spawn them in.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity, 0, InitData);
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and the target player.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
@@ -592,15 +580,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
-            // We need to store object data and send it through photonnetwork.instantiate because we need to reference out player.
-            object[] InitData = new object[]
-            {
-                changingPly.GetPhotonView().ViewID
-            };
-
             //Let's spawn a prop now that we detached the old prop.
-            if (PhotonNetwork.IsMasterClient) { //If we are the MasterClient. We need to instantiate ALL props from MC, as they get deleted when the client leaves if they spawn them in.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, InitData);
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             //The rest gets handled on a callback from photon instantiation.
@@ -672,15 +654,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
-            // We need to store object data and send it through photonnetwork.instantiate because we need to reference out player.
-            object[] InitData = new object[]
-            {
-                changingPly.GetPhotonView().ViewID
-            };
-
             //Let's spawn a prop now that we detached the old prop.
-            if (PhotonNetwork.IsMasterClient) { //If we are the MasterClient. We need to instantiate ALL props from MC, as they get deleted when the client leaves if they spawn them in.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity, 0, InitData);
+            if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
 
