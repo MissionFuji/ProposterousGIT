@@ -27,6 +27,9 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
         if (stream.IsWriting) {
+            if (rb == null) {
+                ResetRB();
+            }
             stream.SendNext(transform.position);
             stream.SendNext(transform.rotation);
             stream.SendNext(rb.velocity);
