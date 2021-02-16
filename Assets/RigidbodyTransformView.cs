@@ -49,7 +49,9 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
             stream.SendNext(rb.angularVelocity);
             //Child Prop
             stream.SendNext(isRotLocked);
-            stream.SendNext(propHolder.transform.GetChild(0).transform.rotation);
+            if (propHolder.transform.childCount > 0) { //There are very short windows where there wont be a child for a few frames. That's why we need this.
+                stream.SendNext(propHolder.transform.GetChild(0).transform.rotation);
+            }
 
 
         } else {
