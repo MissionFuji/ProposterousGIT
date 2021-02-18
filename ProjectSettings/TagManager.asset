@@ -18,6 +18,9 @@ TagManager:
   - mmcCamHelper
   - RootCanvas
   - AttachedProp
+  - ScreenController
+  - GameplayController
+  - LobbySystem
   layers:
   - Default
   - TransparentFX

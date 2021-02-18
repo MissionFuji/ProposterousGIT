@@ -27,18 +27,18 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
     [SerializeField]
     private GameObject MMUIContainer;
     private PlayerPropertiesController ppc;
-    private GameController gc;
+    private ScreenController sController;
 
 
 
     private void Awake() {
         lobby = this;
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
-        gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+        sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
     }
 
 
-    void Start() {
+    public void SetupPhotonNetwork() {
         if (!PhotonNetwork.IsConnected) {
             PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.SerializationRate = 10;
@@ -60,9 +60,6 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         createRoomButton.SetActive(true);
         optionsButton.SetActive(true);
         exitRoomButton.SetActive(true);
-        if (gc) {
-            gc.UpdateGameState(0);
-        }
     }
 
     public void OnJoinRandomLobbyButton_clicked() {
@@ -134,7 +131,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
             char c = charList[Random.Range(0, charList.Length)];
             seudoRoomName += c;
         }
-        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10, EmptyRoomTtl = 1, CleanupCacheOnLeave = false };
+        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10, EmptyRoomTtl = 1 };
         
         PhotonNetwork.CreateRoom(seudoRoomName.ToUpper(), roomOps);
         Debug.Log("Trying to create new room with roomName: " + seudoRoomName.ToString());

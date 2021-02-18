@@ -24,7 +24,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private Text RoomCode;
     private Text PlayerCounter;
     private MainMenuCamera MMCam;
-    private GameController gc;
  
 
 
@@ -61,7 +60,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         MMCam = Camera.main.GetComponent<MainMenuCamera>();
         pv = gameObject.GetComponent<PhotonView>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
-        gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         SceneManager.sceneLoaded += OnSceneLoaded;
         foreach (Transform child in transform) {
             spawnPositions.Add(child.gameObject);
@@ -112,7 +110,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     // When LOCAL PLAYER joins the room.
     public override void OnJoinedRoom() {
         base.OnJoinedRoom();
-        gc.UpdateGameState(1);
         if (!PhotonNetwork.LocalPlayer.IsMasterClient) {
             if (PhotonNetwork.LocalPlayer.IsLocal) {
                 CreateRoomPlayer();
@@ -139,9 +136,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         RoomUI.SetActive(false);
         MMUI.SetActive(true); // Show main menu again.
         base.OnLeftRoom();
-        if (gc) {
-            gc.UpdateGameState(0);
-        }
     }
 
     // When OTHER players leave.

@@ -48,10 +48,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //used for map loading
     public string mapToLoadName;
 
-    //used for anti-dupe.
-    private GameObject propWeTryToTake = null;
-    private string propWeTryToTakeName = "";
-
     //used for smooth move in update. rotation online.
     private float xDir;
     private float yDir;
@@ -101,12 +97,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-            if (PPC.moveState == 1) {
+            if (PPC.moveState == 1) { // If we are a pre-prop ghost:
                 if (rotPropHolder.transform.childCount > 0) {
                     GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
                     prop.transform.rotation = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
                 }
-            } else if (PPC.moveState == 2) {
+            } else if (PPC.moveState == 2) { // If we are a prop:
                 if (rotPropHolder.transform.childCount > 0) {
                     if (RotLocked) {
                         if ((xDir != 0f) || (yDir != 0f)) {
@@ -204,7 +200,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             #endregion
 
             if (Input.GetKeyDown(KeyCode.R)) {
-                if (PPC.moveState == 2) {
+                if (PPC.moveState == 2) { // If we are a prop:
                     if (RotLocked) {
                         RotLocked = false;
                         gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = false;
@@ -224,7 +220,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             if (Input.GetKeyDown(KeyCode.Space)) {
-                if (PPC.moveState != 0 || PPC.moveState != 4) { // Make sure we're not frozen or dead.
+                if (!PPC.playerIsFrozen || PPC.moveState != 4) { // Make sure we're not frozen or a spectating ghost.
                     rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
                     rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
                     Debug.Log("JUMP!");
@@ -240,21 +236,22 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                             if (propInt.isAvailable) { // let's see if prop is available.
                                 if (propInt.isHostOnly) { // Are we the host for this host-only selection?
                                     if (PhotonNetwork.LocalPlayer.IsMasterClient) {
-                                        if (propInt.isMapCartridge) {
+
+                                        if (propInt.isMapCartridge) { 
                                             mapToLoadName = propInt.gameObject.name;
                                             Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                         }
-                                        if (PPC.moveState != 0 || PPC.moveState != 3) {
+
+                                        if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
                                             BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         }
+
                                     } else {
-                                        Debug.Log("Tried to take over a host-only prop and a non-host client.");
+                                        Debug.Log("Tried to take over a host-only prop as a non-host client.");
                                     }
                                 } else { // NOT host-only section.
-                                    if (PPC.moveState != 0 || PPC.moveState != 3) {
+                                    if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
                                         if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
-                                            propWeTryToTake = propInt.gameObject;
-                                            propWeTryToTakeName = propWeTryToTake.name;
                                             BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         } else {
                                             Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
@@ -281,8 +278,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (pv.IsMine == true) {
             // Movement Code.
             #region
-            if (PPC.moveState != 0) { // 0 = Frozen
-                if (PPC.moveState == 1) { // 1 = Pre-Prop
+            if (!PPC.playerIsFrozen) { // 0 = Frozen
+                if (PPC.moveState == 1) { // 1 = Pre-Prop Ghost
                     rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
                     Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
                     Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
@@ -298,11 +295,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     } else {
                         rb.velocity = rb.velocity;
                     }
-
                     /*
-                    if (!rotLocked) {
+                    if (!RotLocked) {
                         if (xDir != 0 && yDir != 0) {
-                            rb.AddTorque((newMoveRot) * rotForce, ForceMode.Force);    *****DISABLE DUE TO UNREALISTIC BEHAVIOR*****
+                            rb.AddTorque((newMoveRot) * rotForce, ForceMode.Force); Adds rotation base on direction of input. Somewhat un-realistic.
                         }
                     }
                     */
@@ -364,7 +360,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
         if (prop.gameObject != null && tarPly.gameObject != null) {
-            if (PPC.moveState == 1) {
+            if (PPC.moveState == 1) { // If we're a preprop ghost.
                 ourRaycastTargerObj = prop.gameObject;
                 string backupTargetPropName = "";
                 foreach (char c in ourRaycastTargerObj.name) { // this is purely for backup duplication purposes.
@@ -379,8 +375,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         ourPreviousProp += c;
                     }
                 }
-                PPC.moveState = 2;
-            } else if (PPC.moveState == 2) {
+                PPC.moveState = 2; // We are absolutely taking over a prop. Regardless of duplication or not. So we can safely set moveState to 2. (Prop)
+            } else if (PPC.moveState == 2) { // Check if we're already a prop, so we can run Prop-To-Prop functionality.
                 ourRaycastTargerObj = prop.gameObject;
                 photonView.RPC("RPC_BecomePropFromProp", RpcTarget.AllBuffered, ourRaycastTargerObj.GetPhotonView().ViewID, gameObject.GetPhotonView().ViewID, int.Parse(ourPreviousProp));
                 ourPreviousProp = "";

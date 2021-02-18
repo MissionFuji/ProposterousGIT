@@ -6,7 +6,8 @@ using System.Linq;
 
 public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public RoomPlayer LocalRoomPlayer;
-    public int moveState = 1; // 0 noMove, 1 preProp, 2 propMove, 3 seekerMove.
+    public int moveState = 1; // 1 preProp(Ghost), 2 propMove, 3 seekerMove, 4 spectator(DeadGhost)
+    public bool playerIsFrozen = false;
     private PhotonView pv;
     
 
@@ -34,9 +35,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
             PhotonNetwork.LeaveRoom();
         }
     }
-
     // END OF LOCALPLAYER
-
 
 
     [PunRPC]
