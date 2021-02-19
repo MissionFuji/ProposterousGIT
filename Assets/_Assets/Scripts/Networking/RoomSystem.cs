@@ -123,7 +123,7 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public override void OnPlayerLeftRoom(Player leavingPlayer) {
         if (PhotonNetwork.CurrentRoom != null) {
             if (!leavingPlayer.IsMasterClient) {
-
+                photonView.RPC("RPC_UpdatePlayerSpawnedInCount", RpcTarget.MasterClient, -1);
             } else {
                 //RPC To kick everyone here
                 photonView.RPC("RPC_HostLeftCloseRoom", RpcTarget.Others);
@@ -131,8 +131,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             base.OnPlayerLeftRoom(leavingPlayer);
         }
         Debug.Log("Player: " + leavingPlayer.NickName + " just left the game.");
-        PhotonNetwork.DestroyPlayerObjects(leavingPlayer); // Destroys player's items and char.
-        photonView.RPC("RPC_UpdatePlayerSpawnedInCount", RpcTarget.MasterClient, -1);
     }
 
 

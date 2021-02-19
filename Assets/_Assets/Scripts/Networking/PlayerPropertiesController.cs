@@ -8,8 +8,15 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     public RoomPlayer LocalRoomPlayer;
     public int moveState = 1; // 1 preProp(Ghost), 2 propMove, 3 seekerMove, 4 spectator(DeadGhost)
     public bool playerIsFrozen = false;
+    private ScreenController sController;
     private PhotonView pv;
-    
+
+
+    private void Awake() {
+        sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
+        pv = gameObject.GetComponent<PhotonView>();
+    }
+
 
     // ALL OF THESE ARE LOCALPLAYER
     public void HostConnected(int plyID) {
@@ -37,6 +44,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     }
     // END OF LOCALPLAYER
 
+    //RPC's *******
 
     [PunRPC]
     private void RPC_ClientConnected(int plyID) {
@@ -53,17 +61,19 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
 
     [PunRPC]
     private void RPC_RemovePlayer() {
+        sController.RunLoadingScreen(2);
+        Invoke("Invoke_RemovePlayer", 0.5f);
+    }
+
+
+    //Invokes ******
+    private void Invoke_RemovePlayer() {
         if (PhotonNetwork.CurrentRoom != null) {
             PhotonNetwork.LeaveRoom();
             Debug.Log("Forced To LeaveRoom By Host.");
         }
     }
 
-
-    private void Awake() {
-        pv = gameObject.GetComponent<PhotonView>();
-    }
-
-
+    
 
 }
