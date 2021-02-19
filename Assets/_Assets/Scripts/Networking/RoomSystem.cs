@@ -116,6 +116,7 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         MMUI.SetActive(true); // Show main menu again.
         gController.UpdateGameplayState(0);
         sController.EndLoadingScreen(2f);
+        cController.ReadyCamera(transform, false);
         base.OnLeftRoom();
     }
 

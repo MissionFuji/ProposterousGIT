@@ -5397,9 +5397,9 @@ MonoBehaviour:
   pitchMinMax: {x: -40, y: 85}
   rotationSmoothTime: 0.04
   CameraPositionWhenNotInGameFailsafe: {x: 0, y: 10.5, z: -53}
-  scrollSpeed: 2
-  minDist: 3
-  maxDist: 10
+  scrollSpeed: 1
+  minDist: 6
+  maxDist: 32
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0
