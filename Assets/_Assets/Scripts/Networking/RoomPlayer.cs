@@ -8,6 +8,7 @@ public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInsta
 
     private PhotonView pv;
     private PlayerPropertiesController ppc;
+    private CameraController cController;
     private TextMeshProUGUI nameText;
     private GameObject localPlayerNameTag;
 
@@ -20,6 +21,8 @@ public class RoomPlayer : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInsta
         if (pv.IsMine) {
             gameObject.tag = "LocalPlayer";
             ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
+            cController = Camera.main.GetComponent<CameraController>();
+            cController.ReadyCamera(transform, true);
             ppc.LocalRoomPlayer = gameObject.GetComponent<RoomPlayer>();
             localPlayerNameTag = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "NameTagHolder"), gameObject.transform.position, Quaternion.identity, 0);
             photonView.RPC("RPC_SetNameTagTarget", RpcTarget.AllBuffered, localPlayerNameTag.GetPhotonView().ViewID, pv.ViewID);

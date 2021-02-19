@@ -28,6 +28,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
     private GameObject MMUIContainer;
     private PlayerPropertiesController ppc;
     private ScreenController sController;
+    private GameplayController gController;
 
 
 
@@ -35,6 +36,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         lobby = this;
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
+        gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
     }
 
 
@@ -50,7 +52,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
     
     public override void OnConnectedToMaster() {
         Debug.Log("Connected to Master. Pun 2.0.");
-        PhotonNetwork.LocalPlayer.NickName = "TestDummy#" + Random.Range(1, 9999).ToString();
+        PhotonNetwork.LocalPlayer.NickName = "xX1337GamerXx" + Random.Range(1, 9999).ToString();
         PhotonNetwork.AutomaticallySyncScene = true;
         MMUIContainer.SetActive(true);
         submitRoomCodeButton.SetActive(false);
@@ -60,9 +62,12 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         createRoomButton.SetActive(true);
         optionsButton.SetActive(true);
         exitRoomButton.SetActive(true);
+        sController.EndLoadingScreen(2f);
+        gController.UpdateGameplayState(0);
     }
 
     public void OnJoinRandomLobbyButton_clicked() {
+        sController.RunLoadingScreen(1);
         joinRandomRoomButton.SetActive(false);
         joinWithRoomCodeButton.SetActive(false);
         createRoomButton.SetActive(false);
@@ -70,11 +75,11 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         exitRoomButton.SetActive(false);
         cancelSearchButton.SetActive(true);
         PhotonNetwork.JoinRandomRoom();
-        Debug.Log("Button Pressed! (" + joinRandomRoomButton.name + ")");
     }
 
 
     public void OnCreateRoomButton_clicked() {
+        sController.RunLoadingScreen(1);
         cancelSearchButton.SetActive(true);
         joinWithRoomCodeButton.SetActive(false);
         createRoomButton.SetActive(false);
@@ -82,11 +87,9 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         optionsButton.SetActive(false);
         exitRoomButton.SetActive(false);
         CreateRoom();
-        Debug.Log("Button Pressed! (" + createRoomButton.name + ")");
     }
     public void OnExitButton_clicked() {
         Application.Quit();
-        Debug.Log("Button Pressed! (" + exitRoomButton.name + ")");
     }
 
     public void OnJoinWithRoomCodeButton_clicked() {
@@ -98,7 +101,6 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         joinRandomRoomButton.SetActive(false);
         optionsButton.SetActive(false);
         exitRoomButton.SetActive(false);
-        Debug.Log("Button Pressed! (" + createRoomButton.name + ")");
     }
 
 
@@ -107,19 +109,16 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         string tempRoomCode = submitRoomCodeInput.transform.Find("InputField/Text").gameObject.GetComponent<Text>().text;
         if (tempRoomCode.Length != 6) {
             Debug.LogError("Room code does not equal 6. Invalid Room Code.");
-        } else { 
+        } else {
+            sController.RunLoadingScreen(1);
             PhotonNetwork.JoinRoom(tempRoomCode);
         }
-        Debug.Log("Button Pressed! (" + joinWithRoomCodeButton.name + ")");
     }
 
     public override void OnJoinRandomFailed(short returnCode, string message) {
         if (!submitRoomCodeButton.activeSelf) { // checking if we're trying to use a room code or not.
             Debug.Log("Failed to join random room. (Possibly no rooms to join.)");
             CreateRoom();
-        } else {
-            Debug.LogError("Failed to join room with that room code.");
-
         }
     }
 
@@ -134,7 +133,6 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10, EmptyRoomTtl = 1 };
         
         PhotonNetwork.CreateRoom(seudoRoomName.ToUpper(), roomOps);
-        Debug.Log("Trying to create new room with roomName: " + seudoRoomName.ToString());
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message) {
@@ -152,7 +150,6 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
         optionsButton.SetActive(true);
         exitRoomButton.SetActive(true);
         PhotonNetwork.LeaveRoom();
-        Debug.Log("Button Pressed! (" + cancelSearchButton.name + ")");
     }
 
 

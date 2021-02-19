@@ -6,14 +6,11 @@ using UnityEngine.UI;
 
 public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
-    //-1 initial, 0 main menu(connected to master), 1 in a room before map is selected, 2 in-game prep phase,
-    //3 active on-going game, 4 end of game sequence, 5 forced loading screen.
-    private int ScreenState = -1;
-
     //Major references
     #region
     private PhotonView pv;
     private PlayerPropertiesController ppc;
+    private CameraController cController;
     private LobbySystem lobbySys;
     #endregion
 
@@ -25,31 +22,23 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject RoomMenuItems;
     private GameObject ConfirmExitMenu;
     private GameObject OptionsMenu;
-    private GameObject ActiveMenuOnScreen = null;
+    public GameObject ActiveMenuOnScreen = null;
     #endregion
 
-    #region
     //References used for Loading Screen Updates.
+    #region
 
-    [SerializeField] // 0 black, 1 red
+    [SerializeField]
     private List<Sprite> backgroundSpriteList = new List<Sprite>();
-    [SerializeField] // 0 gameintro, 1 companyinfo
+    [SerializeField]
     private List<Sprite> hoveringSpriteList = new List<Sprite>();
     [SerializeField]
     private float loadingScreenLerpSpeed;
 
     private Image targetBackgroundImg;
     private Image targetHoverImg;
-    [SerializeField]
     private bool isLoading = false;
-    [SerializeField]
-    private bool firstLoadGameLogoReady = false;
-    [SerializeField]
-    private bool firstLoadCompanyLogoReady = false;
-    [SerializeField]
     private bool isFadingIn = false;
-    [SerializeField]
-    private bool isKeepingOldBackgroundActive = false;
     private Color opaqueColor = new Color(1f, 1f, 1f, 1f);
     private Color transparentColor = new Color(1f, 1f, 1f, 0f);
     #endregion
@@ -57,6 +46,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void Awake() {
         pv = gameObject.GetComponent<PhotonView>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
+        cController = Camera.main.GetComponent<CameraController>();
         lobbySys = GameObject.FindGameObjectWithTag("LobbySystem").GetComponent<LobbySystem>();
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
@@ -66,36 +56,40 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         MainMenuItems = canvas.transform.Find("MainMenuItems").gameObject;
         ConfirmExitMenu = canvas.transform.Find("ConfirmExitMenu").gameObject;
         OptionsMenu = canvas.transform.Find("OptionsMenu").gameObject;
-        Invoke("InitialScreenDelay", 2f);
+        Invoke("InitialIntroScreenDelay", 1f);
     }
 
 
-    // loadingScreenRoutines: 0 gameIntro, 1 companyIntro, 2 loadIntoRoom, 3 loadIntoGame.
-    public void RunLoadingScreen(int loadingScreenRoutine, bool keepOldBackgroundActive) {
+    // loadingScreenRoutines: 0 gameIntro, 1 loadIntoRoom, 2 loadIntoGame
+    public void RunLoadingScreen(int loadingScreenRoutine) {
         if (targetBackgroundImg != null && targetHoverImg != null) { // Make sure we have references to our canvas objects.
-
-            isKeepingOldBackgroundActive = keepOldBackgroundActive; // Set local bool depending if we want to keep background there after a loading screen.
-
             if (loadingScreenRoutine == 0) { // Game intro
-                firstLoadGameLogoReady = true;
                 targetBackgroundImg.sprite = backgroundSpriteList[0];
                 targetHoverImg.sprite = hoveringSpriteList[0];
-            } else if (loadingScreenRoutine == 1) { // Company Intro
-                firstLoadCompanyLogoReady = true;
-                targetBackgroundImg.sprite = backgroundSpriteList[0];
-                targetHoverImg.sprite = hoveringSpriteList[1];
-            } else if (loadingScreenRoutine == 2) { // Load Into Room
+            } else if (loadingScreenRoutine == 1) { // Load Into Room
                 targetBackgroundImg.sprite = backgroundSpriteList[1];
+                targetHoverImg.sprite = hoveringSpriteList[1];
+            } else if (loadingScreenRoutine == 2) { // Load Into Game
+                targetBackgroundImg.sprite = backgroundSpriteList[2];
+                targetHoverImg.sprite = hoveringSpriteList[1];
+            } else {
+                targetBackgroundImg.sprite = backgroundSpriteList[0];
                 targetHoverImg.sprite = hoveringSpriteList[0];
-            } else if (loadingScreenRoutine == 3) { // Load Into Game
-
+                Debug.LogError("Failsafe Loading Screen Ran. Routine selected was out of range.");
             }
-
+            //These enable the loading screen to run through Update().
             isLoading = true;
             isFadingIn = true;
+        }
+    }
 
-            Debug.Log("Ran RunLoadingScreen.");
-
+    public void EndLoadingScreen(float timeBeforeEnd) {
+        if (isLoading) {
+            if (isFadingIn) {
+                if (!IsInvoking("Invoke_EndLoadingScreen")) {
+                    Invoke("Invoke_EndLoadingScreen", timeBeforeEnd);
+                }
+            }
         }
     }
 
@@ -106,84 +100,53 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         #region
         if (isLoading) { // are we loading?
             if (isFadingIn) { // are we increasing opacity?
-                if ((targetHoverImg.color.a >= 0.975f) && (targetBackgroundImg.color.a >= 0.975f)) {
-                    if (!IsInvoking("AfterWaitStartFadeOut")) {
-                        if (firstLoadGameLogoReady || firstLoadCompanyLogoReady) {
-                            Invoke("AfterWaitStartFadeOut", 1f);
-                            Debug.Log("Started 1 sec invoke.");
-                        } else {
-                            Invoke("AfterWaitStartFadeOut", 5f);
-                            Debug.Log("Started 5 sec invoke.");
-                        }
+                if (targetHoverImg.color.a >= 0.98f && targetBackgroundImg.color.a >= 0.98f) { // If it's almost fully opaque
+                    if (targetHoverImg.color != opaqueColor && targetBackgroundImg.color != opaqueColor) { // Let's set it to full opaque.
+                        targetBackgroundImg.color = opaqueColor;
+                        targetHoverImg.color = opaqueColor;
                     }
-                } else {
+                } else { // Let's lerp color towards opaque
                     targetBackgroundImg.color = Color.Lerp(targetBackgroundImg.color, opaqueColor, Time.deltaTime * loadingScreenLerpSpeed);
                     targetHoverImg.color = Color.Lerp(targetHoverImg.color, opaqueColor, Time.deltaTime * loadingScreenLerpSpeed);
-                    Debug.Log("Test.");
                 }
             } else { // are we decreasing opacity?
-                if (!isKeepingOldBackgroundActive) { // We're not keeping old background.
-                    if ((targetHoverImg.color.a <= 0.025f) && (targetBackgroundImg.color.a <= 0.025f)) {
-                        if (!IsInvoking("AfterWaitStartFadeIn")) {
-                            targetBackgroundImg.color = transparentColor;
-                            targetHoverImg.color = transparentColor;
-                            targetHoverImg.color = transparentColor;
-                            Invoke("AfterWaitStartFadeIn", 1f);
-                            isLoading = false;
-                        }
-                    } else {
-                        targetBackgroundImg.color = Color.Lerp(targetBackgroundImg.color, transparentColor, Time.deltaTime * loadingScreenLerpSpeed);
-                        targetHoverImg.color = Color.Lerp(targetHoverImg.color, transparentColor, Time.deltaTime * loadingScreenLerpSpeed);
+                if (targetHoverImg.color.a <= 0.02f) { // Are we close to transparent?
+                    if (targetHoverImg.color != transparentColor && targetBackgroundImg.color != transparentColor) { // Since we're close, let's just manually set it.
+                        targetHoverImg.color = transparentColor;
+                        targetBackgroundImg.color = transparentColor;
+                        isLoading = false; // We do this to break the loop. RunLoadingScreen must be run to restart this process.
                     }
-                } else { // We are keeping old background. Don't fade it out.
-                    if (targetHoverImg.color.a <= 0.025f) {
-                        //This bit only used for initial load screen. (introduction screen)
-                        Debug.Log("hoverImg full set to transparent.");
-                        if (!IsInvoking("AfterWaitStartFadeIn")) {
-                            targetHoverImg.color = transparentColor;
-                            Invoke("AfterWaitStartFadeIn", 1f);
-                            isLoading = false;
-                        }
-                    } else {
-                        Debug.Log("fading hoverImg to transparent.");
-                        targetHoverImg.color = Color.Lerp(targetHoverImg.color, transparentColor, Time.deltaTime * loadingScreenLerpSpeed);
-                    }
+                } else {
+                    targetHoverImg.color = Color.Lerp(targetHoverImg.color, transparentColor, Time.deltaTime * loadingScreenLerpSpeed);
+                    targetBackgroundImg.color = Color.Lerp(targetBackgroundImg.color, transparentColor, Time.deltaTime * loadingScreenLerpSpeed);
                 }
             }
-
-
         }
         #endregion
 
-        //Testing loading screen
-        if (Input.GetKeyDown(KeyCode.P)) {
-            RunLoadingScreen(2, false);
-            Debug.Log("TESTING ON-COMMAND LOADSCREENS.");
-        }
+        //Escape Menu/Menu Navigation.
+        #region
 
-
-            //Escape Menu/Menu Navigation.
-            #region
-
-            if (Input.GetKeyDown(KeyCode.Escape)) {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
             Debug.Log("Escape Pressed.");
+            if (isLoading == false) { // We only want to allow use of the menu items if there is no loading screen.
+                if (ActiveMenuOnScreen == null) {
+                    if (!PhotonNetwork.InRoom) { // Not in a room.
 
-            if (ActiveMenuOnScreen == null) {
-                if (ScreenState == 0) {
-                    //Trying to Escape at the main menu. No effect, press Exit Game.
-                } else if (ScreenState > 0 && ScreenState < 5) {
-                    //Trying to Escape while in a game. Showing RoomMenuItems.
-                    RoomMenuItems.SetActive(true);
-                    ActiveMenuOnScreen = RoomMenuItems;
+                    } else { //We're in a room
+                             //Trying to Escape while in a game. Showing RoomMenuItems.
+                        RoomMenuItems.SetActive(true);
+                        ActiveMenuOnScreen = RoomMenuItems;
+                    }
+                } else {
+                    //There's already a screen up, is it the confirm exit screen?
+                    if (ActiveMenuOnScreen == ConfirmExitMenu) {
+                        MainMenuItems.SetActive(true);
+                    }
+                    // Let's close any open screen.
+                    ActiveMenuOnScreen.SetActive(false);
+                    ActiveMenuOnScreen = null;
                 }
-            } else {
-                //There's already a screen up, is it the confirm exit screen?
-                if (ActiveMenuOnScreen == ConfirmExitMenu) {
-                    MainMenuItems.SetActive(true);
-                }
-                // Let's close any open screen.
-                ActiveMenuOnScreen.SetActive(false);
-                ActiveMenuOnScreen = null;
             }
         }
 
@@ -266,49 +229,31 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
     public void OnClick_ConfirmLeave() {
+        RunLoadingScreen(2);
+        Invoke("Invoke_OnClick_ConfirmLeave", 0.5f);
+    }
+    #endregion
+
+
+    private void Invoke_EndLoadingScreen() {
+        isFadingIn = false;
+    }
+
+    private void Invoke_OnClick_ConfirmLeave() {
         if (ActiveMenuOnScreen != null) {
             ActiveMenuOnScreen.SetActive(false);
             ActiveMenuOnScreen = null;
         }
+        cController.ReadyCamera(transform, false); // Before we leave the room, we make sure our camera controller knows.
         if (pv.IsMine) {
             ppc.HostDisconnecting(pv.ViewID);
         } else {
             ppc.ClientDisconnecting(pv.ViewID);
         }
     }
-    #endregion
 
-    private void AfterWaitStartFadeOut() {
-        if (isLoading) {
-            if (isFadingIn) {
-                isFadingIn = false;
-                Debug.Log("ready to go trans when needed.");
-            }
-        }
-    }
-
-    private void AfterWaitStartFadeIn() {
-        if (!isLoading) {
-            if (!isFadingIn) {
-                Debug.Log("ready to go opaque when needed.");
-                if (firstLoadGameLogoReady) {
-                    firstLoadGameLogoReady = false;
-                    RunLoadingScreen(1, false);
-                } else if (firstLoadCompanyLogoReady) {
-                    firstLoadCompanyLogoReady = false;
-                    lobbySys.SetupPhotonNetwork();
-                }
-
-                isLoading = true;
-            }
-        }
-    }
-
-    private void InitialScreenDelay() {
-        RunLoadingScreen(0, true);
-    }
-
-    public void UpdateScreenState(int screenStateInt) {
-        ScreenState = screenStateInt;
+    private void InitialIntroScreenDelay() {
+        RunLoadingScreen(0);
+        lobbySys.SetupPhotonNetwork();
     }
 }

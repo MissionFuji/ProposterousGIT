@@ -17,7 +17,7 @@ public class PropSpawner : MonoBehaviour
 
 
     private void Awake() {
-        gc = GameObject.FindGameObjectWithTag("GameplayerController").GetComponent<GameplayController>(); //Set reference of our GameController.
+        gc = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>(); //Set reference of our GameController.
         gcpv = gc.gameObject.GetPhotonView();
 
         if (gc != null && gcpv != null) {

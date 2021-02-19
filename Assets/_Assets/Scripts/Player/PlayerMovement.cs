@@ -27,7 +27,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private LayerMask PropInteraction;
 
     private PhotonView pv;
-    private CameraController camController;
     private PlayerPropertiesController PPC;
     private GameObject mmc;
     private float turnSmoothVelocity;
@@ -81,11 +80,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
             rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
-            camController = mmc.GetComponent<CameraController>();
             rb = gameObject.GetComponent<Rigidbody>();
             mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform; // this is what gives us accurate y rotation for player.
             mmcCamTransRef.GetComponent<CameraTarController>().SetCamFollowToPlayer(this.gameObject);
-            camController.ReadyCamera(gameObject.transform);
             cursorObj = mmc.transform.GetChild(0).gameObject;
         }
     }

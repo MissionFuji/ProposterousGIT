@@ -3,7 +3,6 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -15,6 +14,9 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public static RoomSystem room;
     private PhotonView pv;
     private PlayerPropertiesController ppc;
+    private GameplayController gController;
+    private ScreenController sController;
+    private CameraController cController;
     public bool isGameLoaded;
     public int currentScene;
     public int multiplayerScene;
@@ -23,10 +25,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public GameObject RoomUI;
     private Text RoomCode;
     private Text PlayerCounter;
-    private MainMenuCamera MMCam;
- 
-
-
 
     [SerializeField]
     private List<GameObject> spawnPositions = new List<GameObject>();
@@ -43,8 +41,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private int numOfPlayersSpawnedIn;
 
-    private bool isFirstLoad = true;
-
 
     private void Awake() {
         //Singleton
@@ -57,10 +53,11 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
         }
         DontDestroyOnLoad(this.gameObject);
-        MMCam = Camera.main.GetComponent<MainMenuCamera>();
         pv = gameObject.GetComponent<PhotonView>();
+        gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
+        sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
+        cController = Camera.main.GetComponent<CameraController>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
-        SceneManager.sceneLoaded += OnSceneLoaded;
         foreach (Transform child in transform) {
             spawnPositions.Add(child.gameObject);
         }
@@ -74,7 +71,7 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (PhotonNetwork.LocalPlayer.IsLocal) {
             PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "P"), spawnPositions[r].transform.position, Quaternion.identity, 0);
             photonView.RPC("RPC_UpdatePlayerSpawnedInCount", RpcTarget.MasterClient, 1);
-            Debug.Log("CreateRoomPlayer Ran for: " + PhotonNetwork.NickName);
+            sController.EndLoadingScreen(1f); // Ending the loadingscreen that's up, if there is one up.
         }
     }
 
@@ -88,35 +85,17 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonNetwork.RemoveCallbackTarget(this);
     }
 
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode) { //This was done this way when I was trying to have multiple scenes. We're moving to single-scene strategy now.
-
-        if (!isFirstLoad) {
-            Debug.Log("SCENE LOADER: Loaded into scene: " + scene.buildIndex.ToString());
-            if (!PhotonNetwork.LocalPlayer.IsMasterClient) {
-                if (PhotonNetwork.LocalPlayer.IsLocal) {
-                    CreateRoomPlayer();
-                    Debug.Log(PhotonNetwork.NickName + " loaded into scene. We created out own character again.");
-                }
-            } else {
-                Debug.Log("You are the host.");
-                CreateRoomPlayer();
-            }
-        } else {
-            isFirstLoad = false;
-        }
-
-    }
-
     // When LOCAL PLAYER joins the room.
     public override void OnJoinedRoom() {
         base.OnJoinedRoom();
-        if (!PhotonNetwork.LocalPlayer.IsMasterClient) {
+        if (!PhotonNetwork.LocalPlayer.IsMasterClient) { // If we're a regular Client.
             if (PhotonNetwork.LocalPlayer.IsLocal) {
+                gController.EnableMainMenuPrefab(false);
                 CreateRoomPlayer();
-                Debug.Log(PhotonNetwork.NickName + " joined the room. We created out own character.");
             }
-        } else {
-            Debug.Log("You are the host.");
+        } else { // If we're the host.
+            gController.EnableMainMenuPrefab(false);
+            gController.UpdateGameplayState(1);
             CreateRoomPlayer();
         }
         Debug.Log("Successfully joined a room: " + PhotonNetwork.CurrentRoom.Name + ", as player: " + PhotonNetwork.LocalPlayer.NickName + ".");
@@ -135,6 +114,8 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         Debug.Log("Successfully Left a room.");
         RoomUI.SetActive(false);
         MMUI.SetActive(true); // Show main menu again.
+        gController.UpdateGameplayState(0);
+        sController.EndLoadingScreen(2f);
         base.OnLeftRoom();
     }
 
@@ -166,7 +147,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [PunRPC]
     void RPC_UpdatePlayerSpawnedInCount(int dif) {
         numOfPlayersSpawnedIn = numOfPlayersSpawnedIn + dif;
-        Debug.Log("Number of players spawned in successfully: " + numOfPlayersSpawnedIn.ToString() + "Number of players in PhotonNetwork Room: " + PhotonNetwork.CurrentRoom.PlayerCount.ToString());
     }
 
     void UpdateRoomCodeAndPlayerCounter() {
