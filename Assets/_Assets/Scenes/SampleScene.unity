@@ -1541,6 +1541,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c3d0ce3060ee1b4f85a859fd4033696, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ActiveMenuOnScreen: {fileID: 0}
   backgroundSpriteList:
   - {fileID: 21300000, guid: 6831d2dbf49c3c3409aa887351541225, type: 3}
   - {fileID: 21300000, guid: 17e141c2caf64f942ab20aafbc5d4a96, type: 3}
@@ -4016,7 +4017,6 @@ MonoBehaviour:
   gameplayState: -1
   mapList:
   - {fileID: 5848880358997482796, guid: 701cb8bc465d8134d86e51085c9a1896, type: 3}
-  currentMapLoaded: {fileID: 0}
 --- !u!114 &629534985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5397,6 +5397,9 @@ MonoBehaviour:
   pitchMinMax: {x: -40, y: 85}
   rotationSmoothTime: 0.04
   CameraPositionWhenNotInGameFailsafe: {x: 0, y: 10.5, z: -53}
+  scrollSpeed: 2
+  minDist: 3
+  maxDist: 10
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0

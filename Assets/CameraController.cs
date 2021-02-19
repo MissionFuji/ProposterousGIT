@@ -5,10 +5,12 @@ public class CameraController : MonoBehaviour
 
     public float mouseSensitivity = 10;
     public Transform target;
-    public float dstFromTarget = 2;
+    public float dstFromTarget;
     public Vector2 pitchMinMax = new Vector2(-40, 85);
     public float rotationSmoothTime = .12f;
     public Vector3 CameraPositionWhenNotInGameFailsafe = new Vector3(0f, 10.5f, -53f);
+    public float scrollSpeed;
+    public float minDist, maxDist;
 
     private bool playerReady = false;
     private bool lockCursor;
@@ -40,6 +42,14 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    private void Update() {
+        float wheelVal = -Input.mouseScrollDelta.y;
+        if (wheelVal != 0) { // scrolling
+            //dstFromTarget += wheelVal * scrollSpeed;
+            dstFromTarget =  Mathf.Clamp(dstFromTarget += wheelVal * scrollSpeed, minDist, maxDist);
+        }
+    }
+
     void LateUpdate() {
         if (playerReady) { // If we have an active player.
             if (sController.ActiveMenuOnScreen == null) { // We do this check so we don't rotate the camera around out player while a menu is open.
@@ -48,7 +58,7 @@ public class CameraController : MonoBehaviour
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
                 currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
                 transform.eulerAngles = currentRotation;
-                transform.position = (target.position + new Vector3(0f, 8f, 0f)) - transform.forward * dstFromTarget;
+                transform.position = (target.position + new Vector3(0f, 6f, 0f)) - transform.forward * dstFromTarget;
             }
         } else { // If our player isn't active/on-screen.
                 if (Vector3.Distance(transform.position, CameraPositionWhenNotInGameFailsafe) > 1f) {

@@ -13,13 +13,14 @@ public class GameplayController : MonoBehaviour
     [SerializeField]
     private List<GameObject> mapList = new List<GameObject>(); // List of possible maps.
 
+    private PhotonView gcpv;
     private ScreenController sController;
-    [SerializeField] // temporary.
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
 
 
 
     private void Awake() {
+        gcpv = GetComponent<PhotonView>();
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
     }
 
@@ -35,7 +36,7 @@ public class GameplayController : MonoBehaviour
                     } else if (newState == 1) { // Into Pre-Game Room.
                         MoveAllToPreGameLobby();
                     } else if (newState == 2) { // In-Game Prep Phase.
-                        MoveAllToNewGame();
+                        MoveAllToFreshGame();
                     } else if (newState == 3) { // In-Game Active Phase.
 
                     } else if (newState == 4) { // In-Game End Phase.
@@ -69,20 +70,30 @@ public class GameplayController : MonoBehaviour
         currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
     }
 
-    private void MoveAllToNewGame() {
-        sController.RunLoadingScreen(2);
-        Invoke("Invoke_MoveAllToNewGame", 1f);
+    private void MoveAllToFreshGame() {
+        int loadingScreenRoutine = 2;
+        gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.All, loadingScreenRoutine); //Don't want to buffer this one i don't think.
+    }
+
+    //RPC's *********
+    [PunRPC]
+    private void RPC_MoveAllToFreshGame(int loadingScreenRoutine) {
+        sController.RunLoadingScreen(loadingScreenRoutine);
+        Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
 
 
-    //Invokes
-    private void Invoke_MoveAllToNewGame() {
-        if (currentMapLoaded != null) {
-            PhotonNetwork.Destroy(currentMapLoaded);
-            int r = Random.Range(0, mapList.Count - 1);
-            currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0);
-            sController.EndLoadingScreen(2f);
+    //Invokes *********
+
+    private void Invoke_MoveAllToFreshGame() {
+        if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
+            if (currentMapLoaded != null) {
+                PhotonNetwork.Destroy(currentMapLoaded);
+                int r = Random.Range(0, mapList.Count - 1);
+                currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0);
+            }
         }
+        sController.EndLoadingScreen(2f);
     }
 
 }
