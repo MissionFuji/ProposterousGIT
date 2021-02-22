@@ -427,9 +427,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
+            //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn.
+            //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
+            object[] instanceData = new object[1];
+            instanceData[0] = 1;
+
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and target player.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
@@ -458,9 +463,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
+            //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn.
+            //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
+            object[] instanceData = new object[1];
+            instanceData[0] = 1;
+
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and the target player.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity);
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity, 0, instanceData);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
@@ -573,9 +583,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
+            //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn.
+            //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
+            object[] instanceData = new object[1];
+            instanceData[0] = 1;
+
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot);
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
             //The rest gets handled on a callback from photon instantiation.
@@ -647,9 +662,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 RotLocked = false;
             }
 
+            //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn.
+            //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
+            object[] instanceData = new object[1];
+            instanceData[0] = 1;
+
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
-                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity);
+                newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity, 0, instanceData);
                 //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
             }
 

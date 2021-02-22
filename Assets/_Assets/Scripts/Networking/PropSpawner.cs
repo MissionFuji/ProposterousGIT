@@ -29,8 +29,10 @@ public class PropSpawner : MonoBehaviour
 
     private void Start() {
         if (PhotonNetwork.IsMasterClient) {
+            object[] instanceData = new object[1];
+            instanceData[0] = 0;
             int r = Random.Range(0, possibleProps.Count);
-            GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", possibleProps[r].name), gameObject.transform.position, gameObject.transform.rotation);
+            GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", possibleProps[r].name), gameObject.transform.position, gameObject.transform.rotation, 0, instanceData);
         }
     }
 

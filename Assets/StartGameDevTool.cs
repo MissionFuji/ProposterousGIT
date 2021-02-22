@@ -13,7 +13,11 @@ public class StartGameDevTool : MonoBehaviour
     private void OnTriggerEnter(Collider other) {
         if (other.gameObject.transform.parent.transform.parent.gameObject.tag == "LocalPlayer") { // Did WE touch it? Edit: Jesus christ that string of transform jumps is silly.
             if (PhotonNetwork.IsMasterClient) { // Are we the host?
-                gController.UpdateGameplayState(2);
+                if (PhotonNetwork.CurrentRoom.PlayerCount > 1) { //There must be atleast to player in a room to start the game.
+                    PhotonNetwork.CurrentRoom.IsOpen = false;
+                    PhotonNetwork.CurrentRoom.IsVisible = false;
+                    gController.UpdateGameplayState(2);
+                }
             }
         }
     }

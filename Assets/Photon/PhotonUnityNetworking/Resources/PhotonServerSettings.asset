@@ -27,7 +27,7 @@ MonoBehaviour:
     AuthMode: 0
     EnableLobbyStatistics: 0
     NetworkLogging: 1
-  DevRegion: usw
+  DevRegion: us
   PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
@@ -41,13 +41,14 @@ MonoBehaviour:
   - RPC_ClientDisconnected
   - RPC_HostLeftCloseRoom
   - RPC_LockRotationOverNetwork
+  - RPC_MoveAllToFreshGame
   - RPC_RemovePlayer
   - RPC_ResetRotationOverNetwork
   - RPC_SetNameTagTarget
   - RPC_UnlockRotationOverNetwork
   - RPC_UpdatePlayerSpawnedInCount
   - RPC_VoidResetPosition
-  - RPC_MoveAllToFreshGame
+  - RPC_HelpMasterBuildPlayerList
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

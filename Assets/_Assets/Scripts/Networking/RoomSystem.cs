@@ -32,10 +32,8 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private Vector3 offset;
 
     //Player Info
-    Player[] photonPlayer;
     public int playersInRoom;
     public int myNumberInRoom;
-
     public int playersInGame;
 
 
@@ -98,6 +96,7 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             gController.UpdateGameplayState(1);
             CreateRoomPlayer();
         }
+        ppc.moveState = 1; // Make sure we go back to "pre-prop" movestate.
         Debug.Log("Successfully joined a room: " + PhotonNetwork.CurrentRoom.Name + ", as player: " + PhotonNetwork.LocalPlayer.NickName + ".");
         MMUI.SetActive(false);
         RoomUI.SetActive(true);
