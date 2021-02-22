@@ -87,10 +87,13 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
                 //Build our vars.
                 GameObject plyObject = targetPlayerPV.gameObject;
+                Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
 
                 //Prop takeover, parent, then apply transforms to it.
                 gameObject.transform.parent = plyObject.transform.Find("PropHolder");
                 gameObject.transform.localPosition = Vector3.zero;
+                plyRB.freezeRotation = true;
+                plyObject.transform.rotation = Quaternion.identity;
 
                 //Let's give it a tag so we can better check against other objects in other scripts.
                 gameObject.tag = "AttachedProp";
