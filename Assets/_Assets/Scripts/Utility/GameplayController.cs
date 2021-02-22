@@ -105,15 +105,15 @@ public class GameplayController : MonoBehaviour
             foreach (int plyIDToSort in InGamePlayerList) {
                 if (InGamePlayerList.Count < 6) { //If there are 5 players, use one seeker.
                     if (SeekerPlayerList.Count < 1) {
-                        SeekerPlayerList.Add(InGamePlayerList[plyIDToSort]); // Add our seekers to the seeker list.
+                        SeekerPlayerList.Add(plyIDToSort); // Add our seekers to the seeker list.
                     } else {
-                        PropPlayerList.Add(InGamePlayerList[plyIDToSort]); // Add our props to the prop list.
+                        PropPlayerList.Add(plyIDToSort); // Add our props to the prop list.
                     }
                 } else { // If there are more than 5 players, use two seekers.
                     if (SeekerPlayerList.Count < 2) {
-                        SeekerPlayerList.Add(InGamePlayerList[plyIDToSort]);
+                        SeekerPlayerList.Add(plyIDToSort);
                     } else {
-                        PropPlayerList.Add(InGamePlayerList[plyIDToSort]);
+                        PropPlayerList.Add(plyIDToSort);
                     }
                 }
                 if (SeekerPlayerList.Count + PropPlayerList.Count == InGamePlayerList.Count) {
