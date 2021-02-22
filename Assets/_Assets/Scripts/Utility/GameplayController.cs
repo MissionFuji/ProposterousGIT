@@ -103,9 +103,12 @@ public class GameplayController : MonoBehaviour
         InGamePlayerList.Add(plyID); // Add each player to a list.
         if (InGamePlayerList.Count == PhotonNetwork.CurrentRoom.PlayerCount) { // Does our newly completed list match the PhotonNetwork playerlist?
             foreach (int plyIDToSort in InGamePlayerList) {
+                Debug.Log("Are we looping?");
                 if (InGamePlayerList.Count < 6) { //If there are 5 players, use one seeker.
+                    Debug.Log("Are there less than 6 of us?");
                     if (SeekerPlayerList.Count < 1) {
                         SeekerPlayerList.Add(plyIDToSort); // Add our seekers to the seeker list.
+                        Debug.Log("Add a seeker?");
                     } else {
                         PropPlayerList.Add(plyIDToSort); // Add our props to the prop list.
                     }
