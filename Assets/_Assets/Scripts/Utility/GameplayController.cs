@@ -140,7 +140,7 @@ public class GameplayController : MonoBehaviour
             }
         }
 
-        /*
+
         //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker.
         //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
         object[] instanceData = new object[1];
@@ -148,11 +148,10 @@ public class GameplayController : MonoBehaviour
 
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         if (localPlayer != null) {
-                PhotonNetwork.Destroy(localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject); //We destroy our prop before we move to the new pre-phase map.
+                //PhotonNetwork.Destroy(localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject); //We destroy our prop before we move to the new pre-phase map.
                 GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
         //End the loading screen once we're done.
-        */
         sController.EndLoadingScreen(2f);
     }
 
