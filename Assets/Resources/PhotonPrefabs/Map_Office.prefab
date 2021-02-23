@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5848880358855159439}
   - component: {fileID: 5848880358855159438}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -89,7 +89,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5848880358855159433}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 265d25801601ea1458f0b2e75fd5ce40, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
