@@ -151,7 +151,6 @@ public class GameplayController : MonoBehaviour
             Destroy(plyIDPV.gameObject.transform.Find("PropHolder").transform.GetChild(0).gameObject);
             if (plyIDPV.IsMine) { // When we found our player's prop, let's save the viewID.
                 myID = plyIDPV.ViewID;
-                Debug.Log("My ID: " + myID + ", has been found on my player object.");
             }
         }
 
