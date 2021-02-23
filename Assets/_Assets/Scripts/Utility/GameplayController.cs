@@ -90,9 +90,9 @@ public class GameplayController : MonoBehaviour
     [PunRPC]
     private void RPC_MoveAllToFreshGame(int loadingScreenRoutine) {
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
-        GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
-        int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
-        gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
+        //GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
+        //int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
+        //gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
         ppc.moveState = 1; // pre-prop moveState.
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }

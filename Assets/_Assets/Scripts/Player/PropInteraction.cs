@@ -79,7 +79,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 plyRB.interpolation = RigidbodyInterpolation.Interpolate;
                 plyRB.freezeRotation = false;
                 plyRB.isKinematic = false;
-            } else if (spawnRoutine == 2) { //Ghost/Seeker Prefab spawned for player use.
+            } /*else if (spawnRoutine == 2) { //Ghost/Seeker Prefab spawned for player use.
                 GameObject plyTagObj = (GameObject)info.Sender.TagObject;
                 PhotonView targetPlayerPV = plyTagObj.GetComponent<PhotonView>();
 
@@ -95,8 +95,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
                 //Let's give it a tag so we can better check against other objects in other scripts.
                 gameObject.tag = "AttachedProp";
-                Debug.LogError("Making sure this ran on each client..");
-            }
+            }*/
         }
     }
 }
