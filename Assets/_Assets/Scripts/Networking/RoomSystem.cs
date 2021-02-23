@@ -95,6 +95,7 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             gController.EnableMainMenuPrefab(false);
             gController.UpdateGameplayState(1);
             CreateRoomPlayer();
+            UpdatePlayerSpawnedInCount(1);
         }
         ppc.moveState = 1; // Make sure we go back to "pre-prop" movestate.
         Debug.Log("Successfully joined a room: " + PhotonNetwork.CurrentRoom.Name + ", as player: " + PhotonNetwork.LocalPlayer.NickName + ".");
@@ -104,6 +105,9 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     // When OTHER players enter.
     public override void OnPlayerEnteredRoom(Player newPlayer) {
+        if (PhotonNetwork.IsMasterClient) {
+            UpdatePlayerSpawnedInCount(1);
+        }
         base.OnPlayerEnteredRoom(newPlayer);
         Debug.Log(newPlayer.NickName + " has entered this lobby.");
     }
@@ -122,11 +126,12 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     // When OTHER players leave.
     public override void OnPlayerLeftRoom(Player leavingPlayer) {
         if (PhotonNetwork.CurrentRoom != null) {
-            if (!leavingPlayer.IsMasterClient) {
-                photonView.RPC("RPC_UpdatePlayerSpawnedInCount", RpcTarget.MasterClient, -1);
-            } else {
+            if (PhotonNetwork.IsMasterClient) {
+                UpdatePlayerSpawnedInCount(-1);
+            }
+            if (leavingPlayer.IsMasterClient) {
                 //RPC To kick everyone here
-                photonView.RPC("RPC_HostLeftCloseRoom", RpcTarget.Others);
+                photonView.RPC("RPC_HostLeftCloseRoom", RpcTarget.AllBuffered);
             }
             base.OnPlayerLeftRoom(leavingPlayer);
         }
@@ -142,8 +147,8 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
-    [PunRPC]
-    void RPC_UpdatePlayerSpawnedInCount(int dif) {
+    //This only even runs/updates on masterclient.
+    void UpdatePlayerSpawnedInCount(int dif) {
         numOfPlayersSpawnedIn = numOfPlayersSpawnedIn + dif;
     }
 
