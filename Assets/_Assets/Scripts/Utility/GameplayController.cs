@@ -92,9 +92,8 @@ public class GameplayController : MonoBehaviour
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
-       // gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
+        gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
         ppc.moveState = 1; // pre-prop moveState.
-        Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
 
     //Each player in room tells master client to run this.
@@ -103,12 +102,9 @@ public class GameplayController : MonoBehaviour
         InGamePlayerList.Add(plyID); // Add each player to a list.
         if (InGamePlayerList.Count == PhotonNetwork.CurrentRoom.PlayerCount) { // Does our newly completed list match the PhotonNetwork playerlist?
             foreach (int plyIDToSort in InGamePlayerList) {
-                Debug.Log("Are we looping?");
                 if (InGamePlayerList.Count < 6) { //If there are 5 players, use one seeker.
-                    Debug.Log("Are there less than 6 of us?");
                     if (SeekerPlayerList.Count < 1) {
                         SeekerPlayerList.Add(plyIDToSort); // Add our seekers to the seeker list.
-                        Debug.Log("Add a seeker?");
                     } else {
                         PropPlayerList.Add(plyIDToSort); // Add our props to the prop list.
                     }
@@ -121,17 +117,20 @@ public class GameplayController : MonoBehaviour
                 }
                 if (SeekerPlayerList.Count + PropPlayerList.Count == InGamePlayerList.Count) {
                     Debug.Log("All players have been accounted for and sorted.");
+                    object[] sortedLists = new object[3];
+                    sortedLists[0] = InGamePlayerList;
+                    sortedLists[1] = SeekerPlayerList;
+                    sortedLists[2] = PropPlayerList;
+                    gcpv.RPC("RPC_SpawnSortedPlayersIntoFreshGame", RpcTarget.AllBuffered, sortedLists);
                 }
             }
-            Debug.Log("Finished making our customer Player ViewID List.");
         } 
     }
 
+    [PunRPC] // This runs on all players in the room. Sent from MasterClient.
+    private void RPC_SpawnSortedPlayersIntoFreshGame(object[] lists) {
 
-    //Invokes *********
-
-    // This invoke moves all players into a fresh prep-phase game.
-    private void Invoke_MoveAllToFreshGame() {
+        //Our master client spawns in the map.
         if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
             if (currentMapLoaded != null) {
                 PhotonNetwork.Destroy(currentMapLoaded);
@@ -141,28 +140,55 @@ public class GameplayController : MonoBehaviour
         }
 
 
+        //Unpack our object[] array of sorted lists.
+        object[] listsReceived = lists;
+        List<int> allPlayerList = (List<int>)listsReceived[0];
+        List<int> seekerList = (List<int>)listsReceived[1];
+        List<int> propList = (List<int>)listsReceived[2];
+
+        int myID = -1;
+
+        //Destroy all props being controller by players.
+        foreach(int plyID in allPlayerList) {
+            PhotonView plyIDPV = PhotonView.Find(plyID);
+            Destroy(plyIDPV.gameObject.transform.Find("PropHolder").transform.GetChild(0).gameObject);
+            if (plyIDPV.IsMine) { // When we found our player's prop, let's save the viewID.
+                myID = plyIDPV.ViewID;
+                Debug.Log("My ID: " + myID + ", has been found on my player object.");
+            }
+        }
+
         //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker.
-        //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner.
+        //We must send instantiation data with object when we spawn it. We do this to determine if it was spawned by a player, or by a prop-spawner, or by a freshGame reset.
         object[] instanceData = new object[1];
         instanceData[0] = 2;
 
-        GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
-        if (localPlayer != null) {
-            GameObject plyProp = localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject;
-            PhotonView plyPropPV = plyProp.GetPhotonView();
-            Rigidbody plyRB = localPlayer.GetComponent<Rigidbody>();
-            plyRB.isKinematic = true;
-            if (plyProp != null) {
-                if (plyPropPV.IsMine) {
-                    plyPropPV.isRuntimeInstantiated = false;
-                    PhotonNetwork.Destroy(plyProp); //We destroy our prop before we move to the new pre-phase map.
-                    Debug.Log("DEBUG: Destroyed " + plyProp.name + ", ID: " + plyPropPV.ViewID + ". This was done by: " + plyPropPV.Owner);
-                } else {
-                    Debug.LogError("Tried to destroy plyProp, but it's PV isn't ours?? LP: " + localPlayer.GetPhotonView().name + ", Owner of prop: " + plyPropPV.Owner.NickName);
-                }
+        foreach (int seekerID in seekerList) {
+            if (myID == seekerID) {
+                //We're a seeker.
+                PhotonView ourPV = PhotonView.Find(myID);
+                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
             }
-            PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
+
+        foreach(int propID in propList) {
+            if (myID == propID) {
+                //We're a pre-prop ghost.
+                PhotonView ourPV = PhotonView.Find(myID);
+                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+            }
+        }
+        Invoke("Invoke_MoveAllToFreshGame", 0.5f);
+    }
+
+
+    //Invokes *********
+
+    // This invoke moves all players into a fresh prep-phase game.
+    private void Invoke_MoveAllToFreshGame() {
+
         //End the loading screen once we're done.
         sController.EndLoadingScreen(2f);
     }
