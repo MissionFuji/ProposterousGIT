@@ -90,10 +90,10 @@ public class GameplayController : MonoBehaviour
     [PunRPC]
     private void RPC_MoveAllToFreshGame(int loadingScreenRoutine) {
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
-        //GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
-        //int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
-        //gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
-        //ppc.moveState = 1; // pre-prop moveState.
+        GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
+        int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
+        gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
+        ppc.moveState = 1; // pre-prop moveState.
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
 
@@ -148,7 +148,11 @@ public class GameplayController : MonoBehaviour
 
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         if (localPlayer != null) {
-                PhotonNetwork.Destroy(localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject); //We destroy our prop before we move to the new pre-phase map.
+            GameObject plyProp = localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject;
+            if (plyProp != null) {
+                PhotonNetwork.Destroy(plyProp); //We destroy our prop before we move to the new pre-phase map.
+                Debug.Log("DEBUG: Destroyed dat hoe");
+            }
                 GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
         //End the loading screen once we're done.
