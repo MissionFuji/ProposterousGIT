@@ -95,6 +95,10 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
                 //Let's give it a tag so we can better check against other objects in other scripts.
                 gameObject.tag = "AttachedProp";
+
+                //Freeze our rotation and set it to zero.
+                plyRB.freezeRotation = false;
+                plyTagObj.transform.rotation = Quaternion.identity;
             }
         }
     }
