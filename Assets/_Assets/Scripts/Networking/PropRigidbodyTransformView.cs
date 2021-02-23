@@ -63,10 +63,13 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     private void OnTriggerEnter(Collider other) {
         if (other.gameObject != null) {
-            if (other.gameObject.tag == "AttachedProp") {
+            Debug.LogWarning("Some random object touched a prop.");
+            if (other.gameObject.tag == "AttachedProp") { //Is the prop currently taken-over?
                 //We need to get the PV of the player itself.
+                Debug.LogWarning("Prop player is trying to take overship of this prop.");
                 PhotonView playPV = other.gameObject.transform.parent.transform.parent.GetComponent<PhotonView>();
-                if (playPV.Owner.IsLocal && (playPV.Owner != pv.Owner)) {
+                if (playPV.Owner.IsLocal && !pv.Owner.IsLocal) {
+                    Debug.LogWarning("Prop player doesn't already own this prop.");
                     pv.RequestOwnership();
                 }
             }
