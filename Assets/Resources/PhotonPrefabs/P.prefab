@@ -147,7 +147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lerpSpeed: 6
-  isRotLocked: 0
+  isRotLocked: 1
 --- !u!1 &6912361544764721554
 GameObject:
   m_ObjectHideFlags: 0
