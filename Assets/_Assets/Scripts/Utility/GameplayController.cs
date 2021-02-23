@@ -153,7 +153,7 @@ public class GameplayController : MonoBehaviour
             if (plyProp != null) {
                 if (plyPropPV.IsMine) {
                     PhotonNetwork.Destroy(plyProp); //We destroy our prop before we move to the new pre-phase map.
-                    Debug.Log("DEBUG: Destroyed dat hoe");
+                    Debug.Log("DEBUG: Destroyed " + plyProp.name + ". This was done by: " + plyPropPV.Owner);
                 } else {
                     Debug.LogError("Tried to destroy plyProp, but it's PV isn't ours?? LP: " + localPlayer.GetPhotonView().name + ", Owner of prop: " + plyPropPV.Owner.NickName);
                 }
