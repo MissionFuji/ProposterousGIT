@@ -148,7 +148,7 @@ public class GameplayController : MonoBehaviour
 
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         if (localPlayer != null) {
-                //PhotonNetwork.Destroy(localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject); //We destroy our prop before we move to the new pre-phase map.
+                PhotonNetwork.Destroy(localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject); //We destroy our prop before we move to the new pre-phase map.
                 GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
         //End the loading screen once we're done.

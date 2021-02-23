@@ -17,6 +17,8 @@ public class StartGameDevTool : MonoBehaviour
                     PhotonNetwork.CurrentRoom.IsOpen = false;
                     PhotonNetwork.CurrentRoom.IsVisible = false;
                     gController.UpdateGameplayState(2);
+                    gameObject.SetActive(false);
+                    Debug.Log("DEBUG START GAME BUTTON PRESSED");
                 }
             }
         }
