@@ -2,6 +2,7 @@ using UnityEngine;
 using Photon.Pun;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 
 public class GameplayController : MonoBehaviour
 {
@@ -117,18 +118,15 @@ public class GameplayController : MonoBehaviour
                 }
                 if (SeekerPlayerList.Count + PropPlayerList.Count == InGamePlayerList.Count) {
                     Debug.Log("All players have been accounted for and sorted.");
-                    object[] sortedLists = new object[3];
-                    sortedLists[0] = InGamePlayerList;
-                    sortedLists[1] = SeekerPlayerList;
-                    sortedLists[2] = PropPlayerList;
-                    gcpv.RPC("RPC_SpawnSortedPlayersIntoFreshGame", RpcTarget.AllBuffered, sortedLists);
+                    //Send our lists to all players. Must send them as array, and unpack them into list when we receive them.
+                    gcpv.RPC("RPC_SpawnSortedPlayersIntoFreshGame", RpcTarget.AllBuffered, InGamePlayerList.ToArray(), SeekerPlayerList.ToArray(), PropPlayerList.ToArray());
                 }
             }
         } 
     }
 
     [PunRPC] // This runs on all players in the room. Sent from MasterClient.
-    private void RPC_SpawnSortedPlayersIntoFreshGame(object[] lists) {
+    private void RPC_SpawnSortedPlayersIntoFreshGame(int[] playerList, int[] seekerList, int[] propList) {
 
         //Our master client spawns in the map.
         if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
@@ -140,11 +138,10 @@ public class GameplayController : MonoBehaviour
         }
 
 
-        //Unpack our object[] array of sorted lists.
-        object[] listsReceived = lists;
-        List<int> allPlayerList = (List<int>)listsReceived[0];
-        List<int> seekerList = (List<int>)listsReceived[1];
-        List<int> propList = (List<int>)listsReceived[2];
+        //Unpack our int[] arrays to List<int>. 
+        List<int> allPlayerList = playerList.ToList<int>();
+        List<int> allSeekerList = seekerList.ToList<int>();
+        List<int> allPropList = propList.ToList<int>();
 
         int myID = -1;
 
@@ -163,7 +160,7 @@ public class GameplayController : MonoBehaviour
         object[] instanceData = new object[1];
         instanceData[0] = 2;
 
-        foreach (int seekerID in seekerList) {
+        foreach (int seekerID in allSeekerList) {
             if (myID == seekerID) {
                 //We're a seeker.
                 PhotonView ourPV = PhotonView.Find(myID);
@@ -172,7 +169,7 @@ public class GameplayController : MonoBehaviour
             }
         }
 
-        foreach(int propID in propList) {
+        foreach(int propID in allPropList) {
             if (myID == propID) {
                 //We're a pre-prop ghost.
                 PhotonView ourPV = PhotonView.Find(myID);
