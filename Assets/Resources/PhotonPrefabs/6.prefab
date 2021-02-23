@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 7215448055995135734}
   - component: {fileID: 7215448055995135733}
   - component: {fileID: 8706937261468326400}
+  - component: {fileID: 8955221627235741526}
   m_Layer: 11
   m_Name: 6
   m_TagString: Untagged
@@ -184,3 +185,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lerpSpeed: 6
+--- !u!65 &8955221627235741526
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7215448055995135732}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 12.8, y: 19.88, z: 10.44}
+  m_Center: {x: -0.04, y: 8.100774, z: -0.3}
