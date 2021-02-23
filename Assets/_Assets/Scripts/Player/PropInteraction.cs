@@ -20,7 +20,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
     }
 
     private void FixedUpdate() {
-        if (transform.parent == null) {
+        if (gameObject.tag != "AttachedProp") {
             if (rb != null) {
                 rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
             } else {
