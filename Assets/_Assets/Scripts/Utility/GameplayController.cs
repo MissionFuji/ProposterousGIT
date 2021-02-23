@@ -158,7 +158,7 @@ public class GameplayController : MonoBehaviour
                     Debug.LogError("Tried to destroy plyProp, but it's PV isn't ours?? LP: " + localPlayer.GetPhotonView().name + ", Owner of prop: " + plyPropPV.Owner.NickName);
                 }
             }
-                GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+            GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
         //End the loading screen once we're done.
         sController.EndLoadingScreen(2f);
