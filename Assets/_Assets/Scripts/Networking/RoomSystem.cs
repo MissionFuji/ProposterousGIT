@@ -82,6 +82,14 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         PhotonNetwork.RemoveCallbackTarget(this);
     }
 
+    public override void OnMasterClientSwitched(Player newMasterClient) {
+        Debug.LogError("Host must have disconnected. For now, we will for all to leave the room.");
+        GameObject plyTaggedObjOverNetwork = (GameObject)newMasterClient.TagObject;
+        sController.RunLoadingScreen(2);
+        ppc.HostDisconnecting(plyTaggedObjOverNetwork.GetPhotonView().ViewID);
+    }
+    
+
     // When LOCAL PLAYER joins the room.
     public override void OnJoinedRoom() {
         base.OnJoinedRoom();
@@ -127,10 +135,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         if (PhotonNetwork.CurrentRoom != null) {
             if (PhotonNetwork.IsMasterClient) {
                 UpdatePlayerSpawnedInCount(-1);
-            }
-            if (leavingPlayer.IsMasterClient) {
-                //RPC To kick everyone here
-                photonView.RPC("RPC_HostLeftCloseRoom", RpcTarget.AllBuffered);
             }
             base.OnPlayerLeftRoom(leavingPlayer);
         }
