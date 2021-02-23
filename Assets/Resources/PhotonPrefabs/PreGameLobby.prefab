@@ -713,11 +713,11 @@ PrefabInstance:
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[0]
       value: 
-      objectReference: {fileID: 7215448055995135732, guid: 0418f88979741b64d97884ad55ecd9f2, type: 3}
+      objectReference: {fileID: 2377229661786771741, guid: e1cf4ef2f9a870d4b9f301c1161c304e, type: 3}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[1]
       value: 
-      objectReference: {fileID: 158055127318925405, guid: 1c3fca85e310b4246b07c533f44daec3, type: 3}
+      objectReference: {fileID: 9042409503380882703, guid: 8a47c721bd10b2644bb1fb74e32b6b70, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
 --- !u!4 &5555622976859497170 stripped
@@ -787,7 +787,7 @@ PrefabInstance:
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[0]
       value: 
-      objectReference: {fileID: 2547795462021327180, guid: a9752ad12e0838744813e309848d148b, type: 3}
+      objectReference: {fileID: 8795032062667678511, guid: e439988a9d32eea4c8c5cc43795980a4, type: 3}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[1]
       value: 
@@ -860,7 +860,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.size
-      value: 5
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[0]
@@ -882,6 +882,14 @@ PrefabInstance:
       propertyPath: possibleProps.Array.data[4]
       value: 
       objectReference: {fileID: 8795032062667678511, guid: e439988a9d32eea4c8c5cc43795980a4, type: 3}
+    - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
+      propertyPath: possibleProps.Array.data[5]
+      value: 
+      objectReference: {fileID: 158055127318925405, guid: 1c3fca85e310b4246b07c533f44daec3, type: 3}
+    - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
+      propertyPath: possibleProps.Array.data[6]
+      value: 
+      objectReference: {fileID: 2547795462021327180, guid: a9752ad12e0838744813e309848d148b, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
 --- !u!4 &9151214158733446079 stripped
@@ -946,10 +954,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.size
-      value: 1
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
       propertyPath: possibleProps.Array.data[0]
+      value: 
+      objectReference: {fileID: 4918416049097434864, guid: a6b60857c65fe3148979a759a1a26210, type: 3}
+    - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
+      propertyPath: possibleProps.Array.data[1]
+      value: 
+      objectReference: {fileID: 9042409503380882703, guid: 8a47c721bd10b2644bb1fb74e32b6b70, type: 3}
+    - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
+      propertyPath: possibleProps.Array.data[2]
+      value: 
+      objectReference: {fileID: 2377229661786771741, guid: e1cf4ef2f9a870d4b9f301c1161c304e, type: 3}
+    - target: {fileID: 8251456536420783540, guid: 808198862fbabab40aa60dd2a89a92ce, type: 3}
+      propertyPath: possibleProps.Array.data[3]
       value: 
       objectReference: {fileID: 4418895069991044524, guid: c776ad31941864246aafb85dff2039ce, type: 3}
     m_RemovedComponents: []
