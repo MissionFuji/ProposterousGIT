@@ -76,7 +76,6 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 gameObject.tag = "AttachedProp";
 
                 //re-enable -PLAYER- rigidbody so we can move around again.
-                plyRB.interpolation = RigidbodyInterpolation.Interpolate;
                 plyRB.freezeRotation = false;
                 plyRB.isKinematic = false;
             } else if (spawnRoutine == 2) { //Ghost/Seeker Prefab spawned for player use.
@@ -88,12 +87,17 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 //Build our vars.
                 Rigidbody plyRB = plyTagObj.GetComponent<Rigidbody>();
 
+
                 //Prop takeover, parent, then apply transforms to it.
                 gameObject.transform.parent = plyTagObj.transform.Find("PropHolder");
                 gameObject.transform.localPosition = Vector3.zero;
 
                 //Let's give it a tag so we can better check against other objects in other scripts.
                 gameObject.tag = "AttachedProp";
+
+                //Update RB.
+                plyRB.freezeRotation = true;
+                plyRB.isKinematic = false;
 
             }
         }

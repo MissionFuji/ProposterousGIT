@@ -82,7 +82,7 @@ public class GameplayController : MonoBehaviour
     //Only runs on MasterClient.
     private void MoveAllToFreshGame() {
         int loadingScreenRoutine = 2;
-        gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.All, loadingScreenRoutine); //Don't want to buffer this one i don't think.
+        gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
     //RPC's *********
@@ -92,7 +92,7 @@ public class GameplayController : MonoBehaviour
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
-        gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
+       // gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
         ppc.moveState = 1; // pre-prop moveState.
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
@@ -134,7 +134,7 @@ public class GameplayController : MonoBehaviour
     private void Invoke_MoveAllToFreshGame() {
         if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
             if (currentMapLoaded != null) {
-                PhotonNetwork.Destroy(currentMapLoaded);
+                //PhotonNetwork.Destroy(currentMapLoaded);
                 int r = Random.Range(0, mapList.Count - 1);
                 currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0);
             }
@@ -150,6 +150,8 @@ public class GameplayController : MonoBehaviour
         if (localPlayer != null) {
             GameObject plyProp = localPlayer.transform.Find("PropHolder").transform.GetChild(0).gameObject;
             PhotonView plyPropPV = plyProp.GetPhotonView();
+            Rigidbody plyRB = localPlayer.GetComponent<Rigidbody>();
+            plyRB.isKinematic = true;
             if (plyProp != null) {
                 if (plyPropPV.IsMine) {
                     plyProp.transform.parent = null; //Unparent it first?
