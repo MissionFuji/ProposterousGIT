@@ -82,15 +82,14 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
             } else if (spawnRoutine == 2) { //Ghost/Seeker Prefab spawned for player use.
                 GameObject plyTagObj = (GameObject)info.Sender.TagObject;
                 PhotonView targetPlayerPV = plyTagObj.GetComponent<PhotonView>();
-
+                Debug.Log("A prop was spawned. This is plyTagObj: " + plyTagObj.name + ", (" + targetPlayerPV.ViewID + ")");
                 Debug.Log(targetPlayerPV.Owner.NickName + " has instantiated: " + gameObject.name + ", with prop viewID: " + gameObject.GetComponent<PhotonView>().ViewID);
 
                 //Build our vars.
-                GameObject plyObject = targetPlayerPV.gameObject;
-                Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
+                Rigidbody plyRB = plyTagObj.GetComponent<Rigidbody>();
 
                 //Prop takeover, parent, then apply transforms to it.
-                gameObject.transform.parent = plyObject.transform.Find("PropHolder");
+                gameObject.transform.parent = plyTagObj.transform.Find("PropHolder");
                 gameObject.transform.localPosition = Vector3.zero;
 
                 //Let's give it a tag so we can better check against other objects in other scripts.

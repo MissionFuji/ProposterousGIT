@@ -153,12 +153,12 @@ public class GameplayController : MonoBehaviour
             if (plyProp != null) {
                 if (plyPropPV.IsMine) {
                     PhotonNetwork.Destroy(plyProp); //We destroy our prop before we move to the new pre-phase map.
-                    Debug.Log("DEBUG: Destroyed " + plyProp.name + ". This was done by: " + plyPropPV.Owner);
+                    Debug.Log("DEBUG: Destroyed " + plyProp.name + ", ID: " + plyPropPV.ViewID + ". This was done by: " + plyPropPV.Owner);
                 } else {
                     Debug.LogError("Tried to destroy plyProp, but it's PV isn't ours?? LP: " + localPlayer.GetPhotonView().name + ", Owner of prop: " + plyPropPV.Owner.NickName);
                 }
             }
-            GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+            PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.transform.position, localPlayer.transform.rotation, 0, instanceData); //Spawn our ghost prop.
         }
         //End the loading screen once we're done.
         sController.EndLoadingScreen(2f);
