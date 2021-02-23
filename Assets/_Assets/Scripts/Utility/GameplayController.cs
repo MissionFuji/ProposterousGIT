@@ -134,7 +134,7 @@ public class GameplayController : MonoBehaviour
     private void Invoke_MoveAllToFreshGame() {
         if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
             if (currentMapLoaded != null) {
-                //PhotonNetwork.Destroy(currentMapLoaded);
+                PhotonNetwork.Destroy(currentMapLoaded);
                 int r = Random.Range(0, mapList.Count - 1);
                 currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0);
             }
