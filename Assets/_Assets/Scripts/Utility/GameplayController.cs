@@ -152,6 +152,7 @@ public class GameplayController : MonoBehaviour
             PhotonView plyPropPV = plyProp.GetPhotonView();
             if (plyProp != null) {
                 if (plyPropPV.IsMine) {
+                    plyProp.transform.parent = null; //Unparent it first?
                     PhotonNetwork.Destroy(plyProp); //We destroy our prop before we move to the new pre-phase map.
                     Debug.Log("DEBUG: Destroyed " + plyProp.name + ", ID: " + plyPropPV.ViewID + ". This was done by: " + plyPropPV.Owner);
                 } else {
