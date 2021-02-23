@@ -89,14 +89,14 @@ public class RigidbodyTransformView : MonoBehaviour, IPunObservable {
 
 
             //Child Prop. Update Y rotation over network.
-            if (netRotLocked) {
-                if (propHolder.transform.childCount > 0) {
-                    Transform child = propHolder.transform.GetChild(0);
-                    if (child != null) {
-                        child.transform.rotation = Quaternion.Slerp(child.transform.rotation, latestPropRot, Time.deltaTime * lerpSpeed);
+                if (netRotLocked) {
+                    if (propHolder.transform.childCount > 0) {
+                        Transform child = propHolder.transform.GetChild(0);
+                        if (child != null) {
+                            child.transform.rotation = Quaternion.Slerp(child.transform.rotation, latestPropRot, Time.deltaTime * lerpSpeed);
+                        }
                     }
                 }
-            }
 
             // Lerping player's rb values resulted in small amounts of rubber banding. This could likely be tweaked to fix if necessary.
             //rb.velocity = Vector3.Lerp(rb.velocity, velocity, Time.deltaTime * lerpSpeed);

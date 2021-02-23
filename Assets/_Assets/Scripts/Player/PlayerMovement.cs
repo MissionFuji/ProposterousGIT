@@ -196,6 +196,18 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             #endregion
 
+            if (PPC.moveState == 1) {
+                RigidbodyTransformView plyRTV = gameObject.GetComponent<RigidbodyTransformView>();
+                if (plyRTV != null) {
+                    if (!RotLocked) {
+                        RotLocked = true;
+                        plyRTV.isRotLocked = true;
+                        rotLockImg.sprite = lockedSprite;
+                        photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    }
+                }
+            }
+
             if (Input.GetKeyDown(KeyCode.R)) {
                 if (PPC.moveState == 2) { // If we are a prop:
                     if (RotLocked) {
