@@ -68,7 +68,6 @@ public class RoomSystem : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         int r = Random.Range(0, spawnPositions.Count - 1);
         if (PhotonNetwork.LocalPlayer.IsLocal) {
             PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "P"), spawnPositions[r].transform.position, Quaternion.identity, 0);
-            photonView.RPC("RPC_UpdatePlayerSpawnedInCount", RpcTarget.MasterClient, 1);
             sController.EndLoadingScreen(1f); // Ending the loadingscreen that's up, if there is one up.
         }
     }
