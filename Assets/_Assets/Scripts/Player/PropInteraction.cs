@@ -87,6 +87,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
                 //Prop takeover, parent, then apply transforms to it.
                 gameObject.transform.parent = plyTagObj.transform.Find("PropHolder");
+                gameObject.transform.rotation = Quaternion.identity;
                 gameObject.transform.localPosition = Vector3.zero;
 
                 //Let's give it a tag so we can better check against other objects in other scripts.

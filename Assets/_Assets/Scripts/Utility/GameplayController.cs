@@ -165,7 +165,7 @@ public class GameplayController : MonoBehaviour
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
-                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, Quaternion.identity, 0, instanceData); //Spawn our ghost prop.
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
             }
         }
 
@@ -175,7 +175,7 @@ public class GameplayController : MonoBehaviour
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
-                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, Quaternion.identity, 0, instanceData); //Spawn our ghost prop.
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
             }
         }
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
