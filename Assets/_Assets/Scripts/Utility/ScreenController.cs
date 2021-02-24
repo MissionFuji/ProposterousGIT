@@ -270,6 +270,9 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
     private void Invoke_ClearTimerText() {
+        if (CountDownTimer.gameObject.activeSelf == false) {
+            CountDownTimer.gameObject.SetActive(true);
+        }
         CountDownTimer.text = "";
     }
 
