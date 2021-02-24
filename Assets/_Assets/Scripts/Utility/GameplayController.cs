@@ -137,15 +137,10 @@ public class GameplayController : MonoBehaviour
     [PunRPC] // This runs on all players in the room. Sent from MasterClient.
     private void RPC_SpawnSortedPlayersIntoFreshGame(int[] playerList, int[] seekerList, int[] propList) {
 
-        //Our master client spawns in the map.
-        if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
-            if (currentMapLoaded != null) {
-                PhotonNetwork.Destroy(currentMapLoaded);
-                int r = Random.Range(0, mapList.Count - 1);
-                currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0);
-            }
-        }
-
+        //We'll send the already packed ID lists to the map's instantiationData to move players to correct locations after they spawn.
+        object[] listData = new object[3];
+        listData[0] = seekerList;
+        listData[1] = propList;
 
         //Unpack our int[] arrays to List<int>. 
         List<int> allPlayerList = playerList.ToList<int>();
@@ -155,11 +150,21 @@ public class GameplayController : MonoBehaviour
         int myID = -1;
 
         //Destroy all props being controller by players.
-        foreach(int plyID in allPlayerList) {
+        foreach (int plyID in allPlayerList) {
             PhotonView plyIDPV = PhotonView.Find(plyID);
             Destroy(plyIDPV.gameObject.transform.Find("PropHolder").transform.GetChild(0).gameObject);
             if (plyIDPV.IsMine) { // When we found our player's prop, let's save the viewID.
                 myID = plyIDPV.ViewID;
+            }
+        }
+
+
+        //Our master client spawns in the map.
+        if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
+            if (currentMapLoaded != null) {
+                PhotonNetwork.Destroy(currentMapLoaded);
+                int r = Random.Range(0, mapList.Count - 1);
+                currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0, listData);
             }
         }
 
@@ -168,19 +173,15 @@ public class GameplayController : MonoBehaviour
         object[] instanceData = new object[1];
         instanceData[0] = 2;
 
-        //We need to get a reference to our spawn points so we can spawn there.
-        mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
 
 
-        if (mp != null) {
             foreach (int seekerID in allSeekerList) {
                 if (myID == seekerID) {
                     //We're a seeker.
                     PhotonView ourPV = PhotonView.Find(myID);
                     ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                     ourPV.gameObject.transform.rotation = Quaternion.identity;
-                    int r = Random.Range(0, mp.seekerSpawnPointList.Count - 1);
-                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), mp.seekerSpawnPointList[r].transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
                 }
             }
 
@@ -190,14 +191,10 @@ public class GameplayController : MonoBehaviour
                     PhotonView ourPV = PhotonView.Find(myID);
                     ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                     ourPV.gameObject.transform.rotation = Quaternion.identity;
-                    int r = Random.Range(0, mp.propSpawnPointList.Count - 1);
-                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), mp.propSpawnPointList[r].transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
                 }
             }
             Invoke("Invoke_MoveAllToFreshGame", 0.5f);
-        } else {
-            Debug.LogError("MapProperties on new map couldn't be found by using tag: 'Map'!");
-        }
     }
 
     //Runs on all clients.
