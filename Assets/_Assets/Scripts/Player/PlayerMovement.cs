@@ -221,7 +221,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     }
                 }
-            }
+            } //temporary force-lock rot?
 
             if (Input.GetKeyDown(KeyCode.R)) {
                 if (PPC.moveState == 2) { // If we are a prop:
@@ -257,37 +257,43 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         PropInteraction propInt;
                         if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
                             propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
-                            if (propInt.isAvailable) { // let's see if prop is available.
-                                if (propInt.isHostOnly) { // Are we the host for this host-only selection?
-                                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                            if (PPC.moveState == 1 || PPC.moveState == 2) {
+                                if (propInt.isAvailable) { // let's see if prop is available.
+                                    if (propInt.isHostOnly) { // Are we the host for this host-only selection?
+                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) {
 
-                                        if (propInt.isMapCartridge) { 
-                                            mapToLoadName = propInt.gameObject.name;
-                                            Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
-                                        }
+                                            if (propInt.isMapCartridge) {
+                                                mapToLoadName = propInt.gameObject.name;
+                                                Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
+                                            }
 
-                                        if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
-                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                        }
+                                            if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
+                                                BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                            }
 
-                                    } else {
-                                        Debug.Log("Tried to take over a host-only prop as a non-host client.");
-                                    }
-                                } else { // NOT host-only section.
-                                    if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
-                                        if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
-                                            BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                         } else {
-                                            Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+                                            Debug.Log("Tried to take over a host-only prop as a non-host client.");
+                                        }
+                                    } else { // NOT host-only section.
+                                        if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
+                                            if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                                BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                            } else {
+                                                Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+                                            }
                                         }
                                     }
-                                }
 
-                            } else if (!propInt.isAvailable) {
-                                Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+                                } else if (!propInt.isAvailable) {
+                                    Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+                                }
+                            } else if (PPC.moveState == 3) { // if we're seeker.
+                                if (propInt.isAvailable) {
+                                    Debug.Log("You did it. You found a player.");
+                                } else {
+                                    Debug.Log("Nope. Not a player.");
+                                }
                             }
-                        } else {
-                            Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop is not Posessable.");
                         }
                     }
                 }
