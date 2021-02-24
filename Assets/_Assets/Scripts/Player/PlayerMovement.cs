@@ -328,7 +328,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     */
 
                 } else if (PPC.moveState == 3) { // 3 = Seeker
-
+                    rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
+                    Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
+                    Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
+                    rb.velocity = newMovePos;
                 } else if (PPC.moveState == 4) { // 4 = Ghost/Spec
                     Vector3 direction = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical")).normalized;
 
