@@ -19,10 +19,18 @@ public class GameplayController : MonoBehaviour
     private List<int> SeekerPlayerList = new List<int>();
     [SerializeField]
     private List<int> PropPlayerList = new List<int>();
+    [SerializeField]
+    private int CurrentCountDownTimer = 20;
+
+    //Settings:
+    [SerializeField]
+    private int CountDownTimeInSeconds;
 
     private PhotonView gcpv;
     private ScreenController sController;
+    private AudioController aController;
     private PlayerPropertiesController ppc;
+    private MapProperties mp;
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
 
 
@@ -30,6 +38,7 @@ public class GameplayController : MonoBehaviour
     private void Awake() {
         gcpv = GetComponent<PhotonView>();
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
+        aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
     }
 
@@ -159,26 +168,46 @@ public class GameplayController : MonoBehaviour
         object[] instanceData = new object[1];
         instanceData[0] = 2;
 
-        foreach (int seekerID in allSeekerList) {
-            if (myID == seekerID) {
-                //We're a seeker.
-                PhotonView ourPV = PhotonView.Find(myID);
-                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
-                ourPV.gameObject.transform.rotation = Quaternion.identity;
-                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
-            }
-        }
+        //We need to get a reference to our spawn points so we can spawn there.
+        mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
 
-        foreach(int propID in allPropList) {
-            if (myID == propID) {
-                //We're a pre-prop ghost.
-                PhotonView ourPV = PhotonView.Find(myID);
-                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
-                ourPV.gameObject.transform.rotation = Quaternion.identity;
-                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+
+        if (mp != null) {
+            foreach (int seekerID in allSeekerList) {
+                if (myID == seekerID) {
+                    //We're a seeker.
+                    PhotonView ourPV = PhotonView.Find(myID);
+                    ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                    ourPV.gameObject.transform.rotation = Quaternion.identity;
+                    int r = Random.Range(0, mp.seekerSpawnPointList.Count - 1);
+                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), mp.seekerSpawnPointList[r].transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+                }
             }
+
+            foreach (int propID in allPropList) {
+                if (myID == propID) {
+                    //We're a pre-prop ghost.
+                    PhotonView ourPV = PhotonView.Find(myID);
+                    ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                    ourPV.gameObject.transform.rotation = Quaternion.identity;
+                    int r = Random.Range(0, mp.propSpawnPointList.Count - 1);
+                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), mp.propSpawnPointList[r].transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+                }
+            }
+            Invoke("Invoke_MoveAllToFreshGame", 0.5f);
+        } else {
+            Debug.LogError("MapProperties on new map couldn't be found by using tag: 'Map'!");
         }
-        Invoke("Invoke_MoveAllToFreshGame", 0.5f);
+    }
+
+    //Runs on all clients.
+    [PunRPC]
+    private void RPC_OpenSeekerGate() {
+        if (mp.seekerDoor != null) {
+            Destroy(mp.seekerDoor);
+        } else {
+            Debug.LogError("Tried to destroy Seeker door. It was null?..");
+        }
     }
 
 
@@ -187,8 +216,27 @@ public class GameplayController : MonoBehaviour
     // This invoke moves all players into a fresh prep-phase game.
     private void Invoke_MoveAllToFreshGame() {
 
+        CurrentCountDownTimer = CountDownTimeInSeconds; // We set our countdown timer equal to the "start" time.
+        InvokeRepeating("Invoke_CountdownPrepPhase", 0.1f, 1f);
+
         //End the loading screen once we're done.
         sController.EndLoadingScreen(2f);
+    }
+
+    private void Invoke_CountdownPrepPhase() {
+        CurrentCountDownTimer--;
+        if (CurrentCountDownTimer > 0) { //Counting down.
+            sController.UpdateCountDown(CurrentCountDownTimer);
+            aController.PlayCountDownTick();
+        } else if (CurrentCountDownTimer == 0) { // Last countdown tick. "GO!"
+            sController.UpdateCountDown(CurrentCountDownTimer);
+            aController.PlayCountDownLastTick();
+            if (PhotonNetwork.IsMasterClient) {
+                UpdateGameplayState(3);
+                gcpv.RPC("RPC_OpenSeekerGate", RpcTarget.AllBuffered);
+            }
+            CancelInvoke("Invoke_CountdownPrepPhase");
+        }
     }
 
 }

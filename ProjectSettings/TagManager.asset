@@ -22,6 +22,8 @@ TagManager:
   - GameplayController
   - LobbySystem
   - GhostForm
+  - Map
+  - AudioController
   layers:
   - Default
   - TransparentFX

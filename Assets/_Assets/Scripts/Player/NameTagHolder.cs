@@ -17,13 +17,6 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 ownerID = tarPlayer.GetComponent<PhotonView>().ViewID;
             }
             gameObject.transform.position = tarPlayer.transform.position + new Vector3(0, tarPlayer.transform.localScale.y + 1f, 0);
-        } else {
-            PhotonView missingTargetPV = PhotonView.Find(ownerID);
-            if (missingTargetPV != null) {
-                tarPlayer = missingTargetPV.gameObject;
-            } else {
-                Destroy(gameObject);
-            }
         }
     }
 }

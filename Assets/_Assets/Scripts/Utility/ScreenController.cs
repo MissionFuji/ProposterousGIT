@@ -22,6 +22,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject RoomMenuItems;
     private GameObject ConfirmExitMenu;
     private GameObject OptionsMenu;
+    private Text CountDownTimer;
     public GameObject ActiveMenuOnScreen = null;
     #endregion
 
@@ -49,6 +50,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         cController = Camera.main.GetComponent<CameraController>();
         lobbySys = GameObject.FindGameObjectWithTag("LobbySystem").GetComponent<LobbySystem>();
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
+        CountDownTimer = canvas.gameObject.transform.Find("RoomUI/CountDownTimer").gameObject.GetComponent<Text>();
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
         targetBackgroundImg = canvas.transform.Find("BlankBackgroundScreen").gameObject.GetComponent<Image>();
         targetHoverImg = targetBackgroundImg.transform.GetChild(0).gameObject.GetComponent<Image>();
@@ -239,6 +241,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         isFadingIn = false;
     }
 
+
     private void Invoke_OnClick_ConfirmLeave() {
         if (ActiveMenuOnScreen != null) {
             ActiveMenuOnScreen.SetActive(false);
@@ -256,4 +259,18 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         RunLoadingScreen(0);
         lobbySys.SetupPhotonNetwork();
     }
+
+    public void UpdateCountDown(int currentCount) {
+        if (currentCount > 0) {
+            CountDownTimer.text = currentCount.ToString();
+        } else if (currentCount == 0) {
+            CountDownTimer.text = "Go!";
+            Invoke("Invoke_ClearTimerText", 1f); //Clear timer text after 1 second.
+        }
+    }
+
+    private void Invoke_ClearTimerText() {
+        CountDownTimer.text = "";
+    }
+
 }
