@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
+public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunOwnershipCallbacks {
 
     // Modifiable in editor, invisible to cheaters.
     [SerializeField]
@@ -689,6 +689,51 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    void IPunOwnershipCallbacks.OnOwnershipRequest(PhotonView targetView, Player requestingPlayer) {
+        
+    }
+
+    void IPunOwnershipCallbacks.OnOwnershipTransfered(PhotonView targetView, Player previousOwner) {
+
+        Transform propHolderT = gameObject.transform.Find("PropHolder");
+
+        foreach (Transform child in propHolderT) { //Ownership of PLAYER object has changed. This only happens when a player leaves.
+            Rigidbody disconnectedPlyRB = gameObject.GetComponent<Rigidbody>();
+            //Unparent prop.
+            child.parent = null;
+            //Set reference to detaching prop.
+            GameObject detachingProp = child.gameObject;
+            //Set prop layer to PropInteraction Layer to make sure we highlight it after it's detached.
+            detachingProp.layer = 11;
+            //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
+            detachingProp.tag = "Untagged";
+            //Check to see if we have a rigidbody on the detaching object. We shouldn't, so let's add one.
+            if (!detachingProp.GetComponent<Rigidbody>()) {
+
+                //re-adding rb to detaching prop.
+                detachingProp.AddComponent<Rigidbody>();
+                Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
+                //Re-enable networked movement/physics script on object.
+                PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
+                prtv.enabled = true;
+                //Get reference to prop's PV.
+                PhotonView detPropPV = detachingProp.GetComponent<PhotonView>();
+                //Set that networking script to be observed over the network.
+                detPropPV.ObservedComponents.Add(prtv);
+                //Make sure this detached prop has a RB, so we run a function under PropInteraction to ensure this.
+                detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                //Set values of newly added RB. Add velocities after we unfreeze it.
+                detPropRB.isKinematic = false;
+                detPropRB.AddForce(disconnectedPlyRB.velocity * detPropRB.mass, ForceMode.Impulse);
+                detPropRB.AddTorque(disconnectedPlyRB.angularVelocity * detPropRB.mass, ForceMode.Impulse);
+            } else {
+                Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
+            }
+            //Make sure the newly detached prop is available over the network.
+            detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+        }
+        PhotonNetwork.Destroy(gameObject);
+    }
 }
 
 
