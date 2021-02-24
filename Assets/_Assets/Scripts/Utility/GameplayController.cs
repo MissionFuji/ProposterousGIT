@@ -1,11 +1,10 @@
-using UnityEngine;
 using Photon.Pun;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEngine;
 
-public class GameplayController : MonoBehaviour
-{
+public class GameplayController : MonoBehaviour {
 
     [SerializeField]
     private GameObject MainMenuPrefab; // Saved via inspector.
@@ -131,7 +130,7 @@ public class GameplayController : MonoBehaviour
                     gcpv.RPC("RPC_SpawnSortedPlayersIntoFreshGame", RpcTarget.AllBuffered, InGamePlayerList.ToArray(), SeekerPlayerList.ToArray(), PropPlayerList.ToArray());
                 }
             }
-        } 
+        }
     }
 
     [PunRPC] // This runs on all players in the room. Sent from MasterClient.
@@ -175,26 +174,40 @@ public class GameplayController : MonoBehaviour
 
 
 
-            foreach (int seekerID in allSeekerList) {
-                if (myID == seekerID) {
-                    //We're a seeker.
-                    PhotonView ourPV = PhotonView.Find(myID);
-                    ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
-                    ourPV.gameObject.transform.rotation = Quaternion.identity;
-                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
-                }
+        foreach (int seekerID in allSeekerList) {
+            if (myID == seekerID) {
+                //We're a seeker.
+                PhotonView ourPV = PhotonView.Find(myID);
+                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                ourPV.gameObject.transform.rotation = Quaternion.identity;
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
             }
+        }
 
-            foreach (int propID in allPropList) {
-                if (myID == propID) {
-                    //We're a pre-prop ghost.
-                    PhotonView ourPV = PhotonView.Find(myID);
-                    ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
-                    ourPV.gameObject.transform.rotation = Quaternion.identity;
-                    PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+        foreach (int propID in allPropList) {
+            if (myID == propID) {
+                //We're a pre-prop ghost.
+                PhotonView ourPV = PhotonView.Find(myID);
+                ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                ourPV.gameObject.transform.rotation = Quaternion.identity;
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
+            }
+        }
+
+        List<GameObject> oppositeTeamNameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
+
+        //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
+        if (allSeekerList.Contains(myID)) { // If we're on the Seeker team
+            foreach (int propPlayerID in PropPlayerList) { //
+                foreach(GameObject nt in oppositeTeamNameTagList) {
+                    if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
+                        nt.GetComponent<CanvasGroup>().alpha = 0;
+                    }
                 }
             }
-            Invoke("Invoke_MoveAllToFreshGame", 0.5f);
+        }
+
+        Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
 
     //Runs on all clients.

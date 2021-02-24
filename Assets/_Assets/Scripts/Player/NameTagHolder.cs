@@ -5,8 +5,7 @@ using Photon.Realtime;
 using UnityEngine;
 
 public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
-    [SerializeField]
-    private int ownerID = -1;
+    public int ownerID = -1;
     public GameObject tarPlayer = null;
 
     // Update is called once per frame

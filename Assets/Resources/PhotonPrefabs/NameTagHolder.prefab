@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 5913807511652807533}
   - component: {fileID: 5323018253253562834}
   - component: {fileID: 6110572502738521599}
+  - component: {fileID: 2798777698548950668}
   m_Layer: 0
   m_Name: NameTagHolder
-  m_TagString: Untagged
+  m_TagString: NameTag
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -69,6 +70,18 @@ MonoBehaviour:
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!225 &2798777698548950668
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182037886390163942}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2897377386569501763
 GameObject:
   m_ObjectHideFlags: 0
@@ -285,7 +298,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &6957850141644616047
 MonoBehaviour:
   m_ObjectHideFlags: 0
