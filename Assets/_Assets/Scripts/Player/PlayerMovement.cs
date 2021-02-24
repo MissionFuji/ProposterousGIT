@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunOwnershipCallbacks {
+public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     // Modifiable in editor, invisible to cheaters.
     [SerializeField]
@@ -23,6 +23,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
     private bool RotLocked = false;
     [SerializeField]
     private int takeOverRange;
+    [SerializeField]
+    private Color seekerHoverColor;
     [SerializeField]
     private LayerMask PropInteraction;
 
@@ -144,10 +146,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
                             if (obj != null) {
                                 ol = obj.GetComponent<Outline>();
                                 if (outlinePropInt.isAvailable) {
+                                    if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
+                                        if (ol.OutlineColor != seekerHoverColor) {
+                                            ol.OutlineColor = seekerHoverColor;
+                                        }
+                                    }
                                     if (ol.enabled != true) {
                                         ol.enabled = true;
                                     }
 
+                                    //host only?
                                     if (!outlinePropInt.isHostOnly) {
                                         if (ol.OutlineColor != Color.white) {
                                             ol.OutlineColor = Color.white;
@@ -164,12 +172,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
                                         }
                                     }
 
+
                                 } else {
+                                    if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
+                                        if (ol.OutlineColor != seekerHoverColor) {
+                                            ol.OutlineColor = seekerHoverColor;
+                                        }
+                                    } else {
+                                        if (ol.OutlineColor != Color.red) {
+                                            ol.OutlineColor = Color.red;
+                                        }
+                                    }
                                     if (ol.enabled != true) {
                                         ol.enabled = true;
-                                    }
-                                    if (ol.OutlineColor != Color.red) {
-                                        ol.OutlineColor = Color.red;
                                     }
                                 }
                             }
@@ -686,55 +701,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunO
             }
 
             //The rest gets handled from the PropInteraction script on the object when it spawn. This will parent it to us.
-        }
-    }
-
-    void IPunOwnershipCallbacks.OnOwnershipRequest(PhotonView targetView, Player requestingPlayer) {
-        
-    }
-
-    void IPunOwnershipCallbacks.OnOwnershipTransfered(PhotonView targetView, Player previousOwner) {
-
-        if (gameObject.GetComponent<PhotonView>() == targetView) {
-            Debug.LogWarning("Cleaning up " + previousOwner.NickName + "'s props that got left behind.");
-            Transform propHolderT = gameObject.transform.Find("PropHolder");
-
-            foreach (Transform child in propHolderT) { //Ownership of PLAYER object has changed. This only happens when a player leaves.
-                Rigidbody disconnectedPlyRB = gameObject.GetComponent<Rigidbody>();
-                //Unparent prop.
-                child.parent = null;
-                //Set reference to detaching prop.
-                GameObject detachingProp = child.gameObject;
-                //Set prop layer to PropInteraction Layer to make sure we highlight it after it's detached.
-                detachingProp.layer = 11;
-                //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
-                detachingProp.tag = "Untagged";
-                //Check to see if we have a rigidbody on the detaching object. We shouldn't, so let's add one.
-                if (!detachingProp.GetComponent<Rigidbody>()) {
-
-                    //re-adding rb to detaching prop.
-                    detachingProp.AddComponent<Rigidbody>();
-                    Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
-                    //Re-enable networked movement/physics script on object.
-                    PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
-                    prtv.enabled = true;
-                    //Get reference to prop's PV.
-                    PhotonView detPropPV = detachingProp.GetComponent<PhotonView>();
-                    //Set that networking script to be observed over the network.
-                    detPropPV.ObservedComponents.Add(prtv);
-                    //Make sure this detached prop has a RB, so we run a function under PropInteraction to ensure this.
-                    detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
-                    //Set values of newly added RB. Add velocities after we unfreeze it.
-                    detPropRB.isKinematic = false;
-                    detPropRB.AddForce(disconnectedPlyRB.velocity * detPropRB.mass, ForceMode.Impulse);
-                    detPropRB.AddTorque(disconnectedPlyRB.angularVelocity * detPropRB.mass, ForceMode.Impulse);
-                } else {
-                    Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
-                }
-                //Make sure the newly detached prop is available over the network.
-                detachingProp.GetComponent<PropInteraction>().isAvailable = true;
-            }
-            PhotonNetwork.Destroy(gameObject);
         }
     }
 }

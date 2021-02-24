@@ -179,6 +179,7 @@ public class GameplayController : MonoBehaviour {
                 //We're a seeker.
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                ppc.moveState = 3; //We're a seeker now.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
                 PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Seeker"), ourPV.gameObject.transform.position, ourPV.gameObject.transform.rotation, 0, instanceData); //Spawn our ghost prop.
             }

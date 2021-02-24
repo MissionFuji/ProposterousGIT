@@ -24,6 +24,7 @@ TagManager:
   - GhostForm
   - Map
   - AudioController
+  - NameTag
   layers:
   - Default
   - TransparentFX

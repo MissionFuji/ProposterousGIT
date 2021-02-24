@@ -130,7 +130,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
             char c = charList[Random.Range(0, charList.Length)];
             seudoRoomName += c;
         }
-        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10, EmptyRoomTtl = 1, CleanupCacheOnLeave = false };
+        RoomOptions roomOps = new RoomOptions() { IsVisible = true, IsOpen = true, MaxPlayers = 10, EmptyRoomTtl = 1};
         
         PhotonNetwork.CreateRoom(seudoRoomName.ToUpper(), roomOps);
     }
