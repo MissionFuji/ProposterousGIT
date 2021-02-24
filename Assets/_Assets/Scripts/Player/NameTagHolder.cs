@@ -27,9 +27,10 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunOw
 
     void IPunOwnershipCallbacks.OnOwnershipTransfered(PhotonView targetView, Player previousOwner) {
 
-        //The only reason the ownership of these nametags would change, is if the owning player disconnected. Sooo... DESTROY.
-        Debug.Log("Destroyed " + previousOwner.NickName + "'s " + gameObject.name + " GameObject over the network.");
-        Destroy(gameObject);
-
+        if (gameObject.GetComponent<PhotonView>() == targetView) {
+            //The only reason the ownership of these nametags would change, is if the owning player disconnected. Sooo... DESTROY.
+            Debug.Log("Destroyed " + previousOwner.NickName + "'s " + gameObject.name + " GameObject over the network.");
+            Destroy(gameObject);
+        }
     }
 }
