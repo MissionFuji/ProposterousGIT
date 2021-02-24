@@ -2369,7 +2369,7 @@ MonoBehaviour:
   SeekerPlayerList: 
   PropPlayerList: 
   CurrentCountDownTimer: 20
-  CountDownTimeInSeconds: 0
+  CountDownTimeInSeconds: 20
 --- !u!114 &629534985
 MonoBehaviour:
   m_ObjectHideFlags: 0

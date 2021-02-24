@@ -200,6 +200,7 @@ public class GameplayController : MonoBehaviour
     //Runs on all clients.
     [PunRPC]
     private void RPC_OpenSeekerGate() {
+        mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
         if (mp.seekerDoor != null) {
             Destroy(mp.seekerDoor);
         } else {
