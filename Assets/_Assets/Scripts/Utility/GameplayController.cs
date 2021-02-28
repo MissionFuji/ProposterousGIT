@@ -135,18 +135,19 @@ public class GameplayController : MonoBehaviour {
         PhotonView deadID = PhotonView.Find(killedPlyID);
         if (deadID != null) {
             Destroy(deadID.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Everyone will destroy the child object.
+            deadID.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+            deadID.gameObject.transform.rotation = Quaternion.identity;
 
             if (deadID.IsMine) { // If we own the player locally.
                 //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker. Passing 3 = Dead Prop Becoming Trans Ghost.
                 object[] deathInstanceData = new object[1];
                 deathInstanceData[0] = 3;
-
-                deadID.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ppc.moveState = 4; //We're a seeker now.
-                deadID.gameObject.transform.rotation = Quaternion.identity;
                 PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost_Trans"), deadID.gameObject.transform.position, deadID.gameObject.transform.rotation, 0, deathInstanceData);
             }
 
+        } else {
+            Debug.LogError("Trying to destroy object but it's null?");
         }
     }
 
