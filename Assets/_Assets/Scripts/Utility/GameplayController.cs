@@ -123,7 +123,7 @@ public class GameplayController : MonoBehaviour {
                 UpdateGameplayState(4); // End-Phase.
                 Debug.LogWarning("GAME OVER! ALL PROPS KILLED!");
             }
-            gcpv.RPC("RPC_ApproveKillPropPlayer", RpcTarget.MasterClient, killedPlyID);
+            gcpv.RPC("RPC_ApproveKillPropPlayer", RpcTarget.AllBuffered, killedPlyID);
         } else {
             Debug.LogError("Request to kill prop player denied. It's null now?");
         }
