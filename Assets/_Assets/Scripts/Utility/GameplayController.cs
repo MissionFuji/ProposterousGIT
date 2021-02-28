@@ -18,8 +18,7 @@ public class GameplayController : MonoBehaviour {
     private List<int> SeekerPlayerList = new List<int>();
     [SerializeField]
     private List<int> PropPlayerList = new List<int>();
-    [SerializeField]
-    private int CurrentCountDownTimer = 20;
+
 
     //Settings:
     [SerializeField]
@@ -31,6 +30,7 @@ public class GameplayController : MonoBehaviour {
     private PlayerPropertiesController ppc;
     private MapProperties mp;
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
+    private int CurrentCountDownTimer = 20;
 
 
 
@@ -82,6 +82,11 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    //Ran locally by a single seeker from PlayerMovement.
+    public void RequestToKillPropPlayer(int killedPlyID) {
+        gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID)); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
+    }
+
     //Only runs on MasterClient.
     private void MoveAllToPreGameLobby() {
         // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran.
@@ -103,6 +108,45 @@ public class GameplayController : MonoBehaviour {
         int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
         gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
         ppc.moveState = 1; // pre-prop moveState.
+    }
+
+    //Only runs on MasterClient.
+    [PunRPC]
+    void RPC_RequestToKillPropPlayer(int killedPlyID) {
+        PhotonView deadID = PhotonView.Find(killedPlyID);
+        if (deadID != null) {
+            if (PropPlayerList.Contains(deadID.ViewID)) {
+                PropPlayerList.Remove(deadID.ViewID);
+            }
+            Debug.Log("Prop player: " + deadID.name + " has been exterminated. Remaining props: " + PropPlayerList.Count);
+            if (PropPlayerList.Count == 0) {
+                Debug.LogWarning("GAME OVER! ALL PROPS KILLED!");
+            }
+            gcpv.RPC("RPC_ApproveKillPropPlayer", RpcTarget.MasterClient, killedPlyID);
+        } else {
+            Debug.LogError("Request to kill prop player denied. It's null now?");
+        }
+    }
+
+    //Runs on every client.
+    [PunRPC]
+    void RPC_ApproveKillPropPlayer(int killedPlyID) {
+        PhotonView deadID = PhotonView.Find(killedPlyID);
+        if (deadID != null) {
+            Destroy(deadID.gameObject.transform.Find("PropHolder").GetChild(0)); // Everyone will destroy the child object.
+
+            if (deadID.IsMine) { // If we own the player locally.
+                //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker. Passing 3 = Dead Prop Becoming Trans Ghost.
+                object[] deathInstanceData = new object[1];
+                deathInstanceData[0] = 3;
+
+                deadID.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
+                ppc.moveState = 4; //We're a seeker now.
+                deadID.gameObject.transform.rotation = Quaternion.identity;
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost_Trans"), deadID.gameObject.transform.position, deadID.gameObject.transform.rotation, 0, deathInstanceData);
+            }
+
+        }
     }
 
     //Each player in room tells master client to run this.
@@ -210,6 +254,7 @@ public class GameplayController : MonoBehaviour {
 
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
+
 
     //Runs on all clients.
     [PunRPC]

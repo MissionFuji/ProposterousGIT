@@ -35,7 +35,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
         /* THIS ENTIRE SECTION IS FOR WHEN YOU BECOME A PROP. WE SPAWN A NEW PROP BEFORE WE TAKE IT OVER */
         if (gameObject.GetComponent<PropInteraction>()) { // Is this a prop?
             object[] receivedInstData = info.photonView.InstantiationData;
-            int spawnRoutine = (int)receivedInstData[0]; // First index only. 0 == Prop Spawner. 1 == Player Spawned Take-Over Prop. 2 == Player Spawning Seeker/Ghost Prefab.
+            int spawnRoutine = (int)receivedInstData[0]; // First index only. 0 == Prop Spawner. 1 == Player Spawned Take-Over Prop. 2 == Player Spawning Seeker/Ghost Prefab. 3 == DeadProp Spawning Ghost.
             if (spawnRoutine == 0) { // Prop Spawner.
 
             } else if (spawnRoutine == 1) { // Prop spawned for sake of Takeover.
@@ -97,6 +97,24 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 plyRB.freezeRotation = true;
                 plyRB.isKinematic = false;
 
+            } else if (spawnRoutine == 3) {
+                GameObject plyTagObj = (GameObject)info.Sender.TagObject;
+                PhotonView targetPlayerPV = plyTagObj.GetComponent<PhotonView>();
+
+                //Build our vars.
+                Rigidbody plyRB = plyTagObj.GetComponent<Rigidbody>();
+
+                //Prop takeover, parent, then apply transforms to it.
+                gameObject.transform.rotation = Quaternion.identity;
+                gameObject.transform.parent = plyTagObj.transform.Find("PropHolder");
+                gameObject.transform.localPosition = Vector3.zero;
+
+                //Let's give it a tag so we can better check against other objects in other scripts.
+                gameObject.tag = "AttachedProp";
+
+                //Update RB.
+                plyRB.freezeRotation = true;
+                plyRB.isKinematic = false;
             }
         }
     }

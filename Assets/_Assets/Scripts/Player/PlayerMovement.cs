@@ -38,6 +38,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private string ourPreviousProp;
     private RaycastHit objectHit;
     private GameObject cursorObj;
+    private GameObject pickupHolder;
+    private GameplayController gController;
 
     //used only for outline in update.
     [SerializeField]
@@ -80,7 +82,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             PPC = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
             mmc = Camera.main.gameObject;
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
+            gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
+            pickupHolder = gameObject.transform.Find("PickupHolder").gameObject;
             rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
             rb = gameObject.GetComponent<Rigidbody>();
             mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform; // this is what gives us accurate y rotation for player.
@@ -92,6 +96,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private void Update() {
         if (pv.IsMine) {
+
+            //Prop Y Rotation Code
+            #region
             xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
             yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
@@ -111,6 +118,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             }
+            #endregion
 
 
             //Highlighting Code
@@ -157,8 +165,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
                                     //host only?
                                     if (!outlinePropInt.isHostOnly) {
-                                        if (ol.OutlineColor != Color.white) {
-                                            ol.OutlineColor = Color.white;
+                                        if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
+                                            if (ol.OutlineColor != seekerHoverColor) {
+                                                ol.OutlineColor = seekerHoverColor;
+                                            }
+                                        } else {
+                                            if (ol.OutlineColor != Color.white) {
+                                                ol.OutlineColor = Color.white;
+                                            }
                                         }
                                     } else {
                                         if (PhotonNetwork.LocalPlayer.IsMasterClient) {
@@ -221,7 +235,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
                     }
                 }
-            } //temporary force-lock rot?
+            } //temporary force-lock rot? This was placed here to remedy the issue where ghost/seeker would spawn with wrong rotation over the network.
 
             if (Input.GetKeyDown(KeyCode.R)) {
                 if (PPC.moveState == 2) { // If we are a prop:
@@ -288,10 +302,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
-                                if (propInt.isAvailable) {
-                                    Debug.Log("You did it. You found a player.");
-                                } else {
-                                    Debug.Log("Nope. Not a player.");
+                                if (propInt.isAvailable) { // Targeting empty prop
+                                    // Add a strike.
+                                    // If this is third strike, play "ERRRR" noise.
+                                } else { // Targeting a prop takenover by a player.
+                                    PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
+                                    if (rootPlayerPV != null) {
+                                        gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
+                                    }
                                 }
                             }
                         }
@@ -306,6 +324,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     void FixedUpdate() {
         if (pv.IsMine == true) {
+
             // Movement Code.
             #region
             if (!PPC.playerIsFrozen) { // 0 = Frozen
@@ -360,6 +379,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             #endregion
+
         }
     }
 
@@ -388,6 +408,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         targetPlyRigidbody.isKinematic = false;
     }
 
+    [PunRPC]
+    void RPC_LocalPlayerWasKilled() {
+
+    }
 
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
