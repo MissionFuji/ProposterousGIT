@@ -84,7 +84,7 @@ public class GameplayController : MonoBehaviour {
 
     //Ran locally by a single seeker from PlayerMovement.
     public void RequestToKillPropPlayer(int killedPlyID) {
-        gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID)); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
+        gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
     }
 
     //Only runs on MasterClient.
@@ -120,6 +120,7 @@ public class GameplayController : MonoBehaviour {
             }
             Debug.Log("Prop player: " + deadID.name + " has been exterminated. Remaining props: " + PropPlayerList.Count);
             if (PropPlayerList.Count == 0) {
+                UpdateGameplayState(4); // End-Phase.
                 Debug.LogWarning("GAME OVER! ALL PROPS KILLED!");
             }
             gcpv.RPC("RPC_ApproveKillPropPlayer", RpcTarget.MasterClient, killedPlyID);
