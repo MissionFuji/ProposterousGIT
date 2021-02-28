@@ -134,7 +134,7 @@ public class GameplayController : MonoBehaviour {
     void RPC_ApproveKillPropPlayer(int killedPlyID) {
         PhotonView deadID = PhotonView.Find(killedPlyID);
         if (deadID != null) {
-            Destroy(deadID.gameObject.transform.Find("PropHolder").GetChild(0)); // Everyone will destroy the child object.
+            Destroy(deadID.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Everyone will destroy the child object.
 
             if (deadID.IsMine) { // If we own the player locally.
                 //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker. Passing 3 = Dead Prop Becoming Trans Ghost.

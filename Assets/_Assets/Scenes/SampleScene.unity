@@ -2368,7 +2368,6 @@ MonoBehaviour:
   InGamePlayerList: 
   SeekerPlayerList: 
   PropPlayerList: 
-  CurrentCountDownTimer: 20
   CountDownTimeInSeconds: 20
 --- !u!114 &629534985
 MonoBehaviour:
