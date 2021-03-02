@@ -22,9 +22,7 @@ public class GameplayController : MonoBehaviour {
 
     //Settings:
     [SerializeField]
-    private int PrepPhaseCountDownTimeInSeconds;
-    [SerializeField]
-    private int ActiveGameCountDownTimeInSeconds;
+    private int CountDownTimeInSeconds;
 
     private PhotonView gcpv;
     private ScreenController sController;
@@ -33,8 +31,6 @@ public class GameplayController : MonoBehaviour {
     private MapProperties mp;
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
     private int CurrentCountDownTimer = 20;
-    private int CurrentCountDownTimerActiveGame = 20;
-    private int myID = -1;
 
 
 
@@ -61,7 +57,7 @@ public class GameplayController : MonoBehaviour {
                     } else if (newState == 3) { // In-Game Active Phase.
 
                     } else if (newState == 4) { // In-Game End Phase.
-                        MoveAllToPreGameLobby();
+
                     }
                 }
             } else { // If we're not in a room yet.
@@ -94,15 +90,7 @@ public class GameplayController : MonoBehaviour {
     //Only runs on MasterClient.
     private void MoveAllToPreGameLobby() {
         // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran.
-        if (currentMapLoaded != null) { // we already have some room open.
-            int loadingScreenRoutine = 3;
-            gcpv.RPC("RPC_MoveAllToPreGameLobby", RpcTarget.AllBuffered, loadingScreenRoutine);
-            Invoke("Invoke_SmallDelayFromOldRoomToNewPreGameLobby", 1f);
-        } else {
-            int loadingScreenRoutine = 1;
-            currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
-            gcpv.RPC("RPC_MoveAllToPreGameLobby", RpcTarget.AllBuffered, loadingScreenRoutine);
-        }
+        currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
     }
 
     //Only runs on MasterClient.
@@ -122,19 +110,14 @@ public class GameplayController : MonoBehaviour {
         ppc.moveState = 1; // pre-prop moveState.
     }
 
-    //Runs on all clients.
-    [PunRPC]
-    private void RPC_MoveAllToPreGameLobby(int loadingScreenRoutine) {
-        sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
-        Invoke("Invoke_MoveAllToPreGameLobbyExitLoadingScreen", 1f);
-        ppc.moveState = 1; // pre-prop moveState.
-    }
-
     //Only runs on MasterClient.
     [PunRPC]
     void RPC_RequestToKillPropPlayer(int killedPlyID) {
         PhotonView deadID = PhotonView.Find(killedPlyID);
         if (deadID != null) {
+            if (PropPlayerList.Contains(deadID.ViewID)) {
+                PropPlayerList.Remove(deadID.ViewID);
+            }
             Debug.Log("Prop player: " + deadID.name + " has been exterminated. Remaining props: " + PropPlayerList.Count);
             if (PropPlayerList.Count == 0) {
                 UpdateGameplayState(4); // End-Phase.
@@ -154,30 +137,17 @@ public class GameplayController : MonoBehaviour {
             Destroy(deadID.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Everyone will destroy the child object.
             deadID.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
             deadID.gameObject.transform.rotation = Quaternion.identity;
+
             if (deadID.IsMine) { // If we own the player locally.
                 //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker. Passing 3 = Dead Prop Becoming Trans Ghost.
                 object[] deathInstanceData = new object[1];
                 deathInstanceData[0] = 3;
-                ppc.moveState = 4; //We're a dead prop now.
-                GameObject newDeadPly = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost_Trans"), deadID.gameObject.transform.position, deadID.gameObject.transform.rotation, 0, deathInstanceData);
-                deadID.RPC("RPC_MakeDeadGhostVisible", RpcTarget.AllBuffered, newDeadPly.GetPhotonView().ViewID);
+                ppc.moveState = 4; //We're a seeker now.
+                PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost_Trans"), deadID.gameObject.transform.position, deadID.gameObject.transform.rotation, 0, deathInstanceData);
             }
 
         } else {
             Debug.LogError("Trying to destroy object but it's null?");
-        }
-    }
-
-    //Runs on each player
-    [PunRPC]
-    private void RPC_MakeDeadGhostVisible(int deadGhostID) {
-        PhotonView deadGhostPlayer = PhotonView.Find(deadGhostID);
-        if (myID != -1) {
-            if (!SeekerPlayerList.Contains(myID)) {
-                deadGhostPlayer.GetComponent<Renderer>().material.color = new Color(1f, 1f, 1f, 0.6f);
-            }
-        } else {
-            Debug.LogError("myID never got set by Team Sorter.");
         }
     }
 
@@ -221,6 +191,8 @@ public class GameplayController : MonoBehaviour {
         List<int> allPlayerList = playerList.ToList<int>();
         List<int> allSeekerList = seekerList.ToList<int>();
         List<int> allPropList = propList.ToList<int>();
+
+        int myID = -1;
 
         //Destroy all props being controller by players.
         foreach (int plyID in allPlayerList) {
@@ -288,17 +260,13 @@ public class GameplayController : MonoBehaviour {
 
     //Runs on all clients.
     [PunRPC]
-    private void RPC_OpenSeekerGateAndStartActiveGameTimer() {
+    private void RPC_OpenSeekerGate() {
         mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
         if (mp.seekerDoor != null) {
             Destroy(mp.seekerDoor);
         } else {
             Debug.LogError("Tried to destroy Seeker door. It was null?..");
         }
-
-        CurrentCountDownTimer = ActiveGameCountDownTimeInSeconds; // We set our countdown timer equal to the "start" time.
-        InvokeRepeating("Invoke_CountdownActiveGame", 0.1f, 1f);
-
     }
 
 
@@ -307,7 +275,7 @@ public class GameplayController : MonoBehaviour {
     // This invoke moves all players into a fresh prep-phase game.
     private void Invoke_MoveAllToFreshGame() {
 
-        CurrentCountDownTimer = PrepPhaseCountDownTimeInSeconds; // We set our countdown timer equal to the "start" time.
+        CurrentCountDownTimer = CountDownTimeInSeconds; // We set our countdown timer equal to the "start" time.
         InvokeRepeating("Invoke_CountdownPrepPhase", 0.1f, 1f);
 
         //End the loading screen once we're done.
@@ -324,34 +292,10 @@ public class GameplayController : MonoBehaviour {
             aController.PlayCountDownLastTick();
             if (PhotonNetwork.IsMasterClient) {
                 UpdateGameplayState(3);
-                gcpv.RPC("RPC_OpenSeekerGateAndStartActiveGameTimer", RpcTarget.AllBuffered);
+                gcpv.RPC("RPC_OpenSeekerGate", RpcTarget.AllBuffered);
             }
             CancelInvoke("Invoke_CountdownPrepPhase");
         }
-    }
-
-    private void Invoke_CountdownActiveGame() {
-        CurrentCountDownTimerActiveGame--;
-        if (CurrentCountDownTimerActiveGame > 0) { //Counting down.
-            sController.UpdateCountDownActiveGame(CurrentCountDownTimerActiveGame);
-        } else if (CurrentCountDownTimerActiveGame == 0) { // Last tick.
-            sController.UpdateCountDownActiveGame(CurrentCountDownTimerActiveGame);
-            if (PhotonNetwork.IsMasterClient) {
-                UpdateGameplayState(4); // End game phase. Display winner/loser or whatever.
-            }
-            CancelInvoke("Invoke_CountdownActiveGame");
-        }
-    }
-
-    //Only the master client runs this.
-    private void Invoke_SmallDelayFromOldRoomToNewPreGameLobby() {
-        PhotonNetwork.Destroy(currentMapLoaded);
-        currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
-    }
-
-    //All clients run this.
-    private void Invoke_MoveAllToPreGameLobbyExitLoadingScreen() {
-        sController.EndLoadingScreen(1f);
     }
 
 }
