@@ -2369,8 +2369,7 @@ MonoBehaviour:
   InGamePlayerList: 
   SeekerPlayerList: 
   PropPlayerList: 
-  PrepPhaseCountDownTimeInSeconds: 0
-  ActiveGameCountDownTimeInSeconds: 0
+  CountDownTimeInSeconds: 20
 --- !u!114 &629534985
 MonoBehaviour:
   m_ObjectHideFlags: 0
