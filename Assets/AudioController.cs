@@ -29,12 +29,12 @@ public class AudioController : MonoBehaviour
     }
 
     public void PlayPropTakeoverSuccess() {
-        AudSo.clip = CountDownLastTick;
+        AudSo.clip = PropTakeoverSuccess;
         AudSo.Play();
     }
 
     public void PlayPropTakeoverFail() {
-        AudSo.clip = CountDownLastTick;
+        AudSo.clip = PropTakeoverFail;
         AudSo.Play();
     }
 }

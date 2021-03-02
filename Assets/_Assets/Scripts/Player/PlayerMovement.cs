@@ -40,6 +40,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject cursorObj;
     private GameObject pickupHolder;
     private GameplayController gController;
+    private AudioController aController;
 
     //used only for outline in update.
     [SerializeField]
@@ -83,6 +84,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmc = Camera.main.gameObject;
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
             gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
+            aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
             pickupHolder = gameObject.transform.Find("PickupHolder").gameObject;
             rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
@@ -286,6 +288,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             }
 
                                         } else {
+                                            aController.PlayPropTakeoverFail();
                                             Debug.Log("Tried to take over a host-only prop as a non-host client.");
                                         }
                                     } else { // NOT host-only section.
@@ -293,12 +296,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
                                                 BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             } else {
+                                                aController.PlayPropTakeoverFail();
                                                 Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
                                             }
                                         }
                                     }
 
                                 } else if (!propInt.isAvailable) {
+                                    aController.PlayPropTakeoverFail();
                                     Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
@@ -358,24 +363,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
                     rb.velocity = newMovePos;
                 } else if (PPC.moveState == 4) { // 4 = Ghost/Spec
-                    Vector3 direction = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical")).normalized;
-
-                    //X/Y Movement.
-                    if (direction.magnitude >= 0.1f) {
-                        float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-                        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, rotSpeed);
-
-                        transform.rotation = Quaternion.Euler(0f, angle, 0f);
-                        Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-                        //controller.Move(moveDir.normalized * playerSpeed * Time.deltaTime);
-                    }
-
-                    //Z Movement.
-                    if (Input.GetKey(KeyCode.Space) && (!Input.GetKey(KeyCode.LeftShift))) {
-                        //controller.Move(Vector3.up * (playerSpeed / 2) * Time.deltaTime);
-                    } else if (!Input.GetKey(KeyCode.Space) && (Input.GetKey(KeyCode.LeftShift))) {
-                        //controller.Move(-Vector3.up * (playerSpeed / 2) * Time.deltaTime);
-                    }
+                    rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
+                    Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
+                    Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
+                    rb.velocity = newMovePos;
                 }
             }
             #endregion
@@ -406,11 +397,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         targetPly.transform.rotation = Quaternion.identity;
         targetPlyProp.gameObject.transform.rotation = Quaternion.identity;
         targetPlyRigidbody.isKinematic = false;
-    }
-
-    [PunRPC]
-    void RPC_LocalPlayerWasKilled() {
-
     }
 
     void BecomeProp(int plyID, int propID) {
@@ -445,6 +431,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
         } else {
             Debug.LogError("The prop or target player you're referencing is null. Maybe prop was taken?");
+            aController.PlayPropTakeoverFail();
         }
     }
 
@@ -452,6 +439,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup) {
 
+        aController.PlayPropTakeoverSuccess();
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
             GameObject targetPropRef = PhotonView.Find(propID).gameObject;
@@ -540,6 +528,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
+        aController.PlayPropTakeoverSuccess();
         //Store data for current prop/player.
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {

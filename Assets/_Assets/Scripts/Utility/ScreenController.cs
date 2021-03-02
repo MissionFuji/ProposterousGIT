@@ -23,6 +23,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject ConfirmExitMenu;
     private GameObject OptionsMenu;
     private Text CountDownTimer;
+    private Text CountDownTimerActiveGame;
     public GameObject ActiveMenuOnScreen = null;
     #endregion
 
@@ -51,6 +52,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         lobbySys = GameObject.FindGameObjectWithTag("LobbySystem").GetComponent<LobbySystem>();
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
         CountDownTimer = canvas.gameObject.transform.Find("RoomUI/CountDownTimer").gameObject.GetComponent<Text>();
+        CountDownTimerActiveGame = canvas.gameObject.transform.Find("RoomUI/ActiveGameCountDownTimer").gameObject.GetComponent<Text>();
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
         targetBackgroundImg = canvas.transform.Find("BlankBackgroundScreen").gameObject.GetComponent<Image>();
         targetHoverImg = targetBackgroundImg.transform.GetChild(0).gameObject.GetComponent<Image>();
@@ -62,7 +64,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
 
-    // loadingScreenRoutines: 0 gameIntro, 1 loadIntoRoom, 2 loadIntoGame
+    // loadingScreenRoutines: 0 gameIntro, 1 loadIntoRoom, 2 loadIntoGame, 3 loadIntoRoomFromOldGame
     public void RunLoadingScreen(int loadingScreenRoutine) {
         if (targetBackgroundImg != null && targetHoverImg != null) { // Make sure we have references to our canvas objects.
             if (loadingScreenRoutine == 0) { // Game intro
@@ -74,6 +76,9 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             } else if (loadingScreenRoutine == 2) { // Load Into Game
                 targetBackgroundImg.sprite = backgroundSpriteList[2];
                 targetHoverImg.sprite = hoveringSpriteList[1];
+            } else if (loadingScreenRoutine == 3) {
+                targetBackgroundImg.sprite = backgroundSpriteList[1];
+                targetHoverImg.sprite = hoveringSpriteList[2];
             } else {
                 targetBackgroundImg.sprite = backgroundSpriteList[0];
                 targetHoverImg.sprite = hoveringSpriteList[0];
@@ -269,11 +274,26 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    public void UpdateCountDownActiveGame(int currentCount) {
+        if (currentCount > 0) {
+            CountDownTimer.text = currentCount.ToString();
+        } else if (currentCount == 0) {
+            Invoke("Invoke_ClearTimerText_ActiveGame", 1f); //Clear timer text after 1 second.
+        }
+    }
+
     private void Invoke_ClearTimerText() {
         if (CountDownTimer.gameObject.activeSelf == false) {
             CountDownTimer.gameObject.SetActive(true);
         }
         CountDownTimer.text = "";
+    }
+
+    private void Invoke_ClearTimerText_ActiveGame() {
+        if (CountDownTimerActiveGame.gameObject.activeSelf == false) {
+            CountDownTimerActiveGame.gameObject.SetActive(true);
+        }
+        CountDownTimerActiveGame.text = "";
     }
 
 }
