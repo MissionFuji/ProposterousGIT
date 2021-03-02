@@ -35,28 +35,25 @@ MonoBehaviour:
   RpcList:
   - ClickRpc
   - DestroyRpc
+  - RPC_ApproveKillPropPlayer
   - RPC_BecomePropFromPreProp
   - RPC_BecomePropFromProp
   - RPC_ClientConnected
   - RPC_ClientDisconnected
+  - RPC_HelpMasterBuildPlayerList
   - RPC_HostLeftCloseRoom
   - RPC_LockRotationOverNetwork
+  - RPC_MakeDeadGhostVisible
   - RPC_MoveAllToFreshGame
+  - RPC_MoveAllToPreGameLobby
+  - RPC_OpenSeekerGateAndStartActiveGameTimer
   - RPC_RemovePlayer
+  - RPC_RequestToKillPropPlayer
   - RPC_ResetRotationOverNetwork
   - RPC_SetNameTagTarget
-  - RPC_UnlockRotationOverNetwork
-  - RPC_UpdatePlayerSpawnedInCount
-  - RPC_VoidResetPosition
-  - RPC_HelpMasterBuildPlayerList
   - RPC_SpawnSortedPlayersIntoFreshGame
-  - RPC_OpenSeekerGate
-  - RPC_ApproveKillPropPlayer
-  - RPC_LocalPlayerWasKilled
-  - RPC_RequestToKillPropPlayer
-  - RPC_MakeDeadGhostVisible
-  - RPC_OpenSeekerGateAndStartActiveGameTimer
-  - RPC_MoveAllToPreGameLobby
+  - RPC_UnlockRotationOverNetwork
+  - RPC_VoidResetPosition
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
