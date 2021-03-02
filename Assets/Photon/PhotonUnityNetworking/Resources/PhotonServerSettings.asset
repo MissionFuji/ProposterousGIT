@@ -54,6 +54,9 @@ MonoBehaviour:
   - RPC_ApproveKillPropPlayer
   - RPC_LocalPlayerWasKilled
   - RPC_RequestToKillPropPlayer
+  - RPC_MakeDeadGhostVisible
+  - RPC_OpenSeekerGateAndStartActiveGameTimer
+  - RPC_MoveAllToPreGameLobby
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
