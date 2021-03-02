@@ -40,7 +40,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject cursorObj;
     private GameObject pickupHolder;
     private GameplayController gController;
-    private AudioController aController;
 
     //used only for outline in update.
     [SerializeField]
@@ -84,7 +83,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmc = Camera.main.gameObject;
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
             gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
-            aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
             pickupHolder = gameObject.transform.Find("PickupHolder").gameObject;
             rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
@@ -288,7 +286,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             }
 
                                         } else {
-                                            aController.PlayPropTakeoverFail();
+                                        
                                             Debug.Log("Tried to take over a host-only prop as a non-host client.");
                                         }
                                     } else { // NOT host-only section.
@@ -296,14 +294,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
                                                 BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             } else {
-                                                aController.PlayPropTakeoverFail();
                                                 Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
                                             }
                                         }
                                     }
 
                                 } else if (!propInt.isAvailable) {
-                                    aController.PlayPropTakeoverFail();
                                     Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
@@ -431,15 +427,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
         } else {
             Debug.LogError("The prop or target player you're referencing is null. Maybe prop was taken?");
-            aController.PlayPropTakeoverFail();
         }
     }
 
 
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup) {
-
-        aController.PlayPropTakeoverSuccess();
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
             GameObject targetPropRef = PhotonView.Find(propID).gameObject;
@@ -528,7 +521,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {
-        aController.PlayPropTakeoverSuccess();
         //Store data for current prop/player.
         PhotonView tarPropPV = PhotonView.Find(propID);
         if (tarPropPV != null) {
