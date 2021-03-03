@@ -102,9 +102,11 @@ public class GameplayController : MonoBehaviour {
         // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran. This happens on first join.
         if (currentMapLoaded != null) {
             PhotonNetwork.Destroy(currentMapLoaded);
+            currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
+            gcpv.RPC("RPC_MoveAllToPreGameLobby", RpcTarget.AllBuffered);
+        } else {
+            currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
         }
-        currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
-        gcpv.RPC("RPC_MoveAllToPreGameLobby", RpcTarget.AllBuffered);
     }
 
 
