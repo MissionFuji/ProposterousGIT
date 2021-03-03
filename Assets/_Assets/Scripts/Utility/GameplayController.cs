@@ -113,6 +113,9 @@ public class GameplayController : MonoBehaviour {
 
     //Only runs on MasterClient.
     private void MoveAllToFreshGame() {
+        PropPlayerList.Clear();
+        InGamePlayerList.Clear();
+        SeekerPlayerList.Clear();
         int loadingScreenRoutine = 2;
         gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
@@ -132,6 +135,7 @@ public class GameplayController : MonoBehaviour {
     private void RPC_MoveAllToPreGameLobby() {
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         GameObject rController = GameObject.FindGameObjectWithTag("RoomController");
+        ppc.moveState = 1; // pre-prop moveState.
         localPlayer.transform.position = rController.transform.GetChild(Random.Range(0, rController.transform.childCount - 1)).position;
     }
 
