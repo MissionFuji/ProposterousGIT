@@ -138,6 +138,7 @@ public class GameplayController : MonoBehaviour {
     [PunRPC]
     private void RPC_RunEndPhase(int loadingScreenRoutine) {
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
+        sController.UpdateGameTimeLeft(0); // Try to clear timer text.
         Invoke("Invoke_EndPhaseBuffer", 1f);
     }
 
