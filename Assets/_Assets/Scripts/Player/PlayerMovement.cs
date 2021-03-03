@@ -105,7 +105,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-            if (PPC.moveState == 1) { // If we are a pre-prop ghost:
+            if (PPC.moveState == 1 || PPC.moveState == 3) { // If we are a pre-prop ghost:
                 if (rotPropHolder.transform.childCount > 0) {
                     GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
                     prop.transform.rotation = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
