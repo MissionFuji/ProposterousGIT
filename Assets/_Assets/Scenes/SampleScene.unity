@@ -3096,7 +3096,8 @@ MonoBehaviour:
   dstFromTarget: 32
   pitchMinMax: {x: -40, y: 85}
   rotationSmoothTime: 0.04
-  CameraPositionWhenNotInGameFailsafe: {x: 0, y: 10.5, z: -53}
+  CameraPositionWhenNotInGameFailsafe: {x: 0, y: 6.5, z: -53}
+  CameraOffsetWhenInGame: {x: 0, y: 10, z: 0}
   scrollSpeed: 1
   minDist: 6
   maxDist: 32
@@ -3845,7 +3846,7 @@ GameObject:
   - component: {fileID: 1168658251}
   - component: {fileID: 1168658250}
   m_Layer: 5
-  m_Name: ActiveGameCountDownTimer
+  m_Name: GameTimeLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7709,7 +7710,7 @@ GameObject:
   - component: {fileID: 2113147549}
   m_Layer: 0
   m_Name: RoomController
-  m_TagString: System
+  m_TagString: RoomController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

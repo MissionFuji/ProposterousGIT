@@ -9,6 +9,7 @@ public class CameraController : MonoBehaviour
     public Vector2 pitchMinMax = new Vector2(-40, 85);
     public float rotationSmoothTime = .12f;
     public Vector3 CameraPositionWhenNotInGameFailsafe = new Vector3(0f, 10.5f, -53f);
+    public Vector3 CameraOffsetWhenInGame = Vector3.zero;
     public float scrollSpeed;
     public float minDist, maxDist;
 
@@ -45,7 +46,6 @@ public class CameraController : MonoBehaviour
     private void Update() {
         float wheelVal = -Input.mouseScrollDelta.y;
         if (wheelVal != 0) { // scrolling
-            //dstFromTarget += wheelVal * scrollSpeed;
             dstFromTarget =  Mathf.Clamp(dstFromTarget += wheelVal * scrollSpeed, minDist, maxDist);
         }
     }
@@ -58,7 +58,7 @@ public class CameraController : MonoBehaviour
                 pitch = Mathf.Clamp(pitch, pitchMinMax.x, pitchMinMax.y);
                 currentRotation = Vector3.SmoothDamp(currentRotation, new Vector3(pitch, yaw), ref rotationSmoothVelocity, rotationSmoothTime);
                 transform.eulerAngles = currentRotation;
-                transform.position = (target.position + new Vector3(0f, 6f, 0f)) - transform.forward * dstFromTarget;
+                transform.position = (target.position + CameraOffsetWhenInGame) - transform.forward * dstFromTarget;
             }
         } else { // If our player isn't active/on-screen.
                 if (Vector3.Distance(transform.position, CameraPositionWhenNotInGameFailsafe) > 1f) {
@@ -69,6 +69,7 @@ public class CameraController : MonoBehaviour
                 }
         }
     }
+
 
 
 }

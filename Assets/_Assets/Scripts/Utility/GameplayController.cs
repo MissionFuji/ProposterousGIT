@@ -59,7 +59,7 @@ public class GameplayController : MonoBehaviour {
                     } else if (newState == 3) { // In-Game Active Phase.
 
                     } else if (newState == 4) { // In-Game End Phase.
-
+                        RunEndPhase();
                     }
                 }
             } else { // If we're not in a room yet.
@@ -84,16 +84,30 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    //Only runs on MasterClient.
+    private void RunEndPhase() {
+        int loadingScreenRoutine = 3;
+        gcpv.RPC("RPC_RunEndPhase", RpcTarget.AllBuffered, loadingScreenRoutine);
+    }
+
+
     //Ran locally by a single seeker from PlayerMovement.
     public void RequestToKillPropPlayer(int killedPlyID) {
         gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
     }
 
+
     //Only runs on MasterClient.
     private void MoveAllToPreGameLobby() {
-        // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran.
+        // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran. This happens on first join.
+        if (currentMapLoaded != null) {
+            PhotonNetwork.Destroy(currentMapLoaded);
+        }
         currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PreGameLobby"), Vector3.zero, Quaternion.identity, 0);
+        gcpv.RPC("RPC_MoveAllToPreGameLobby", RpcTarget.AllBuffered);
     }
+
+
 
     //Only runs on MasterClient.
     private void MoveAllToFreshGame() {
@@ -110,6 +124,19 @@ public class GameplayController : MonoBehaviour {
         int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
         gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
         ppc.moveState = 1; // pre-prop moveState.
+    }
+
+    [PunRPC]
+    private void RPC_MoveAllToPreGameLobby() {
+        GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
+        GameObject rController = GameObject.FindGameObjectWithTag("RoomController");
+        localPlayer.transform.position = rController.transform.GetChild(Random.Range(0, rController.transform.childCount - 1)).position;
+    }
+
+    [PunRPC]
+    private void RPC_RunEndPhase(int loadingScreenRoutine) {
+        sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
+        Invoke("Invoke_EndPhaseBuffer", 1f);
     }
 
     //Only runs on MasterClient.
@@ -312,6 +339,13 @@ public class GameplayController : MonoBehaviour {
             }
             CancelInvoke("Invoke_UpdateGameTimeLeft");
         }
+    }
+
+    private void Invoke_EndPhaseBuffer() {
+        if (PhotonNetwork.IsMasterClient) {
+            UpdateGameplayState(1);
+        }
+        sController.EndLoadingScreen(2f);
     }
 
 }

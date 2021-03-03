@@ -76,6 +76,9 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             } else if (loadingScreenRoutine == 2) { // Load Into Game
                 targetBackgroundImg.sprite = backgroundSpriteList[2];
                 targetHoverImg.sprite = hoveringSpriteList[1];
+            } else if (loadingScreenRoutine == 3) {
+                targetBackgroundImg.sprite = backgroundSpriteList[1];
+                targetHoverImg.sprite = hoveringSpriteList[2];
             } else {
                 targetBackgroundImg.sprite = backgroundSpriteList[0];
                 targetHoverImg.sprite = hoveringSpriteList[0];
