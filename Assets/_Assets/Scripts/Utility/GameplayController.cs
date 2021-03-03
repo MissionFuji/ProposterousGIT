@@ -23,6 +23,7 @@ public class GameplayController : MonoBehaviour {
     //Settings:
     [SerializeField]
     private int CountDownTimeInSeconds;
+    private int GameTimeDurationInSeconds;
 
     private PhotonView gcpv;
     private ScreenController sController;
@@ -31,6 +32,7 @@ public class GameplayController : MonoBehaviour {
     private MapProperties mp;
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
     private int CurrentCountDownTimer = 20;
+    private int CurrentGameTimeLeftTimer = 300;
 
 
 
@@ -287,14 +289,28 @@ public class GameplayController : MonoBehaviour {
         if (CurrentCountDownTimer > 0) { //Counting down.
             sController.UpdateCountDown(CurrentCountDownTimer);
             aController.PlayCountDownTick();
-        } else if (CurrentCountDownTimer == 0) { // Last countdown tick. "GO!"
+        } else if (CurrentCountDownTimer == 0) { // Last countdown tick.
             sController.UpdateCountDown(CurrentCountDownTimer);
             aController.PlayCountDownLastTick();
             if (PhotonNetwork.IsMasterClient) {
-                UpdateGameplayState(3);
+                UpdateGameplayState(3); // Move game to active phase.
                 gcpv.RPC("RPC_OpenSeekerGate", RpcTarget.AllBuffered);
             }
             CancelInvoke("Invoke_CountdownPrepPhase");
+            InvokeRepeating("Invoke_UpdateGameTimeLeft", 0.1f, 1f);
+        }
+    }
+
+    private void Invoke_UpdateGameTimeLeft() {
+        CurrentGameTimeLeftTimer--;
+        if (CurrentGameTimeLeftTimer > 0) { //Counting down.
+            sController.UpdateGameTimeLeft(CurrentGameTimeLeftTimer);
+        } else if (CurrentGameTimeLeftTimer == 0) { // Last countdown tick.
+            sController.UpdateGameTimeLeft(CurrentGameTimeLeftTimer);
+            if (PhotonNetwork.IsMasterClient) {
+                UpdateGameplayState(4); // Move game to end-phase
+            }
+            CancelInvoke("Invoke_UpdateGameTimeLeft");
         }
     }
 

@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private PhotonView pv;
     private PlayerPropertiesController PPC;
+    private AudioController aController;
     private GameObject mmc;
     private float turnSmoothVelocity;
     private Rigidbody rb;
@@ -83,6 +84,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmc = Camera.main.gameObject;
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
             gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
+            aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
             pickupHolder = gameObject.transform.Find("PickupHolder").gameObject;
             rotPropHolder = gameObject.transform.Find("PropHolder").gameObject;
@@ -299,8 +301,10 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                         }
                                     }
 
+                                    aController.PlayPropTakeoverSuccess();
                                 } else if (!propInt.isAvailable) {
                                     Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+                                    aController.PlayPropTakeoverFail();
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
                                 if (propInt.isAvailable) { // Targeting empty prop

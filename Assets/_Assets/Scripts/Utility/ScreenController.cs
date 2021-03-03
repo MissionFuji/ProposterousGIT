@@ -23,6 +23,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject ConfirmExitMenu;
     private GameObject OptionsMenu;
     private Text CountDownTimer;
+    private Text GameTimeLeft;
     public GameObject ActiveMenuOnScreen = null;
     #endregion
 
@@ -51,6 +52,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         lobbySys = GameObject.FindGameObjectWithTag("LobbySystem").GetComponent<LobbySystem>();
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
         CountDownTimer = canvas.gameObject.transform.Find("RoomUI/CountDownTimer").gameObject.GetComponent<Text>();
+        GameTimeLeft = canvas.gameObject.transform.Find("RoomUI/GameTimeLeft").gameObject.GetComponent<Text>();
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
         targetBackgroundImg = canvas.transform.Find("BlankBackgroundScreen").gameObject.GetComponent<Image>();
         targetHoverImg = targetBackgroundImg.transform.GetChild(0).gameObject.GetComponent<Image>();
@@ -85,6 +87,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    //We run this to end our current loading screen after x seconds.
     public void EndLoadingScreen(float timeBeforeEnd) {
         if (isLoading) {
             if (isFadingIn) {
@@ -269,11 +272,21 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    public void UpdateGameTimeLeft(int currentCount) {
+        if (currentCount > 0) {
+            GameTimeLeft.text = currentCount.ToString();
+        } else if (currentCount == 0) {
+            GameTimeLeft.text = "";
+        }
+    }
+
     private void Invoke_ClearTimerText() {
         if (CountDownTimer.gameObject.activeSelf == false) {
             CountDownTimer.gameObject.SetActive(true);
         }
         CountDownTimer.text = "";
     }
+
+
 
 }
