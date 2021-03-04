@@ -97,7 +97,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 plyRB.freezeRotation = true;
                 plyRB.isKinematic = false;
 
-            } else if (spawnRoutine == 3) {
+            } else if (spawnRoutine == 3) { //Dead ghost.
                 GameObject plyTagObj = (GameObject)info.Sender.TagObject;
                 PhotonView targetPlayerPV = plyTagObj.GetComponent<PhotonView>();
 

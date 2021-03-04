@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public class GameplayController : MonoBehaviour {
+public class GameplayController : MonoBehaviour
+{
 
     [SerializeField]
     private GameObject MainMenuPrefab; // Saved via inspector.
@@ -131,12 +132,21 @@ public class GameplayController : MonoBehaviour {
         ppc.moveState = 1; // pre-prop moveState.
     }
 
+    // Runs on all clients.
     [PunRPC]
     private void RPC_MoveAllToPreGameLobby() {
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         GameObject rController = GameObject.FindGameObjectWithTag("RoomController");
-        ppc.moveState = 1; // pre-prop moveState.
+        Rigidbody plyRB = localPlayer.GetComponent<Rigidbody>();
+        PhotonNetwork.Destroy(localPlayer.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Destroy out child object.
+        plyRB.isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
         localPlayer.transform.position = rController.transform.GetChild(Random.Range(0, rController.transform.childCount - 1)).position;
+        localPlayer.transform.rotation = Quaternion.identity;
+        //Passing 0 = PropSpawner. Passing 1 = Player-takover spawn. Passing 2 = Player Becoming Ghost/Seeker. Passing 3 = Dead Prop Becoming Trans Ghost.
+        object[] newRoomFromOldRoomInstData = new object[1];
+        newRoomFromOldRoomInstData[0] = 2;
+        ppc.moveState = 1; // pre-prop moveState.
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.gameObject.transform.position, localPlayer.gameObject.transform.rotation, 0, newRoomFromOldRoomInstData);
     }
 
     [PunRPC]
@@ -192,24 +202,53 @@ public class GameplayController : MonoBehaviour {
     //Each player in room tells master client to run this.
     [PunRPC]
     private void RPC_HelpMasterBuildPlayerList(int plyID) {
+        int loopCount = 0;
         InGamePlayerList.Add(plyID); // Add each player to a list.
         if (InGamePlayerList.Count == PhotonNetwork.CurrentRoom.PlayerCount) { // Does our newly completed list match the PhotonNetwork playerlist?
             foreach (int plyIDToSort in InGamePlayerList) {
+                loopCount++; //This is used to count the # of times we loop.
                 if (InGamePlayerList.Count < 6) { //If there are 5 players, use one seeker.
-                    if (SeekerPlayerList.Count < 1) {
-                        SeekerPlayerList.Add(plyIDToSort); // Add our seekers to the seeker list.
-                    } else {
-                        PropPlayerList.Add(plyIDToSort); // Add our props to the prop list.
+                    if (loopCount != InGamePlayerList.Count) {// If this is NOT the last loop.
+                        int determineRole = Random.Range(0, 4); 
+                        if (determineRole == 0) { // Rolled Seeker
+                            if (SeekerPlayerList.Count < 1) {
+                                SeekerPlayerList.Add(plyIDToSort);
+                            } else {// There's already a seeker. We need to place you as pre-prop.
+                                PropPlayerList.Add(plyIDToSort);
+                            }
+                        } else if (determineRole > 0) {// Rolled Pre Prop
+                            PropPlayerList.Add(plyIDToSort);
+                        }
+                    } else { // This is the last loop. Make sure we add a seeker if there isn't one yet.
+                        if (SeekerPlayerList.Count < 1) {
+                            SeekerPlayerList.Add(plyIDToSort);
+                        } else {
+                            PropPlayerList.Add(plyIDToSort);
+                        }
                     }
                 } else { // If there are more than 5 players, use two seekers.
-                    if (SeekerPlayerList.Count < 2) {
-                        SeekerPlayerList.Add(plyIDToSort);
-                    } else {
-                        PropPlayerList.Add(plyIDToSort);
+                    if (loopCount < InGamePlayerList.Count - 1) {// If this is NOT the last two loops.
+                        int determineRole = Random.Range(0, 4);
+                        if (determineRole == 0) { // Rolled Seeker
+                            if (SeekerPlayerList.Count < 2) {
+                                SeekerPlayerList.Add(plyIDToSort);
+                            } else {// There's already a seeker. We need to place you as pre-prop.
+                                PropPlayerList.Add(plyIDToSort);
+                            }
+                        } else if (determineRole > 0) {// Rolled Pre Prop
+                            PropPlayerList.Add(plyIDToSort);
+                        }
+                    } else { // This is the last two loops. Make sure we add two seekers if there isn't one yet.
+                        if (SeekerPlayerList.Count < 2) {
+                            SeekerPlayerList.Add(plyIDToSort);
+                        } else {
+                            PropPlayerList.Add(plyIDToSort);
+                        }
                     }
                 }
                 if (SeekerPlayerList.Count + PropPlayerList.Count == InGamePlayerList.Count) {
                     Debug.Log("All players have been accounted for and sorted.");
+                    loopCount = 0; // Reset loopCount for next time.
                     //Send our lists to all players. Must send them as array, and unpack them into list when we receive them.
                     gcpv.RPC("RPC_SpawnSortedPlayersIntoFreshGame", RpcTarget.AllBuffered, InGamePlayerList.ToArray(), SeekerPlayerList.ToArray(), PropPlayerList.ToArray());
                 }
@@ -283,8 +322,8 @@ public class GameplayController : MonoBehaviour {
 
         //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
         if (allSeekerList.Contains(myID)) { // If we're on the Seeker team
-            foreach (int propPlayerID in PropPlayerList) { //
-                foreach(GameObject nt in oppositeTeamNameTagList) {
+            foreach (int propPlayerID in PropPlayerList) { 
+                foreach (GameObject nt in oppositeTeamNameTagList) {
                     if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
                         nt.GetComponent<CanvasGroup>().alpha = 0;
                     }
