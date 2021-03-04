@@ -254,10 +254,12 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             ActiveMenuOnScreen = null;
         }
         cController.ReadyCamera(transform, false); // Before we leave the room, we make sure our camera controller knows.
+        GameObject plyObj = (GameObject)pv.Owner.TagObject;
+        PhotonView plyPV = plyObj.GetPhotonView();
         if (pv.IsMine) {
-            ppc.HostDisconnecting(pv.ViewID);
+            ppc.HostDisconnecting(plyPV.ViewID);
         } else {
-            ppc.ClientDisconnecting(pv.ViewID);
+            ppc.ClientDisconnecting(plyPV.ViewID);
         }
     }
 
