@@ -26,11 +26,11 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     }
 
     public void ClientConnected(int plyID) {
-        photonView.RPC("RPC_ClientConnected", RpcTarget.MasterClient, PhotonView.Find(plyID).Owner.NickName, plyID);
+        photonView.RPC("RPC_ClientConnected", RpcTarget.MasterClient, plyID);
     }
 
     public void ClientDisconnecting(int plyID) {
-        photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, PhotonView.Find(plyID).Owner.NickName, plyID);
+        photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, plyID);
         if (PhotonNetwork.CurrentRoom != null) {
             PhotonNetwork.LeaveRoom();
         }
@@ -49,15 +49,15 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     //RPC's *******
 
     [PunRPC]
-    private void RPC_ClientConnected(string plyName, int plyID) {
-        Debug.Log("Player joined the lobby with name: " + plyName);
+    private void RPC_ClientConnected(int plyID) {
+        Debug.Log("Player joined the lobby with ID: " + plyID.ToString());
     }
 
 
     [PunRPC]
-    private void RPC_ClientDisconnected(string plyName, int plyID) {
+    private void RPC_ClientDisconnected(int plyID) {
         gController.MasterClientRemovesPlayerFromListOnDisconnect(plyID);
-        Debug.Log("Player left the lobby with name: " + plyName);
+        Debug.Log("Player left the lobby with ID: " + plyID.ToString());
     }
 
     [PunRPC]
