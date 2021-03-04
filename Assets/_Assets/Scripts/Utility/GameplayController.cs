@@ -91,6 +91,10 @@ public class GameplayController : MonoBehaviour
         gcpv.RPC("RPC_RunEndPhase", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
+    //Ran locally by a single seeker from PlayerMovement.
+    public void RequestToDestroyVacantProp(int vacantPropID) {
+        gcpv.RPC("RPC_RequestToDestroyVacantProp", RpcTarget.MasterClient, PhotonView.Find(vacantPropID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
+    }
 
     //Ran locally by a single seeker from PlayerMovement.
     public void RequestToKillPropPlayer(int killedPlyID) {
@@ -156,6 +160,19 @@ public class GameplayController : MonoBehaviour
         CancelInvoke("Invoke_CountdownPrepPhase");
         sController.UpdateGameTimeLeft(0); // Try to clear timer text.
         Invoke("Invoke_EndPhaseBuffer", 1f);
+    }
+
+
+    //Only runs on MasterClient.
+    [PunRPC]
+    void RPC_RequestToDestroyVacantProp(int vacantPropID) {
+        PhotonView vacantProp = PhotonView.Find(vacantPropID);
+        if (vacantProp != null) {
+            Debug.Log("Seeker incorrectly chose to destroy: " + vacantProp.name + ", vacant prop destroyed over the network.");
+            PhotonNetwork.Destroy(vacantProp.gameObject);
+        } else {
+            Debug.LogError("Request to kill prop player denied. It's null now?");
+        }
     }
 
     //Only runs on MasterClient.

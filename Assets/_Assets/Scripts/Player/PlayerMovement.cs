@@ -42,6 +42,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject pickupHolder;
     private GameplayController gController;
 
+    //Used only to count # of seeker mistake destroys.
+    private int mistakeCount = 0;
+
     //used only for outline in update.
     [SerializeField]
     private GameObject outlinedObjectRef = null;
@@ -307,14 +310,24 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     aController.PlayPropTakeoverFail();
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
-                                if (propInt.isAvailable) { // Targeting empty prop
-                                    // Add a strike.
-                                    // If this is third strike, play "ERRRR" noise.
-                                } else { // Targeting a prop takenover by a player.
-                                    PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
-                                    if (rootPlayerPV != null) {
-                                        gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
+                                if (mistakeCount <= 5) { //We only get 5 mistakes. After that, you gotta reload somehow.
+                                    if (propInt.isAvailable) { // Targeting empty prop
+                                                               // Add a strike.
+                                                               // If this is third strike, play "ERRRR" noise.
+                                        PhotonView propPV = propInt.gameObject.GetPhotonView();
+                                        if (propPV != null) {
+                                            gController.RequestToDestroyVacantProp(propPV.ViewID);
+                                        }
+                                        mistakeCount++;
+                                    } else { // Targeting a prop takenover by a player.
+                                        PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
+                                        if (rootPlayerPV != null) {
+                                            gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
+                                        }
                                     }
+                                } else {
+                                    aController.PlayPropTakeoverFail();
+                                    Debug.LogWarning("Seems like you ran out of -ammo-. Not the sleuth you thought you were, eh?");
                                 }
                             }
                         }
