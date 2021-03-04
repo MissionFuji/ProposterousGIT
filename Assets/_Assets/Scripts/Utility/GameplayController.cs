@@ -47,7 +47,6 @@ public class GameplayController : MonoBehaviour {
     //Updates gameplayState and Logs it. //Anyone can run this func, but it only works on the MasterClient.
     public void UpdateGameplayState(int newState) {
         gameplayState = newState;
-        if (PhotonNetwork.IsConnectedAndReady) {
             if (PhotonNetwork.InRoom) {
                 if (PhotonNetwork.IsMasterClient) {
                     if (newState == 0) { // Main Menu.
@@ -68,7 +67,6 @@ public class GameplayController : MonoBehaviour {
                 }
             }
             Debug.Log("Gameplay State Updated! " + newState.ToString());
-        }
     }
 
     public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
