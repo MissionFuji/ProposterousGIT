@@ -72,6 +72,7 @@ public class GameplayController : MonoBehaviour {
     }
 
     public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
+        Debug.Log("Trying to remove this ID from all lists: " + plyID.ToString());
         if (PhotonNetwork.IsMasterClient) {
             if (PhotonNetwork.InRoom) {
                 if (gameplayState > 1 && gameplayState < 4) { // If we're in a game AND it's not the "end phase".
