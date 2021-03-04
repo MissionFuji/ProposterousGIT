@@ -9,11 +9,13 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     public int moveState = 1; // 1 preProp(Ghost), 2 propMove, 3 seekerMove, 4 spectator(DeadGhost)
     public bool playerIsFrozen = false;
     private ScreenController sController;
+    private GameplayController gController;
     private PhotonView pv;
 
 
     private void Awake() {
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
+        gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
         pv = gameObject.GetComponent<PhotonView>();
     }
 
@@ -24,11 +26,11 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     }
 
     public void ClientConnected(int plyID) {
-        photonView.RPC("RPC_ClientConnected", RpcTarget.MasterClient, plyID);
+        photonView.RPC("RPC_ClientConnected", RpcTarget.MasterClient, PhotonView.Find(plyID).Owner.NickName, plyID);
     }
 
     public void ClientDisconnecting(int plyID) {
-        photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, plyID);
+        photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, PhotonView.Find(plyID).Owner.NickName, plyID);
         if (PhotonNetwork.CurrentRoom != null) {
             PhotonNetwork.LeaveRoom();
         }
@@ -47,16 +49,15 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     //RPC's *******
 
     [PunRPC]
-    private void RPC_ClientConnected(int plyID) {
-        PhotonView pv = PhotonView.Find(plyID);
-        Debug.Log("Player joined the lobby with playerID: " + pv.Owner.NickName);
+    private void RPC_ClientConnected(string plyName, int plyID) {
+        Debug.Log("Player joined the lobby with name: " + plyName);
     }
 
 
     [PunRPC]
-    private void RPC_ClientDisconnected(int plyID) {
-        PhotonView pv = PhotonView.Find(plyID);
-            Debug.Log("Player left the lobby with playerID: " + pv.Owner.NickName);
+    private void RPC_ClientDisconnected(string plyName, int plyID) {
+        gController.MasterClientRemovesPlayerFromListOnDisconnect(plyID);
+        Debug.Log("Player left the lobby with name: " + plyName);
     }
 
     [PunRPC]

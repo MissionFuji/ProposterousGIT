@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public class GameplayController : MonoBehaviour
-{
+public class GameplayController : MonoBehaviour {
 
     [SerializeField]
     private GameObject MainMenuPrefab; // Saved via inspector.
@@ -69,6 +68,51 @@ public class GameplayController : MonoBehaviour
                 }
             }
             Debug.Log("Gameplay State Updated! " + newState.ToString());
+        }
+    }
+
+    public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
+        if (PhotonNetwork.IsMasterClient) {
+            if (PhotonNetwork.InRoom) {
+                if (gameplayState > 1 && gameplayState < 4) { // If we're in a game AND it's not the "end phase".
+                    if (SeekerPlayerList.Contains(plyID)) {
+                        SeekerPlayerList.Remove(plyID);
+                    } else if (PropPlayerList.Contains(plyID)) {
+                        PropPlayerList.Remove(plyID);
+                    } else {
+                        Debug.LogError("Tried to remove player's plyID from seeker/prop player lists and couldn't find it?..");
+                    }
+
+                    if (InGamePlayerList.Contains(plyID)) {
+                        InGamePlayerList.Remove(plyID);
+                    } else {
+                        Debug.LogError("Tried to remove disonnecting player from InGamePlayerList and it was never in there in the first place?..");
+                    }
+                }
+            }
+        }
+    }
+
+    private void CheckIfGameShouldAutoClose() {
+        if (PhotonNetwork.IsMasterClient) {
+            if (PhotonNetwork.InRoom) {
+                if (gameplayState > 1 && gameplayState < 4) { // If we're in a game AND it's not the "end phase".
+                    if (PhotonNetwork.CurrentRoom.PlayerCount == InGamePlayerList.Count) {
+                        if (InGamePlayerList.Count < 2) {
+                            UpdateGameplayState(4); // End-Phase. 
+                            CancelInvoke("Invoke_UpdateGameTimeLeft");
+                        } else if (SeekerPlayerList.Count == 0) {
+                            UpdateGameplayState(4); // End-Phase. Props Win
+                            CancelInvoke("Invoke_UpdateGameTimeLeft");
+                        } else if (PropPlayerList.Count == 0) {
+                            UpdateGameplayState(4); // End-Phase. Seeker Win
+                            CancelInvoke("Invoke_UpdateGameTimeLeft");
+                        }
+                        // NOTE:
+                        // When player's disconnect tell the host to remove those players from the player lists accordingly.
+                    }
+                }
+            }
         }
     }
 
@@ -184,10 +228,6 @@ public class GameplayController : MonoBehaviour
                 PropPlayerList.Remove(deadID.ViewID);
             }
             Debug.Log("Prop player: " + deadID.name + " has been exterminated. Remaining props: " + PropPlayerList.Count);
-            if (PropPlayerList.Count == 0) {
-                UpdateGameplayState(4); // End-Phase.
-                Debug.LogWarning("GAME OVER! ALL PROPS KILLED!");
-            }
             gcpv.RPC("RPC_ApproveKillPropPlayer", RpcTarget.AllBuffered, killedPlyID);
         } else {
             Debug.LogError("Request to kill prop player denied. It's null now?");
@@ -226,7 +266,7 @@ public class GameplayController : MonoBehaviour
                 loopCount++; //This is used to count the # of times we loop.
                 if (InGamePlayerList.Count < 6) { //If there are 5 players, use one seeker.
                     if (loopCount != InGamePlayerList.Count) {// If this is NOT the last loop.
-                        int determineRole = Random.Range(0, 4); 
+                        int determineRole = Random.Range(0, 4);
                         if (determineRole == 0) { // Rolled Seeker
                             if (SeekerPlayerList.Count < 1) {
                                 SeekerPlayerList.Add(plyIDToSort);
@@ -339,7 +379,7 @@ public class GameplayController : MonoBehaviour
 
         //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
         if (allSeekerList.Contains(myID)) { // If we're on the Seeker team
-            foreach (int propPlayerID in PropPlayerList) { 
+            foreach (int propPlayerID in PropPlayerList) {
                 foreach (GameObject nt in oppositeTeamNameTagList) {
                     if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
                         nt.GetComponent<CanvasGroup>().alpha = 0;
@@ -397,6 +437,7 @@ public class GameplayController : MonoBehaviour
         CurrentGameTimeLeftTimer--;
         if (CurrentGameTimeLeftTimer > 0) { //Counting down.
             sController.UpdateGameTimeLeft(CurrentGameTimeLeftTimer);
+            CheckIfGameShouldAutoClose(); // We're checking to see if we should close the game due to lack of players or other coniditions.
         } else if (CurrentGameTimeLeftTimer == 0) { // Last countdown tick.
             sController.UpdateGameTimeLeft(CurrentGameTimeLeftTimer);
             if (PhotonNetwork.IsMasterClient) {
