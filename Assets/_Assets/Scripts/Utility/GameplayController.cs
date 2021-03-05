@@ -47,26 +47,27 @@ public class GameplayController : MonoBehaviour {
     //Updates gameplayState and Logs it. //Anyone can run this func, but it only works on the MasterClient.
     public void UpdateGameplayState(int newState) {
         gameplayState = newState;
-            if (PhotonNetwork.InRoom) {
-                if (PhotonNetwork.IsMasterClient) {
-                    if (newState == 0) { // Main Menu.
-                        EnableMainMenuPrefab(true);
-                    } else if (newState == 1) { // Into Pre-Game Room.
-                        MoveAllToPreGameLobby();
-                    } else if (newState == 2) { // In-Game Prep Phase.
-                        MoveAllToFreshGame();
-                    } else if (newState == 3) { // In-Game Active Phase.
-
-                    } else if (newState == 4) { // In-Game End Phase.
-                        RunEndPhase();
-                    }
-                }
-            } else { // If we're not in a room yet.
+        if (PhotonNetwork.InRoom) {
+            if (PhotonNetwork.IsMasterClient) {
                 if (newState == 0) { // Main Menu.
                     EnableMainMenuPrefab(true);
+                    CancelInvoke("Invoke_CountdownPrepPhase");
+                } else if (newState == 1) { // Into Pre-Game Room.
+                    MoveAllToPreGameLobby();
+                } else if (newState == 2) { // In-Game Prep Phase.
+                    MoveAllToFreshGame();
+                } else if (newState == 3) { // In-Game Active Phase.
+
+                } else if (newState == 4) { // In-Game End Phase.
+                    RunEndPhase();
                 }
             }
-            Debug.Log("Gameplay State Updated! " + newState.ToString());
+        } else { // If we're not in a room yet.
+            if (newState == 0) { // Main Menu.
+                EnableMainMenuPrefab(true);
+            }
+        }
+        Debug.Log("Gameplay State Updated! " + newState.ToString());
     }
 
     public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
