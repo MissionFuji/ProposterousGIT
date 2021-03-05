@@ -32,7 +32,7 @@ public class AudioController : MonoBehaviour
 
     private void AudioPlayer(AudioClip clipToPlay) {
         AudioSource audSource = gameObject.AddComponent<AudioSource>();
-        audSource.clip = PropTakeoverFail;
+        audSource.clip = clipToPlay;
         audSource.Play();
         SuperInvoke.Run(()=> DestroyAudioSourceAfterPlayedClip(audSource), audSource.clip.length);
     }
