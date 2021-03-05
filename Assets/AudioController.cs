@@ -1,6 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using JacobGames.SuperInvoke;
 
 public class AudioController : MonoBehaviour
 {
@@ -14,27 +13,32 @@ public class AudioController : MonoBehaviour
     [SerializeField]
     AudioClip PropTakeoverFail;
 
-    private void Awake() {
-        AudSo = GetComponent<AudioSource>();
-    }
-
     public void PlayCountDownTick() {
-        AudSo.clip = CountDownTick;
-        AudSo.Play();
+        AudioPlayer(CountDownTick);
     }
 
     public void PlayCountDownLastTick() {
-        AudSo.clip = CountDownLastTick;
-        AudSo.Play();
+        AudioPlayer(CountDownLastTick);
     }
 
     public void PlayPropTakeoverSuccess() {
-        AudSo.clip = PropTakeoverSuccess;
-        AudSo.Play();
+        AudioPlayer(PropTakeoverSuccess);
     }
 
     public void PlayPropTakeoverFail() {
-        AudSo.clip = PropTakeoverFail;
-        AudSo.Play();
+        AudioPlayer(PropTakeoverFail);
     }
+
+
+    private void AudioPlayer(AudioClip clipToPlay) {
+        AudioSource audSource = gameObject.AddComponent<AudioSource>();
+        audSource.clip = PropTakeoverFail;
+        audSource.Play();
+        SuperInvoke.Run(()=> DestroyAudioSourceAfterPlayedClip(audSource), audSource.clip.length);
+    }
+
+    private void DestroyAudioSourceAfterPlayedClip(AudioSource sourceToDestroy) {
+        Destroy(sourceToDestroy);
+    }
+
 }
