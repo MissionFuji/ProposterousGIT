@@ -68,9 +68,11 @@ public class ComponentEditorScript : EditorWindow
                 // Commit button
                 if (GUILayout.Button("Add Components"))
                 {
+                    // The target to apply our components to
                     GameObject target;
-
+                    // The path for the base prefab
                     string prefabPath = ResolvePrefabPath(out target);
+
 
                     if (target)
                     {
