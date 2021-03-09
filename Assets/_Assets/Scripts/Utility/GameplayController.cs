@@ -2,6 +2,7 @@ using Photon.Pun;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JacobGames.SuperInvoke;
 using UnityEngine;
 
 public class GameplayController : MonoBehaviour {
@@ -387,7 +388,7 @@ public class GameplayController : MonoBehaviour {
         foreach (int propID in allPropList) {
             if (myID == propID) {
                 //We're a pre-prop ghost.
-                PropPlayersAccessObjectiveManager(myID);
+                SuperInvoke.Run(() => Invoke_DelayedObjectiveUpdateWaitingForMap(myID), 2f);
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
@@ -477,6 +478,12 @@ public class GameplayController : MonoBehaviour {
         }
         sController.EndLoadingScreen(2f);
     }
+
+    private void Invoke_DelayedObjectiveUpdateWaitingForMap(int ourID) {
+        //We're using a time delay to hope that the map spawns well before we run this.
+        PropPlayersAccessObjectiveManager(ourID);
+    }
+
     #endregion
 
 }
