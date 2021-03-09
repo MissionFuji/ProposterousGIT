@@ -5595,7 +5595,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63d64bf523642f941bacf520e03b5db2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NumberOfObjectives: 0
+  NumberOfObjectives: 6
   ObjectiveList_ReadOnly:
   - Test Phone In Mgr Office
   - Test Fridge in W Bathroom
