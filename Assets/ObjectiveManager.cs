@@ -7,37 +7,24 @@ public class ObjectiveManager : MonoBehaviour
 {
 
     [Header("Objective Manager Settings")]
-
-    [Tooltip("Taunting, Proximity Chat, Talking Over Seeker Radio, etc.")]
+    [Tooltip("The number of objectives per prop player.")]
     [Range(0, 6)]
     [SerializeField]
-    private int SocialObjectives;
-    [Tooltip("Possess X object in x room for x seconds, etc.")]
-    [Range(0, 6)]
-    [SerializeField]
-    private int PossessObjectives;
-    [Tooltip("Turn off the lights, turn off X object, etc.")]
-    [Range(0, 6)]
-    [SerializeField]
-    private int InteractObjectives;
+    private int NumberOfObjectives;
 
     [SerializeField]
-    private List<string> ListOfRooms = new List<string>(); // This list is created via inspector and DOESN'T get modified otherwise.
+    private List<string> ObjectiveList_ReadOnly = new List<string>(); // This list will be populated with the target player's randomly selected objectives.
 
-    [SerializeField]
-    private List<string> ListOfProps = new List<string>(); // This list is created via inspector and DOESN'T get modified otherwise.
-
-    [SerializeField]
-    private List<string> DisplayTheseObjectives = new List<string>(); // This list will be populated with the target player's randomly selected objectives.
-
-    [SerializeField]
-    private int[] GivenObjectives;
 
     // Regular Private Vars
     private ScreenController sController;
 
-    //figure out what kind of task to give. Haunt, Interact, Possess for X Seconds in X room, Taunt in X room
-    // 
+    [SerializeField]
+    private List<string> GivenObjectivesToDisplay = new List<string>();
+    [SerializeField]
+    private List<int> GivenObjectiveNumber = new List<int>();
+
+
 
     private void Awake() {
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
@@ -47,7 +34,16 @@ public class ObjectiveManager : MonoBehaviour
         PhotonView lpPV = PhotonView.Find(localPlayerID);
         if (lpPV != null && lpPV.IsMine) { // Let's make sure we are who we say we are.
             if (sController != null) {
-                sController.PopulateObjectiveList(DisplayTheseObjectives);
+                int loopCounter = 0;
+                while (GivenObjectivesToDisplay.Count < NumberOfObjectives) { // If we havent finished getting all of our objectives yet 
+                    int r = Random.Range(0, ObjectiveList_ReadOnly.Count - 1);
+                    if (!GivenObjectivesToDisplay.Contains(ObjectiveList_ReadOnly[r])) {
+                        sController.PopulateObjectiveList(ObjectiveList_ReadOnly[r], loopCounter); // We tell our sController what to show, and what line to show it.
+                        GivenObjectivesToDisplay.Add(ObjectiveList_ReadOnly[r]);
+                        GivenObjectiveNumber.Add(r);
+                        loopCounter++;
+                    }
+                }
             }
         } else {
             Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");

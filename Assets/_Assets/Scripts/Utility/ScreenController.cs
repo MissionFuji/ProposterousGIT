@@ -103,12 +103,8 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
-    public void PopulateObjectiveList(List<string> objList) {
-        int loopCount = 0;
-        foreach (string obj in objList) {
-            ObjectiveListText.text.Insert(0, (loopCount + 1).ToString() + ") " + obj + "/n");
-            loopCount++;
-        }
+    public void PopulateObjectiveList(string obj, int pos) {
+        ObjectiveListText.text.Insert(pos, (pos + 1).ToString() + ") " + obj + "/n");
     }
 
 
