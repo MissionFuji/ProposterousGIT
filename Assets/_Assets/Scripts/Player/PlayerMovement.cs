@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     // Modifiable in editor, invisible to cheaters.
     [SerializeField]
-    private float rotSpeed = 0.1f;
+    private float yPropRotSpeed;
     [SerializeField]
     private LayerMask groudLayer;
     [SerializeField]
@@ -108,10 +108,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
-            if (PPC.moveState == 1 || PPC.moveState == 3) { // If we are a pre-prop ghost:
-                if (rotPropHolder.transform.childCount > 0) {
-                    GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
-                    prop.transform.rotation = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
+            if (PPC.moveState == 1 || PPC.moveState == 3) { // If we are a pre-prop ghost or seeker:
+                if (xDir != 0f || yDir != 0f) {
+                    if (rotPropHolder.transform.childCount > 0) {
+                        GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
+                        Quaternion tarRot = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
+                        prop.transform.rotation = Quaternion.Slerp(prop.transform.rotation, tarRot, yPropRotSpeed * Time.deltaTime);
+                    }
                 }
             } else if (PPC.moveState == 2) { // If we are a prop:
                 if (rotPropHolder.transform.childCount > 0) {

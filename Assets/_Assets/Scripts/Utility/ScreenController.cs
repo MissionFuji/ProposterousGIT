@@ -14,7 +14,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private LobbySystem lobbySys;
     #endregion
 
-    // Escape Menu References + Cursor Reference.
+    // Escape Menu References + Cursor Reference + Objectives.
     #region
     private GameObject cursorSprite;
     private GameObject canvas;
@@ -24,6 +24,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject OptionsMenu;
     private Text CountDownTimer;
     private Text GameTimeLeft;
+    private Text ObjectiveListText;
     public GameObject ActiveMenuOnScreen = null;
     #endregion
 
@@ -53,6 +54,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
         CountDownTimer = canvas.gameObject.transform.Find("RoomUI/CountDownTimer").gameObject.GetComponent<Text>();
         GameTimeLeft = canvas.gameObject.transform.Find("RoomUI/GameTimeLeft").gameObject.GetComponent<Text>();
+        ObjectiveListText = canvas.gameObject.transform.Find("RoomUI/ObjectiveList").gameObject.GetComponent<Text>();
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
         targetBackgroundImg = canvas.transform.Find("BlankBackgroundScreen").gameObject.GetComponent<Image>();
         targetHoverImg = targetBackgroundImg.transform.GetChild(0).gameObject.GetComponent<Image>();
@@ -98,6 +100,14 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     Invoke("Invoke_EndLoadingScreen", timeBeforeEnd);
                 }
             }
+        }
+    }
+
+    public void PopulateObjectiveList(List<string> objList) {
+        int loopCount = 0;
+        foreach (string obj in objList) {
+            ObjectiveListText.text.Insert(0, (loopCount + 1).ToString() + ") " + obj + "/n");
+            loopCount++;
         }
     }
 

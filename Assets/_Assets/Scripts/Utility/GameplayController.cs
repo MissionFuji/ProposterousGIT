@@ -6,25 +6,30 @@ using UnityEngine;
 
 public class GameplayController : MonoBehaviour {
 
+    //gController Settings
+    #region
+    [Header("gController Settings:")]
+    [Tooltip("The Prefab used for the Main Menu.")]
     [SerializeField]
-    private GameObject MainMenuPrefab; // Saved via inspector.
-    [SerializeField]
-    private int gameplayState = -1; // -1 is initial load, 0 is Main Menu, 1 is Pre-Game Room, 2 is In-Game Prep-Phase, 3 is In-Game Active, 4 is In-Game End-Of-Round;
-    [SerializeField]
-    private List<GameObject> mapList = new List<GameObject>(); // List of possible maps.
-    [SerializeField]
-    private List<int> InGamePlayerList = new List<int>();
-    [SerializeField]
-    private List<int> SeekerPlayerList = new List<int>();
-    [SerializeField]
-    private List<int> PropPlayerList = new List<int>();
-
-
-    //Settings:
+    private GameObject MainMenuPrefab; // Saved via Inspector.
+    [Tooltip("Time (in seconds) for Prep-Phase Count-Down.")]
     [SerializeField]
     private int CountDownTimeInSeconds;
+    [Tooltip("Time (in seconds) for Active-Game Count-Down.")]
+    [SerializeField]
     private int GameTimeDurationInSeconds;
+    [Tooltip("A list of maps that will randomly be selected from.")]
+    [SerializeField]
+    private List<GameObject> mapList = new List<GameObject>(); // List of possible maps.
+    #endregion
 
+
+    //Vars
+    #region
+    private List<int> InGamePlayerList = new List<int>();
+    private List<int> SeekerPlayerList = new List<int>();
+    private List<int> PropPlayerList = new List<int>();
+    private int gameplayState = -1; // -1 is initial load, 0 is Main Menu, 1 is Pre-Game Room, 2 is In-Game Prep-Phase, 3 is In-Game Active, 4 is In-Game End-Of-Round;
     private PhotonView gcpv;
     private ScreenController sController;
     private AudioController aController;
@@ -33,7 +38,7 @@ public class GameplayController : MonoBehaviour {
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
     private int CurrentCountDownTimer = 20;
     private int CurrentGameTimeLeftTimer = 300;
-
+    #endregion
 
 
     private void Awake() {
@@ -42,6 +47,7 @@ public class GameplayController : MonoBehaviour {
         aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
     }
+
 
 
     //Updates gameplayState and Logs it. //Anyone can run this func, but it only works on the MasterClient.
@@ -70,6 +76,7 @@ public class GameplayController : MonoBehaviour {
         Debug.Log("Gameplay State Updated! " + newState.ToString());
     }
 
+    //This is run from PPC when the MC detects a player left unexpectedly. Gotta remove leavingPlayers from the playerLists.
     public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
         Debug.Log("Trying to remove this ID from all lists: " + plyID.ToString());
         if (PhotonNetwork.IsMasterClient) {
@@ -93,6 +100,30 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    //Main Menu "scene" Toggle.
+    public void EnableMainMenuPrefab(bool result) {
+        if (result) {
+            if (MainMenuPrefab.activeSelf == false) {
+                MainMenuPrefab.SetActive(true);
+            }
+        } else {
+            if (MainMenuPrefab.activeSelf == true) {
+                MainMenuPrefab.SetActive(false);
+            }
+        }
+    }
+
+    //Ran locally by a single seeker from PlayerMovement.
+    public void RequestToDestroyVacantProp(int vacantPropID) {
+        gcpv.RPC("RPC_RequestToDestroyVacantProp", RpcTarget.MasterClient, PhotonView.Find(vacantPropID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
+    }
+
+    //Ran locally by a single seeker from PlayerMovement.
+    public void RequestToKillPropPlayer(int killedPlyID) {
+        gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
+    }
+
+    //While the game is active, we'll check to see if there's any reason to close the game. (Not enough seekers/props.)
     private void CheckIfGameShouldAutoClose() {
         if (PhotonNetwork.IsMasterClient) {
             if (PhotonNetwork.InRoom) {
@@ -116,37 +147,13 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
-    //Main Menu "scene" Toggle.
-    public void EnableMainMenuPrefab(bool result) {
-        if (result) {
-            if (MainMenuPrefab.activeSelf == false) {
-                MainMenuPrefab.SetActive(true);
-            }
-        } else {
-            if (MainMenuPrefab.activeSelf == true) {
-                MainMenuPrefab.SetActive(false);
-            }
-        }
-    }
-
-    //Only runs on MasterClient.
+    //Only runs on MasterClient. This runs under UpdateGameplayState(4).
     private void RunEndPhase() {
         int loadingScreenRoutine = 3;
         gcpv.RPC("RPC_RunEndPhase", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
-    //Ran locally by a single seeker from PlayerMovement.
-    public void RequestToDestroyVacantProp(int vacantPropID) {
-        gcpv.RPC("RPC_RequestToDestroyVacantProp", RpcTarget.MasterClient, PhotonView.Find(vacantPropID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
-    }
-
-    //Ran locally by a single seeker from PlayerMovement.
-    public void RequestToKillPropPlayer(int killedPlyID) {
-        gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
-    }
-
-
-    //Only runs on MasterClient.
+    //Only runs on MasterClient. Ran in UpdateGameplayState(1)
     private void MoveAllToPreGameLobby() {
         // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran. This happens on first join.
         if (currentMapLoaded != null) {
@@ -158,9 +165,7 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
-
-
-    //Only runs on MasterClient.
+    //Only runs on MasterClient. Ran in UpdateGameplayState(3)
     private void MoveAllToFreshGame() {
         PropPlayerList.Clear();
         InGamePlayerList.Clear();
@@ -169,7 +174,20 @@ public class GameplayController : MonoBehaviour {
         gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
-    //RPC's *********
+    //Only runs on players in the propPlayerList locally from this script. We access the ObjectiveManager attached to the current map.
+    private void PropPlayersAccessObjectiveManager(int LPID) {
+        ObjectiveManager curMapObjMgr = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
+        if (curMapObjMgr != null) {
+            curMapObjMgr.InitiateObjectiveManager(LPID);
+        } else {
+            Debug.LogError("Trying to utilize ObjectiveManager, but couldn't find it. Null Reference.");
+        }
+    }
+
+    //RPC's **********************************************************************************************************************************************************************************
+    #region
+
+
     //Runs on all clients.
     [PunRPC]
     private void RPC_MoveAllToFreshGame(int loadingScreenRoutine) {
@@ -197,6 +215,7 @@ public class GameplayController : MonoBehaviour {
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.gameObject.transform.position, localPlayer.gameObject.transform.rotation, 0, newRoomFromOldRoomInstData);
     }
 
+    // Runs on all clients.
     [PunRPC]
     private void RPC_RunEndPhase(int loadingScreenRoutine) {
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
@@ -205,7 +224,6 @@ public class GameplayController : MonoBehaviour {
         sController.UpdateGameTimeLeft(0); // Try to clear timer text.
         Invoke("Invoke_EndPhaseBuffer", 1f);
     }
-
 
     //Only runs on MasterClient.
     [PunRPC]
@@ -256,7 +274,7 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
-    //Each player in room tells master client to run this.
+    //Each player in room tells master client to run this. All players send info to master so he can make a list.
     [PunRPC]
     private void RPC_HelpMasterBuildPlayerList(int plyID) {
         int loopCount = 0;
@@ -313,7 +331,8 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
-    [PunRPC] // This runs on all players in the room. Sent from MasterClient.
+    // This runs on all players in the room. Sent from MasterClient.
+    [PunRPC] // All we're doing here is spawning the map if we're host, then all players will set their moveState accoring to what the master told them.
     private void RPC_SpawnSortedPlayersIntoFreshGame(int[] playerList, int[] seekerList, int[] propList) {
 
         //We'll send the already packed ID lists to the map's instantiationData to move players to correct locations after they spawn.
@@ -368,6 +387,7 @@ public class GameplayController : MonoBehaviour {
         foreach (int propID in allPropList) {
             if (myID == propID) {
                 //We're a pre-prop ghost.
+                PropPlayersAccessObjectiveManager(myID);
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
@@ -391,7 +411,6 @@ public class GameplayController : MonoBehaviour {
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
 
-
     //Runs on all clients.
     [PunRPC]
     private void RPC_OpenSeekerGate() {
@@ -403,12 +422,14 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    #endregion
 
-    //Invokes *********
+    //Invokes **********************************************************************************************************************************************************************************
+    #region
 
     // This invoke moves all players into a fresh prep-phase game.
     private void Invoke_MoveAllToFreshGame() {
-
+        CurrentGameTimeLeftTimer = GameTimeDurationInSeconds; // We set our gameTime timer equal to the "start" time.
         CurrentCountDownTimer = CountDownTimeInSeconds; // We set our countdown timer equal to the "start" time.
         InvokeRepeating("Invoke_CountdownPrepPhase", 0.1f, 1f);
 
@@ -416,6 +437,7 @@ public class GameplayController : MonoBehaviour {
         sController.EndLoadingScreen(2f);
     }
 
+    // This is called through Invoke.Repeating. Effectively just a counter for prep-phase.
     private void Invoke_CountdownPrepPhase() {
         CurrentCountDownTimer--;
         if (CurrentCountDownTimer > 0) { //Counting down.
@@ -433,6 +455,7 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    // This is called through Invoke.Repeating. Effectively just a counter for Active-Game phase.
     private void Invoke_UpdateGameTimeLeft() {
         CurrentGameTimeLeftTimer--;
         if (CurrentGameTimeLeftTimer > 0) { //Counting down.
@@ -447,11 +470,13 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    // After we've showed the loadingScreen on the way out of the game, here we end that loading screen and UpdateGameplayState to 1. Back to the room.
     private void Invoke_EndPhaseBuffer() {
         if (PhotonNetwork.IsMasterClient) {
             UpdateGameplayState(1);
         }
         sController.EndLoadingScreen(2f);
     }
+    #endregion
 
 }

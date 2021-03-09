@@ -5479,6 +5479,7 @@ GameObject:
   - component: {fileID: 5848880358997482194}
   - component: {fileID: 5848880358997482797}
   - component: {fileID: 5480129673127395831}
+  - component: {fileID: 9132813955510888321}
   m_Layer: 0
   m_Name: Map_Office
   m_TagString: Map
@@ -5529,9 +5530,10 @@ MonoBehaviour:
   prefixField: -1
   Synchronization: 0
   OwnershipTransfer: 0
+  observableSearch: 0
   ObservedComponents:
   - {fileID: 0}
-  viewIdField: 0
+  sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
 --- !u!114 &5480129673127395831
@@ -5581,6 +5583,41 @@ MonoBehaviour:
   - {fileID: 2777924031058328648}
   - {fileID: 4825901387429283479}
   seekerDoor: {fileID: 3140539554102453278}
+--- !u!114 &9132813955510888321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5848880358997482796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63d64bf523642f941bacf520e03b5db2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  numberOfSocialObjectives: 0
+  numberOfPossessObjectives: 3
+  numberOfInteractObjectives: 0
+  ListOfRooms:
+  - Work Area
+  - Men's Bathroom.
+  - Women's Bathroom
+  - Break Room
+  - Lobby
+  - Manager's Office
+  - Meeting Room
+  ListOfProps:
+  - Binder
+  - Monitor
+  - Keyboard
+  - Mouse
+  - Phone
+  - Fridge
+  - Microwave
+  - Pitcher
+  - Water Cooler
+  ListOfActions: []
+  PlayerGivenObjectives: []
 --- !u!1 &5904647875429467856
 GameObject:
   m_ObjectHideFlags: 0
