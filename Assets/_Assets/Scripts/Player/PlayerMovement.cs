@@ -391,6 +391,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     }
 
 
+    public void ResetMistakeCount() {
+        mistakeCount = 5;
+    }
+
+
     [PunRPC]
     void RPC_UnlockRotationOverNetwork(int plyID) {
         Rigidbody plyRB = PhotonView.Find(plyID).gameObject.GetComponent<Rigidbody>();
