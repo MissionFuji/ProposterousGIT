@@ -153,6 +153,8 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
                     } else { //We're in a room
                              //Trying to Escape while in a game. Showing RoomMenuItems.
+                        Cursor.visible = true;
+                        Cursor.lockState = CursorLockMode.None;
                         RoomMenuItems.SetActive(true);
                         ActiveMenuOnScreen = RoomMenuItems;
                     }
@@ -161,6 +163,10 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     if (ActiveMenuOnScreen == ConfirmExitMenu) {
                         MainMenuItems.SetActive(true);
                     }
+
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+
                     // Let's close any open screen.
                     ActiveMenuOnScreen.SetActive(false);
                     ActiveMenuOnScreen = null;
