@@ -202,10 +202,14 @@ public class GameplayController : MonoBehaviour {
     // Runs on all clients.
     [PunRPC]
     private void RPC_MoveAllToPreGameLobby() {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         GameObject rController = GameObject.FindGameObjectWithTag("RoomController");
         Rigidbody plyRB = localPlayer.GetComponent<Rigidbody>();
-        PhotonNetwork.Destroy(localPlayer.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Destroy out child object.
+        if (localPlayer.gameObject.transform.Find("PropHolder").childCount > 0) {
+            PhotonNetwork.Destroy(localPlayer.gameObject.transform.Find("PropHolder").GetChild(0).gameObject); // Destroy our child object.
+        }
         plyRB.isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
         localPlayer.transform.position = rController.transform.GetChild(Random.Range(0, rController.transform.childCount - 1)).position;
         localPlayer.transform.rotation = Quaternion.identity;
