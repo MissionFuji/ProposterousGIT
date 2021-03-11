@@ -12,6 +12,7 @@ public class ComponentEditorScript : EditorWindow
     private GameObject lastSource;
 
     private static bool[] componentIncludes;
+    private static bool[] copyValues;
 
     // Create a new editor window and create a singleton of our window instance
     [MenuItem("Proposterous/Prop Network Components")]
@@ -46,9 +47,18 @@ public class ComponentEditorScript : EditorWindow
                 if (lastSource != componentRetrieveSource || componentIncludes.Length != components.Length)
                 {
                     componentIncludes = new bool[components.Length];
+                    copyValues = new bool[components.Length];
+
+                    for (int j = 0; j < components.Length; j++)
+                    {
+                        componentIncludes[j] = false;
+                        copyValues[j] = false;
+                    }
                 }
 
                 int i = 0;
+
+                // Layout select check boxes
                 foreach (Component original in components)
                 {
                     Transform t = original as Transform;
@@ -56,7 +66,11 @@ public class ComponentEditorScript : EditorWindow
                     // Not the transform component
                     if (t == null)
                     {
+                        EditorGUILayout.BeginHorizontal();
                         componentIncludes[i] = GUILayout.Toggle(componentIncludes[i], original.GetType().ToString());
+                        copyValues[i] = GUILayout.Toggle(copyValues[i], "Copy Values");
+                        EditorGUILayout.EndHorizontal();
+
                     }
 
                     i++;
@@ -100,11 +114,14 @@ public class ComponentEditorScript : EditorWindow
 
                                 // Use internal utilities to compy the component values (be aware this copies based on source)
                                 // This might not be what we want always (i.e local component refs are not relative)
-                                if (UnityEditorInternal.ComponentUtility.CopyComponent(original))
+                                if (copyValues[i])
                                 {
-                                    if (UnityEditorInternal.ComponentUtility.PasteComponentValues(copy))
+                                    if (UnityEditorInternal.ComponentUtility.CopyComponent(original))
                                     {
-                                        Debug.Log("Successfully copied" + original.GetType().ToString() + " to target.");
+                                        if (UnityEditorInternal.ComponentUtility.PasteComponentValues(copy))
+                                        {
+                                            Debug.Log("Successfully copied" + original.GetType().ToString() + " to target.");
+                                        }
                                     }
                                 }
                             }

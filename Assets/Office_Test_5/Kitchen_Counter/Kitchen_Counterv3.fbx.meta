@@ -1,16 +1,11 @@
 fileFormatVersion: 2
-guid: b9c5ee9656364484c873d2260c3444e5
+guid: 4ea215dbedc43ec48b9dd287e8950f3c
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Filing_Cabinet1
-    second: {fileID: 2100000, guid: fd3e5a200fb853040a90c2a7391f0d5c, type: 2}
+  externalObjects: {}
   materials:
-    materialImportMode: 1
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -100,7 +95,7 @@ ModelImporter:
   animationType: 2
   humanoidOversampling: 1
   avatarSetup: 0
-  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   additionalBone: 0
   userData: 
   assetBundleName: 
