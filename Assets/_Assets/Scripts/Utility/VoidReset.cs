@@ -13,9 +13,8 @@ public class VoidReset : MonoBehaviour
     private void OnTriggerEnter(Collider other) {
         if (PhotonNetwork.IsMasterClient) {
             if (other.gameObject.GetComponent<PropInteraction>()) {
-                if (other.gameObject.tag == "AttachedProp") { //Let's see if it's an attached prop.
-                                                              //We get from the prop, to the prop holder, to the player.
-                    voidPV.RPC("RPC_VoidResetPosition", RpcTarget.AllBuffered, other.gameObject.transform.parent.transform.parent.gameObject.GetComponent<PhotonView>().ViewID);
+                if (other.gameObject.transform.parent != null) { //Let's see if it's an attached prop. (Prop, ghost, seeker OR pre-prop.)
+                    voidPV.RPC("RPC_VoidResetPosition", RpcTarget.AllBuffered, other.gameObject.transform.root.GetComponent<PhotonView>().ViewID);
                 } else { // Unattached prop.
                     PhotonNetwork.Destroy(other.gameObject);
                 }

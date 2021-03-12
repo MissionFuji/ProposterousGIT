@@ -41,6 +41,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     private Image targetBackgroundImg;
     private Image targetHoverImg;
+    [SerializeField]
     private bool isLoading = false;
     private bool isFadingIn = false;
     private Color opaqueColor = new Color(1f, 1f, 1f, 1f);
