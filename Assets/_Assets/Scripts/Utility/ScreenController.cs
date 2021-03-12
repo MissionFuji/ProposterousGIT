@@ -112,6 +112,13 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         GivenObjectiveNumber[pos].text = obj;
     }
 
+    //Clear the visual objective list, but don't clear the back-end. Back-end automatically gets cleared when a new map spawns in.
+    public void ClearObjectiveList() {
+        foreach (Text line in GivenObjectiveNumber) {
+            line.text = "";
+        }
+    }
+
 
     void Update() {
 
