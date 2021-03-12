@@ -33,6 +33,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     public void ClientDisconnecting(int plyID) {
         int refID = plyID;
         photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, refID);
+        sController.ClearObjectiveList();
         if (PhotonNetwork.CurrentRoom != null) {
             PhotonNetwork.LeaveRoom();
         }
@@ -64,6 +65,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
 
     [PunRPC]
     private void RPC_RemovePlayer() {
+        sController.ClearObjectiveList();
         sController.RunLoadingScreen(2);
         Invoke("Invoke_RemovePlayer", 0.5f);
     }
