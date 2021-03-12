@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.SceneManagement;
@@ -90,6 +88,8 @@ public class ComponentEditorScript : EditorWindow
 
                     if (target)
                     {
+                        //Make sure we add our prop to the PropInteraction layer. (11)
+                        target.layer = 11;
 
                         // -------------------------< COPYING COMPONENTS >-------------------------
 
