@@ -28,12 +28,16 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     public void ClientConnected(int plyID) {
         int refID = plyID;
         photonView.RPC("RPC_ClientConnected", RpcTarget.MasterClient, refID);
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public void ClientDisconnecting(int plyID) {
         int refID = plyID;
         photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, refID);
         sController.ClearObjectiveList();
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.CurrentRoom != null) {
             PhotonNetwork.LeaveRoom();
         }
