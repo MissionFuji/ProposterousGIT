@@ -11,16 +11,15 @@ public class PropSpawner : MonoBehaviour
     [SerializeField]
     private List<GameObject> possibleProps = new List<GameObject>();
 
-
-    private GameplayController gc;
+    private GameplayController gController;
     private PhotonView gcpv;
 
 
     private void Awake() {
-        gc = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>(); //Set reference of our GameController.
-        gcpv = gc.gameObject.GetPhotonView();
+        gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>(); //Set reference of our GameController.
+        gcpv = gController.gameObject.GetPhotonView();
 
-        if (gc != null && gcpv != null) {
+        if (gController != null && gcpv != null) {
 
         } else {
             Debug.LogError("Couldn't reference our GameController or its PhotonView?");
@@ -33,6 +32,8 @@ public class PropSpawner : MonoBehaviour
             instanceData[0] = 0;
             int r = Random.Range(0, possibleProps.Count);
             GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", possibleProps[r].name), gameObject.transform.position, gameObject.transform.rotation, 0, instanceData);
+            //We add our newly spawned prop to our list of props to be destroy on map-switch.
+            gController.AddPropToDestroyOnRoundOver(newNetworkProp);
         }
     }
 

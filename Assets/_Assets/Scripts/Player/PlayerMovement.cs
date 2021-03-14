@@ -420,6 +420,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         targetPlyRigidbody.isKinematic = false;
     }
 
+    [PunRPC]
+    void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
+        GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
+        if (propToDestroy != null) {
+            gController.AddPropToDestroyOnRoundOver(propToDestroy);
+        }
+    }
+
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
@@ -501,7 +509,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and target player.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
-                //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
+
+                //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
+                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         } else {
@@ -537,7 +547,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { //If we are the local player and the target player.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity, 0, instanceData);
-                //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
+
+                //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
+                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
@@ -657,7 +669,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
-                //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
+
+                //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
+                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
             }
             //The rest gets handled on a callback from photon instantiation.
         } else {
@@ -736,7 +750,9 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //Let's spawn a prop now that we detached the old prop.
             if (PhotonView.Find(changingPlyID).Owner.IsLocal) { // If we are the local player and the target player.
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity, 0, instanceData);
-                //We disable our Locked rotation so that we when we take over our new prop, we won't be locked.
+
+                //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
+                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
             }
 
             //The rest gets handled from the PropInteraction script on the object when it spawn. This will parent it to us.

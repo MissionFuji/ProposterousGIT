@@ -27,6 +27,8 @@ public class GameplayController : MonoBehaviour {
 
     //Vars
     #region
+    [SerializeField]
+    private List<GameObject> propsSpawnedDuringGame = new List<GameObject>();
     private List<int> InGamePlayerList = new List<int>();
     private List<int> SeekerPlayerList = new List<int>();
     private List<int> PropPlayerList = new List<int>();
@@ -124,6 +126,32 @@ public class GameplayController : MonoBehaviour {
         gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
     }
 
+    //Ran locally by the masterclient from PlayerMovement.
+    public void AddPropToDestroyOnRoundOver(GameObject objToDestroy) {
+        if (PhotonNetwork.IsMasterClient) {
+            propsSpawnedDuringGame.Add(objToDestroy);
+        }
+    }
+
+    private void DestroyObjectsOnMapSwitch() {
+        if (PhotonNetwork.IsMasterClient) {
+            foreach (GameObject objToDestroy in propsSpawnedDuringGame) {
+                //If our prop isn't null.
+                if (objToDestroy != null) {
+                    //If our prop doesn't have the AttachedProp tag or doesn't have a parent of any kind, we should be able to safely Net-Destroy it.
+                    if (objToDestroy.tag != "AttachedProp" || objToDestroy.transform.parent == null) {
+                        //Let's destroy that prop.
+                        PhotonNetwork.Destroy(objToDestroy);
+                    }
+                }
+            }
+
+            // After we destroyed all the props we needed to, let's clear the list so it can be rebuilt at a later time.
+            propsSpawnedDuringGame.Clear();
+
+        }
+    }
+
     //While the game is active, we'll check to see if there's any reason to close the game. (Not enough seekers/props.)
     private void CheckIfGameShouldAutoClose() {
         if (PhotonNetwork.IsMasterClient) {
@@ -156,6 +184,9 @@ public class GameplayController : MonoBehaviour {
 
     //Only runs on MasterClient. Ran in UpdateGameplayState(1)
     private void MoveAllToPreGameLobby() {
+        //Destroy all props left from last game if there are any.
+        DestroyObjectsOnMapSwitch();
+
         // We disable MainMenuProp in RoomSystem when the OnJoined Callback is ran. This happens on first join.
         if (currentMapLoaded != null) {
             PhotonNetwork.Destroy(currentMapLoaded);
@@ -367,7 +398,11 @@ public class GameplayController : MonoBehaviour {
         //Our master client spawns in the map.
         if (PhotonNetwork.IsMasterClient) { // Only if we're host to we spawn the map and destroy the old one over the network.
             if (currentMapLoaded != null) {
+                //Destroy the map prefab.
                 PhotonNetwork.Destroy(currentMapLoaded);
+                //Destroy all the props from the map.
+                DestroyObjectsOnMapSwitch();
+                //Spawn the new map.
                 int r = Random.Range(0, mapList.Count - 1);
                 currentMapLoaded = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", mapList[r].name), Vector3.zero, Quaternion.identity, 0, listData);
             }

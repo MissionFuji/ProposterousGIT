@@ -9,8 +9,6 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
     public bool isHostOnly = false;
     public bool isMapCartridge = false;
     private Rigidbody rb;
-    [SerializeField]
-    private List<GameObject> propsSpawnedDuringGame = new List<GameObject>();
 
 
 
@@ -38,30 +36,12 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
         /* THIS ENTIRE SECTION IS FOR WHEN YOU BECOME A PROP. WE SPAWN A NEW PROP BEFORE WE TAKE IT OVER */
         if (gameObject.GetComponent<PropInteraction>()) { // Is this a prop?
 
-            if (PhotonNetwork.IsMasterClient) { 
-                if (info.photonView.gameObject.tag == "Map") {
-                    // If a new map has been spawned in, let's delete all of the props that were spawned in last game.
-                    foreach(GameObject obj in propsSpawnedDuringGame) {
-                        if (obj != null)
-                        PhotonNetwork.Destroy(obj);
-                    }
-                    Debug.Log("Destoyed " + propsSpawnedDuringGame.Count + " props that were left over after last game.");
-                    // Then let's clear our list when we're done.
-                    propsSpawnedDuringGame.Clear();
-                }
-            }
-
             object[] receivedInstData = info.photonView.InstantiationData;
             int spawnRoutine = (int)receivedInstData[0]; // First index only. 0 == Prop Spawner. 1 == Player Spawned Take-Over Prop. 2 == Player Spawning Seeker/Ghost Prefab. 3 == DeadProp Spawning Ghost.
             if (spawnRoutine == 0) { // Prop Spawner.
 
-                //We want to add these objects to a list when they're spawned to PHotonNetwork.Remove them when we switch levels.
-                propsSpawnedDuringGame.Add(info.photonView.gameObject);
 
             } else if (spawnRoutine == 1) { // Prop spawned for sake of Takeover.
-
-                //We want to add these objects to a list when they're spawned to PHotonNetwork.Remove them when we switch levels.
-                propsSpawnedDuringGame.Add(info.photonView.gameObject);
 
                 //Grab our localPlayer "P" Object.
                 GameObject plyTagObj = (GameObject)info.Sender.TagObject;
