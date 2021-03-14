@@ -18,7 +18,6 @@ public class RoomDetectorTrigger : MonoBehaviour
 
     private void Awake() {
         oManager = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
-        InvokeRepeating("Invoke_CheckIfStillInRoom", 0.1f, 1f);
     }
 
     private void OnTriggerEnter(Collider other) {
