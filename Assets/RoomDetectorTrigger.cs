@@ -24,13 +24,16 @@ public class RoomDetectorTrigger : MonoBehaviour
         if (oManager != null) {
             // Making sure we that the collision happened with a player "prop".
             if (other.gameObject.tag == "AttachedProp" && other.gameObject.transform.parent != null) {
+                //Get the attached prop PV.
                 PhotonView enteringPlayerPV = other.gameObject.GetPhotonView();
+                //Get the rootPlayerID
+                int attemptingPlayerID = other.transform.root.gameObject.GetPhotonView().ViewID;
                 // Are we local and are we who we say we are?
                 if (enteringPlayerPV != null && enteringPlayerPV.IsMine && enteringPlayerPV.Owner.IsLocal) {
                     // Add entering player to insideRoom list.
                     listOfPlayerObjectsInThisRoom.Add(other.gameObject);
                     // Send a message to oManager to start this objective for us.
-                    oManager.TryStartRoomObjective(objectiveNum);
+                    oManager.TryStartRoomObjective(objectiveNum, attemptingPlayerID);
                 }
             }
         }
@@ -40,13 +43,15 @@ public class RoomDetectorTrigger : MonoBehaviour
         if (oManager != null) {
             // Making sure we that the collision happened with a player "prop".
             if (other.gameObject.tag == "AttachedProp" && other.gameObject.transform.parent != null) {
-                PhotonView enteringPlayerPV = other.gameObject.GetPhotonView();
+                PhotonView exitingPlayerPV = other.gameObject.GetPhotonView();
+                //Get the rootPlayerID
+                int attemptingPlayerID = other.transform.root.gameObject.GetPhotonView().ViewID;
                 // Are we local and are we who we say we are?
-                if (enteringPlayerPV != null && enteringPlayerPV.IsMine && enteringPlayerPV.Owner.IsLocal) {
+                if (exitingPlayerPV != null && exitingPlayerPV.IsMine && exitingPlayerPV.Owner.IsLocal) {
                     // Remove leaving player from insideRoom list.
                     listOfPlayerObjectsInThisRoom.Remove(other.gameObject);
                     // Send a message to our oManager to cancel the objective for us.
-                    oManager.TryCancelRoomObjective(objectiveNum);
+                    oManager.TryCancelRoomObjective(objectiveNum, attemptingPlayerID);
                 }
             }
         }

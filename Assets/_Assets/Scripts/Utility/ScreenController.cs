@@ -108,15 +108,22 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    //Populate our objective list line by line. Ran from oManager.
     public void PopulateObjectiveList(string obj, int pos) {
         GivenObjectiveNumber[pos].text = obj;
     }
 
-    //Clear the visual objective list, but don't clear the back-end. Back-end automatically gets cleared when a new map spawns in.
+    //Clear the visual objective list, but don't clear the back-end. Back-end automatically gets cleared when a new map spawns in. Ran from oManager.
     public void ClearObjectiveList() {
         foreach (Text line in GivenObjectiveNumber) {
             line.text = "";
         }
+    }
+
+    //Visually 'complete' a specific task on a specific line. Ran from oManager.
+    public void VisualCompleteObjective(int line) {
+        //For now we'll simply clear it, but later we can add effects.
+        GivenObjectiveNumber[line].text = "";
     }
 
 

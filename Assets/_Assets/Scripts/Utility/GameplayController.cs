@@ -41,6 +41,7 @@ public class GameplayController : MonoBehaviour {
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
     private int CurrentCountDownTimer = 20;
     private int CurrentGameTimeLeftTimer = 300;
+    private int CurrentTeam = -1; // -1 default, 0 is props, 1 is seeker.
     #endregion
 
 
@@ -133,6 +134,15 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
+    //Ran locally by all clients. This runs when a map spawns in.
+    public void GetObjectiveManagerReference() {
+        GameObject localPly = (GameObject)PhotonNetwork.LocalPlayer.TagObject;
+        PhotonView localPlyPV = localPly.GetPhotonView();
+        if (localPlyPV.IsMine && localPlyPV.Owner.IsLocal) {
+            PlayersAccessObjectiveManager(localPlyPV.ViewID);
+        }
+    }
+
     private void DestroyObjectsOnMapSwitch() {
         if (PhotonNetwork.IsMasterClient) {
             foreach (GameObject objToDestroy in propsSpawnedDuringGame) {
@@ -206,13 +216,22 @@ public class GameplayController : MonoBehaviour {
         gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
-    //Only runs on players in the propPlayerList locally from this script. We access the ObjectiveManager attached to the current map.
-    private void PropPlayersAccessObjectiveManager(int LPID) {
-        ObjectiveManager curMapObjMgr = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
-        if (curMapObjMgr != null) {
-            curMapObjMgr.InitiateObjectiveManager(LPID);
-        } else {
-            Debug.LogError("Trying to utilize ObjectiveManager, but couldn't find it. Null Reference.");
+    //Only runs on all players when a new map spawns on their client, locally.
+    private void PlayersAccessObjectiveManager(int LPID) {
+
+        //We should only be initializing this oManager if we're on the prop team.
+        if (CurrentTeam == 0) { //-1 is default, 0 is prop, 1 is seeker.
+
+            //Let's get our oManager off of the map prefab.
+            ObjectiveManager curMapObjMgr = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
+
+            //Let's also make sure we've got a successful reference.
+            if (curMapObjMgr != null) {
+                curMapObjMgr.InitiateObjectiveManager(LPID);
+            } else {
+                Debug.LogError("Trying to utilize ObjectiveManager, but couldn't find it. Null Reference.");
+            }
+
         }
     }
 
@@ -248,6 +267,7 @@ public class GameplayController : MonoBehaviour {
         object[] newRoomFromOldRoomInstData = new object[1];
         newRoomFromOldRoomInstData[0] = 2;
         ppc.moveState = 1; // pre-prop moveState.
+        CurrentTeam = -1; // -1 default, 0 prop, 1 seeker. TeamNumber only goes above -1 if we're in an active game.
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.gameObject.transform.position, localPlayer.gameObject.transform.rotation, 0, newRoomFromOldRoomInstData);
     }
 
@@ -418,6 +438,7 @@ public class GameplayController : MonoBehaviour {
         foreach (int seekerID in allSeekerList) {
             if (myID == seekerID) {
                 //We're a seeker.
+                CurrentTeam = 1; // -1 default, 0 prop, 1 seeker.
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ppc.moveState = 3; //We're a seeker now.
@@ -429,7 +450,7 @@ public class GameplayController : MonoBehaviour {
         foreach (int propID in allPropList) {
             if (myID == propID) {
                 //We're a pre-prop ghost.
-                SuperInvoke.Run(() => Invoke_DelayedObjectiveUpdateWaitingForMap(myID), 2f);
+                CurrentTeam = 0; // -1 default, 0 prop, 1 seeker.
                 PhotonView ourPV = PhotonView.Find(myID);
                 ourPV.GetComponent<Rigidbody>().isKinematic = true; // Freeze our player, we will unfreeze after prop is spawned, and modified through callback in PropInteraction.
                 ourPV.gameObject.transform.rotation = Quaternion.identity;
@@ -463,6 +484,7 @@ public class GameplayController : MonoBehaviour {
             Debug.LogError("Tried to destroy Seeker door. It was null?..");
         }
     }
+
 
     #endregion
 
@@ -518,11 +540,6 @@ public class GameplayController : MonoBehaviour {
             UpdateGameplayState(1);
         }
         sController.EndLoadingScreen(2f);
-    }
-
-    private void Invoke_DelayedObjectiveUpdateWaitingForMap(int ourID) {
-        //We're using a time delay to hope that the map spawns well before we run this.
-        PropPlayersAccessObjectiveManager(ourID);
     }
 
     #endregion
