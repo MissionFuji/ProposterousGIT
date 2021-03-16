@@ -3237,7 +3237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68771bf4f261f764d863c13fbb0b0613, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectiveNum: 4
+  objectiveNum: 3
   listOfPlayerObjectsInThisRoom: []
 --- !u!1 &8538409949929202326
 GameObject:
