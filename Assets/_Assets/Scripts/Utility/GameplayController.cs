@@ -41,6 +41,7 @@ public class GameplayController : MonoBehaviour {
     private GameObject currentMapLoaded; //This is the current map prefab loaded. Could be pre-game lobby, office map, candy land map, etc.
     private int CurrentCountDownTimer = 20;
     private int CurrentGameTimeLeftTimer = 300;
+    [SerializeField]
     private int CurrentTeam = -1; // -1 default, 0 is props, 1 is seeker.
     #endregion
 
