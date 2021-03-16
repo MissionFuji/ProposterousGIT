@@ -71,7 +71,8 @@ public class ObjectiveManager : MonoBehaviour
                     Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
                 }
             } else {
-                //If we're the MC, we already created the list when the map was spawned in. So instead of requestion access, we'll just display the list locally.
+            //If we're the MC, we already created the list when the map was spawned in. So instead of requestion access, we'll just display the list locally.
+            Debug.Log("We are mc so we don't need to worry about requesting it. we already have it. so let's display it.");
                 DisplayObjectiveList();
             }
     }
