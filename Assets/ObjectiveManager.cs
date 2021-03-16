@@ -23,6 +23,7 @@ public class ObjectiveManager : MonoBehaviour
     // Regular Private Vars
     private ScreenController sController;
     private GameplayController gController;
+    private PhotonView oMgrPV;
     private List<int> GivenObjectiveNumber = new List<int>();
     private int roomCountDownRemaining;
     private int roomObjectiveTryingToComplete;
@@ -37,6 +38,7 @@ public class ObjectiveManager : MonoBehaviour
         // Controller References
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
         gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
+        oMgrPV = GetComponent<PhotonView>();
 
         // If we're the MasterClient, let's generate our list.
         if (PhotonNetwork.IsMasterClient) {
@@ -57,13 +59,13 @@ public class ObjectiveManager : MonoBehaviour
     //Initializes ObjectiveManager and asks MasterClient for the objective list.
     public void InitiateObjectiveManager(int localPlayerID) {
             PhotonView lpPV = PhotonView.Find(localPlayerID);
-
             // If we're not the MC.
             if (!lpPV.Owner.IsMasterClient) {
                 // If we own the PV we're going to run RPC's for.
                 if (lpPV != null && lpPV.IsMine) {
-                    // We'll request a list from our MC.
-                    lpPV.RPC("RPC_RequestObjectiveListFromMaster", RpcTarget.MasterClient, lpPV.ViewID);
+                // We'll request a list from our MC.
+
+                oMgrPV.RPC("RPC_RequestObjectiveListFromMaster", RpcTarget.MasterClient, lpPV.ViewID);
                 } else {
                     Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
                 }
@@ -104,7 +106,6 @@ public class ObjectiveManager : MonoBehaviour
     // Runs on the MasterClient. MC gives prop players the objective list.
     [PunRPC]
     private void RPC_RequestObjectiveListFromMaster(int requestingPlyID) {
-        PhotonView oMgrPV = GetComponent<PhotonView>();
         PhotonView targetPlayer = PhotonView.Find(requestingPlyID);
 
         int[] compressedObjectivesList = GivenObjectiveNumber.ToArray();
@@ -173,7 +174,7 @@ public class ObjectiveManager : MonoBehaviour
         if (cmpltingPly != null && cmpltingPly.IsMine) { // Let's make sure we are who we say we are.
             if (GivenObjectiveNumber.Contains(roomObjectiveTryingToComplete)) {
                 // Let's tell all client that this task is completed by us.
-                cmpltingPly.RPC("RPC_CompleteRoomObjective", RpcTarget.AllBuffered, objectiveToComplete, completingPlyID);
+                oMgrPV.RPC("RPC_CompleteRoomObjective", RpcTarget.AllBuffered, objectiveToComplete, completingPlyID);
             } else {
                 Debug.Log("Tried to complete objective that was not part of your objective list? Could have been completed by somebody else before you.");
             }
