@@ -481,6 +481,11 @@ public class GameplayController : MonoBehaviour {
     [PunRPC]
     private void RPC_OpenSeekerGate() {
         mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
+        ObjectiveManager oMgr = mp.gameObject.GetComponent<ObjectiveManager>();
+        if (CurrentTeam == 0) { // If we're on the props team.
+            oMgr.DisplayObjectiveList();
+        }
+
         if (mp.seekerDoor != null) {
             Destroy(mp.seekerDoor);
         } else {

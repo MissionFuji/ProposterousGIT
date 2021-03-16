@@ -24,12 +24,12 @@ public class ObjectiveManager : MonoBehaviour
     private ScreenController sController;
     private GameplayController gController;
     private PhotonView oMgrPV;
-    [SerializeField]
     private List<int> GivenObjectiveNumber = new List<int>();
     private int roomCountDownRemaining;
     private int roomObjectiveTryingToComplete;
     private int completingPlayerID;
     private int numberOfCompletedObjectives;
+    private bool canCompleteObjectives = false;
 
 
 
@@ -70,11 +70,7 @@ public class ObjectiveManager : MonoBehaviour
                 } else {
                     Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
                 }
-            } else {
-            //If we're the MC, we already created the list when the map was spawned in. So instead of requestion access, we'll just display the list locally.
-            Debug.Log("We are mc so we don't need to worry about requesting it. we already have it. so let's display it.");
-                DisplayObjectiveList();
-            }
+            } // If we ARE the mc, we don't need to get the list because we made it.
     }
 
     private void MasterClientGeneratesNewObjectiveList() {
@@ -91,17 +87,28 @@ public class ObjectiveManager : MonoBehaviour
         }
     }
 
-    private void DisplayObjectiveList() {
-        if (sController != null) {
-            int loopCounter = 0;
-            foreach (int objNum in GivenObjectiveNumber) {
-                sController.PopulateObjectiveList(ObjectiveList_ReadOnly[objNum], loopCounter); // We tell our sController what to show, and what line to show it.
-                loopCounter++;
+    // Runs on all clients. Currently running from gController where we destroy the "Seeker Door"
+    public void DisplayObjectiveList() {
 
-                if (loopCounter == GivenObjectiveNumber.Count) {
-                    Debug.Log("Displayed all objectives.");
+        if (GivenObjectiveNumber.Count > 0) { // We do this to make sure nobody who wasn't approved to get the list can cheese the system and see it early.
+            if (sController != null) {
+                int loopCounter = 0;
+
+                foreach (int objNum in GivenObjectiveNumber) {
+
+                    // Tell the sController to display our objective.
+                    sController.PopulateObjectiveList(ObjectiveList_ReadOnly[objNum], loopCounter); // We tell our sController what to show, and what line to show it.
+
+                    // Counting
+                    loopCounter++;
+
+                    // Are we done adding objectives?
+                    if (loopCounter == GivenObjectiveNumber.Count) {
+                        Debug.Log("Displayed all objectives. Can now complete objectives.");
+                        canCompleteObjectives = true;
+                    }
+
                 }
-
             }
         }
     }
@@ -122,7 +129,10 @@ public class ObjectiveManager : MonoBehaviour
     private void RPC_GivePlayerAccessToObjectiveList(int[] compressedListOfObjectives) {
 
         GivenObjectiveNumber = compressedListOfObjectives.ToList<int>();
-        DisplayObjectiveList();
+        Debug.Log("We've got the objective list on the back-end. We're just waiting on game to start now before showing.");
+
+        //We run DisplayObjectiveList through gController when the "SeekerDoor" get destroyed.
+
     }
 
 
@@ -131,35 +141,38 @@ public class ObjectiveManager : MonoBehaviour
 
     // Start Room Objective Countdown.
     public void TryStartRoomObjective(int objectiveNum, int attemptingPlayerID) {
-        PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
-        if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
+        if (canCompleteObjectives) {
+            PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
+            if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
 
-            // Let's try to clear any current/on-going objectives.
-            if (IsInvoking("StartRoomObjectiveCountdown") || completingPlayerID != -1 || roomObjectiveTryingToComplete != -1) {
-                TryCancelRoomObjective(-1, attemptingPlayerID);
-            }
+                // Let's try to clear any current/on-going objectives.
+                if (IsInvoking("StartRoomObjectiveCountdown") || completingPlayerID != -1 || roomObjectiveTryingToComplete != -1) {
+                    TryCancelRoomObjective(-1, attemptingPlayerID);
+                }
 
-            // Let's try to start a new objective
-            if (GivenObjectiveNumber.Contains(objectiveNum)) {
-                // Reference our attempting player locally on this script.
-                completingPlayerID = attemptingPlayerID;
-                // Reset the countdown to start again.
-                roomCountDownRemaining = RoomCountdownTime;
-                // We tell our oManager what objective we're working on completing.
-                roomObjectiveTryingToComplete = objectiveNum;
-                // Start the countdown, kronk.
-                InvokeRepeating("StartRoomObjectiveCountdown", 0.1f, 1f);
-                Debug.Log("We DO have that objective. Starting it if possible.");
-            } else {
-                Debug.Log("We don't have that objective.");
+                // Let's try to start a new objective
+                if (GivenObjectiveNumber.Contains(objectiveNum)) {
+                    // Reference our attempting player locally on this script.
+                    completingPlayerID = attemptingPlayerID;
+                    // Reset the countdown to start again.
+                    roomCountDownRemaining = RoomCountdownTime;
+                    // We tell our oManager what objective we're working on completing.
+                    roomObjectiveTryingToComplete = objectiveNum;
+                    // Start the countdown, kronk.
+                    InvokeRepeating("StartRoomObjectiveCountdown", 0.1f, 1f);
+                    Debug.Log("We DO have that objective. Starting it if possible.");
+                } else {
+                    Debug.Log("We don't have that objective.");
+                }
             }
         }
     }
 
     // Cancel Room Objective Countdown.
     public void TryCancelRoomObjective(int objectiveNum, int attemptingPlayerID) {
-        PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
-        if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
+        if (canCompleteObjectives) {
+            PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
+            if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
                 // Clearing our completingPlayerID var because we canceled the objective.
                 completingPlayerID = -1;
                 // Cancel the timer.
@@ -168,18 +181,23 @@ public class ObjectiveManager : MonoBehaviour
                 roomCountDownRemaining = RoomCountdownTime;
                 // Set attempting complete objective Num to -1 (Because 0 is technically always in our list.)
                 roomObjectiveTryingToComplete = -1;
+            }
         }
     }
 
     // Countdown has ended, trying to complete the objective.
     private void TryCompleteRoomObjective(int objectiveToComplete, int completingPlyID) {
-        PhotonView cmpltingPly = PhotonView.Find(completingPlyID);
-        if (cmpltingPly != null && cmpltingPly.IsMine) { // Let's make sure we are who we say we are.
-            if (GivenObjectiveNumber.Contains(roomObjectiveTryingToComplete)) {
-                // Let's tell all client that this task is completed by us.
-                oMgrPV.RPC("RPC_CompleteRoomObjective", RpcTarget.AllBuffered, objectiveToComplete, completingPlyID);
-            } else {
-                Debug.Log("Tried to complete objective that was not part of your objective list? Could have been completed by somebody else before you.");
+        if (canCompleteObjectives) {
+            PhotonView cmpltingPly = PhotonView.Find(completingPlyID);
+            if (cmpltingPly != null && cmpltingPly.IsMine) { // Let's make sure we are who we say we are.
+                if (GivenObjectiveNumber.Contains(roomObjectiveTryingToComplete)) {
+
+                    int lineNum = GivenObjectiveNumber.IndexOf(roomObjectiveTryingToComplete);
+                    // Let's tell all client that this task is completed by us.
+                    oMgrPV.RPC("RPC_CompleteRoomObjective", RpcTarget.AllBuffered, objectiveToComplete, lineNum, completingPlyID);
+                } else {
+                    Debug.Log("Tried to complete objective that was not part of your objective list? Could have been completed by somebody else before you.");
+                }
             }
         }
     }
@@ -199,9 +217,9 @@ public class ObjectiveManager : MonoBehaviour
 
     // Runs on all clients when a player completes an objective.
     [PunRPC]
-    private void RPC_CompleteRoomObjective(int objectiveNumber, int completedPlayer) {
+    private void RPC_CompleteRoomObjective(int objectiveNumber, int lineNumber, int completedPlayer) {
         // Visually complete the objective on the UI Locally.
-        sController.VisualCompleteObjective(objectiveNumber);
+        sController.VisualCompleteObjective(lineNumber);
         // Set the objNumber in the list to -1. (We can't just remove an index, so we have to modify it instead.)
         GivenObjectiveNumber[objectiveNumber] = -1;
         // Track # of completed tasks locally.
@@ -212,6 +230,7 @@ public class ObjectiveManager : MonoBehaviour
             // Let's see if we're now done with all of our tasks
             if (numberOfCompletedObjectives == NumberOfObjectives) {
                 gController.UpdateGameplayState(4);
+                sController.ClearObjectiveList();
             }
         }
 
