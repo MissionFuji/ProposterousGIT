@@ -1,11 +1,9 @@
-using UnityEngine;
 using Photon.Pun;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.UI;
+using UnityEngine;
 
-public class ObjectiveManager : MonoBehaviour
-{
+public class ObjectiveManager : MonoBehaviour {
 
     [Header("Objective Manager Settings")]
     [Tooltip("The number of objectives per prop player.")]
@@ -59,18 +57,18 @@ public class ObjectiveManager : MonoBehaviour
     //This only runs on players who are "props". This shouldn't run for seekers.
     //Initializes ObjectiveManager and asks MasterClient for the objective list.
     public void InitiateObjectiveManager(int localPlayerID) {
-            PhotonView lpPV = PhotonView.Find(localPlayerID);
-            // If we're not the MC.
-            if (!lpPV.Owner.IsMasterClient) {
-                // If we own the PV we're going to run RPC's for.
-                if (lpPV != null && lpPV.IsMine) {
+        PhotonView lpPV = PhotonView.Find(localPlayerID);
+        // If we're not the MC.
+        if (!lpPV.Owner.IsMasterClient) {
+            // If we own the PV we're going to run RPC's for.
+            if (lpPV != null && lpPV.IsMine) {
                 // We'll request a list from our MC.
                 Debug.Log("We're requestion a list from our MC after we got out map spawned in.");
                 oMgrPV.RPC("RPC_RequestObjectiveListFromMaster", RpcTarget.MasterClient, lpPV.ViewID);
-                } else {
-                    Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
-                }
-            } // If we ARE the mc, we don't need to get the list because we made it.
+            } else {
+                Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
+            }
+        } // If we ARE the mc, we don't need to get the list because we made it.
     }
 
     private void MasterClientGeneratesNewObjectiveList() {
@@ -218,10 +216,16 @@ public class ObjectiveManager : MonoBehaviour
     // Runs on all clients when a player completes an objective.
     [PunRPC]
     private void RPC_CompleteRoomObjective(int objectiveNumber, int lineNumber, int completedPlayer) {
+
+        // Only our prop players will have a populated list. Let's make sure we're a prop if we're modifying this value.
+        if (GivenObjectiveNumber.Count > 0) {
+            // Set the objNumber in the list to -1. (We can't just remove an index, so we have to modify it instead.)
+            GivenObjectiveNumber[lineNumber] = -1;
+        }
+
         // Visually complete the objective on the UI Locally.
         sController.VisualCompleteObjective(lineNumber);
-        // Set the objNumber in the list to -1. (We can't just remove an index, so we have to modify it instead.)
-        GivenObjectiveNumber[objectiveNumber] = -1;
+
         // Track # of completed tasks locally.
         numberOfCompletedObjectives++;
 
