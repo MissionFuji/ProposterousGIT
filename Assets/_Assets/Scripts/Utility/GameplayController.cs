@@ -140,6 +140,7 @@ public class GameplayController : MonoBehaviour {
         PhotonView localPlyPV = localPly.GetPhotonView();
         if (localPlyPV.IsMine && localPlyPV.Owner.IsLocal) {
             PlayersAccessObjectiveManager(localPlyPV.ViewID);
+            Debug.Log("We got our map reference after it spawned.");
         }
     }
 
@@ -228,6 +229,7 @@ public class GameplayController : MonoBehaviour {
             //Let's also make sure we've got a successful reference.
             if (curMapObjMgr != null) {
                 curMapObjMgr.InitiateObjectiveManager(LPID);
+                Debug.Log("Ghost players were told to initializeObjMgr");
             } else {
                 Debug.LogError("Trying to utilize ObjectiveManager, but couldn't find it. Null Reference.");
             }

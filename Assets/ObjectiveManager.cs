@@ -24,6 +24,7 @@ public class ObjectiveManager : MonoBehaviour
     private ScreenController sController;
     private GameplayController gController;
     private PhotonView oMgrPV;
+    [SerializeField]
     private List<int> GivenObjectiveNumber = new List<int>();
     private int roomCountDownRemaining;
     private int roomObjectiveTryingToComplete;
@@ -64,7 +65,7 @@ public class ObjectiveManager : MonoBehaviour
                 // If we own the PV we're going to run RPC's for.
                 if (lpPV != null && lpPV.IsMine) {
                 // We'll request a list from our MC.
-
+                Debug.Log("We're requestion a list from our MC after we got out map spawned in.");
                 oMgrPV.RPC("RPC_RequestObjectiveListFromMaster", RpcTarget.MasterClient, lpPV.ViewID);
                 } else {
                     Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
@@ -83,6 +84,7 @@ public class ObjectiveManager : MonoBehaviour
                 if (!GivenObjectiveNumber.Contains(r)) {
                     GivenObjectiveNumber.Add(r);
                     loopCounter++;
+                    Debug.Log("MasterClient is building obj list.");
                 }
             }
         }
