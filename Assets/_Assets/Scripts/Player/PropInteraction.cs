@@ -8,7 +8,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
     [Header("PropInteraction Settings")]
     [Tooltip("The ID associated with this prop.")]
     [SerializeField]
-    private int propID;
+    private int propID = -1;
     [Tooltip("Is this prop available for takeover?")]
     public bool isAvailable = true;
     [Tooltip("Is this prop masterclient only?")]
