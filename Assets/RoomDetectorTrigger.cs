@@ -38,6 +38,7 @@ public class RoomDetectorTrigger : MonoBehaviour
 
                 // Check if its got the required prop ID.
                 if (initialPropID == requiredPropID) {
+                    Debug.Log("We are required prop ID.");
                     // Get the attached prop PV.
                     PhotonView enteringPlayerPV = other.gameObject.GetPhotonView();
                     // Get the rootPlayerID
@@ -49,6 +50,8 @@ public class RoomDetectorTrigger : MonoBehaviour
                         // Send a message to oManager to start this objective for us.
                         oManager.TryStartRoomObjective(objectiveNum, attemptingPlayerID, initialPropID);
                     }
+                } else {
+                    Debug.Log("We are NOT required prop ID.");
                 }
             }
         }

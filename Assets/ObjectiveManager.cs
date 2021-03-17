@@ -150,6 +150,8 @@ public class ObjectiveManager : MonoBehaviour {
     // Start Room Objective Countdown.
     public void TryStartRoomObjective(int objectiveNum, int attemptingPlayerID, int initialPropID) {
         if (canCompleteObjectives) {
+
+            Debug.Log("Trying to start objective");
             PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
             if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
 
@@ -188,6 +190,7 @@ public class ObjectiveManager : MonoBehaviour {
                 roomCountDownRemaining = RoomCountdownTime;
                 // Set attempting complete objective Num to -1 (Because 0 is technically always in our list.)
                 roomObjectiveTryingToComplete = -1;
+                Debug.Log("We are cancelling objective.");
             }
         }
     }
@@ -202,6 +205,7 @@ public class ObjectiveManager : MonoBehaviour {
                     int lineNum = GivenObjectiveNumber.IndexOf(roomObjectiveTryingToComplete);
                     // Let's tell all client that this task is completed by us.
                     oMgrPV.RPC("RPC_CompleteRoomObjective", RpcTarget.AllBuffered, objectiveToComplete, lineNum, completingPlyID);
+                    Debug.Log("Completing obj.");
                 } else {
                     Debug.Log("Tried to complete objective that was not part of your objective list? Could have been completed by somebody else before you.");
                 }
@@ -223,6 +227,7 @@ public class ObjectiveManager : MonoBehaviour {
                     //Countdown each second.
                     roomCountDownRemaining--;
                     // If we're done counting down:
+                    Debug.LogWarning(roomCountDownRemaining);
                     if (roomCountDownRemaining == 0) {
                         // Let's try to complete the objective.
                         TryCompleteRoomObjective(roomObjectiveTryingToComplete, completingPlayerID);
