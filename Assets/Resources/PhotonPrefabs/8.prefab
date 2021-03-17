@@ -157,6 +157,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f62bf4fe9d7f6c449bf555adc27c7c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  propID: 8
   isAvailable: 1
   isHostOnly: 0
   isMapCartridge: 0

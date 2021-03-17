@@ -5,10 +5,16 @@ using UnityEngine;
 
 public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback {
 
-    public bool isAvailable = true;
-    public bool isHostOnly = false;
-    public bool isMapCartridge = false;
+    [Header("PropInteraction Settings")]
+    [Tooltip("The ID associated with this prop.")]
+    [SerializeField]
     private int propID;
+    [Tooltip("Is this prop available for takeover?")]
+    public bool isAvailable = true;
+    [Tooltip("Is this prop masterclient only?")]
+    public bool isHostOnly = false;
+    [Tooltip("Is this a prop used by the masterclient to start the game?")]
+    public bool isMapCartridge = false;
     private Rigidbody rb;
 
 
