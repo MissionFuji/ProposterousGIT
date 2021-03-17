@@ -28,6 +28,8 @@ public class ObjectiveManager : MonoBehaviour {
     private int completingPlayerID;
     private int numberOfCompletedObjectives;
     private bool canCompleteObjectives = false;
+    private int initPropID = -1;
+    private GameObject localPlayerRoot;
 
 
 
@@ -38,6 +40,7 @@ public class ObjectiveManager : MonoBehaviour {
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
         gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
         oMgrPV = GetComponent<PhotonView>();
+        localPlayerRoot = (GameObject)PhotonNetwork.LocalPlayer.TagObject;
 
         // If we're the MasterClient, let's generate our list.
         if (PhotonNetwork.IsMasterClient) {
@@ -68,18 +71,27 @@ public class ObjectiveManager : MonoBehaviour {
             } else {
                 Debug.LogError("Player that is trying to initiate ObjectiveManager has null PV or I don't own the PV?");
             }
-        } // If we ARE the mc, we don't need to get the list because we made it.
+        } else {
+            // If we ARE the mc, we don't need to get the list because we made it in MasterClientGeneratesNewObjectiveList().
+        }
     }
 
     private void MasterClientGeneratesNewObjectiveList() {
         if (sController != null) {
             int loopCounter = 0;
             while (GivenObjectiveNumber.Count < NumberOfObjectives) { // If we havent finished getting all of our objectives yet 
+                // Grab a random index of the ReadOnly copy of our objective list.
                 int r = Random.Range(0, ObjectiveList_ReadOnly.Count - 1);
+                // Make sure our list doesn't already have this objective.
                 if (!GivenObjectiveNumber.Contains(r)) {
+                    // Add it to our list.
                     GivenObjectiveNumber.Add(r);
+                    // Count each iteration.
                     loopCounter++;
-                    Debug.Log("MasterClient is building obj list.");
+                    // Are we done adding objectives?
+                    if (loopCounter == NumberOfObjectives) {
+                        Debug.Log("MasterClient finished building Objective List.");
+                    }
                 }
             }
         }
@@ -114,11 +126,11 @@ public class ObjectiveManager : MonoBehaviour {
     // Runs on the MasterClient. MC gives prop players the objective list.
     [PunRPC]
     private void RPC_RequestObjectiveListFromMaster(int requestingPlyID) {
+        // Get requesting player Reference
         PhotonView targetPlayer = PhotonView.Find(requestingPlyID);
-
+        // De-compress list for use.
         int[] compressedObjectivesList = GivenObjectiveNumber.ToArray();
-        Debug.Log("Sending compressed objective list array to requesting player.");
-
+        // Give requesting player access to obj list.
         oMgrPV.RPC("RPC_GivePlayerAccessToObjectiveList", targetPlayer.Owner, compressedObjectivesList);
     }
 
@@ -126,11 +138,9 @@ public class ObjectiveManager : MonoBehaviour {
     [PunRPC]
     private void RPC_GivePlayerAccessToObjectiveList(int[] compressedListOfObjectives) {
 
+        // Update Obj List on the back-end.
         GivenObjectiveNumber = compressedListOfObjectives.ToList<int>();
-        Debug.Log("We've got the objective list on the back-end. We're just waiting on game to start now before showing.");
-
-        //We run DisplayObjectiveList through gController when the "SeekerDoor" get destroyed.
-
+        // We run DisplayObjectiveList through gController when the "SeekerDoor" get destroyed.
     }
 
 
@@ -138,7 +148,7 @@ public class ObjectiveManager : MonoBehaviour {
     //----------------<Room Objectives>----------------\\
 
     // Start Room Objective Countdown.
-    public void TryStartRoomObjective(int objectiveNum, int attemptingPlayerID) {
+    public void TryStartRoomObjective(int objectiveNum, int attemptingPlayerID, int initialPropID) {
         if (canCompleteObjectives) {
             PhotonView attemptPly = PhotonView.Find(attemptingPlayerID);
             if (attemptPly != null && attemptPly.IsMine) { // Let's make sure we are who we say we are.
@@ -150,6 +160,8 @@ public class ObjectiveManager : MonoBehaviour {
 
                 // Let's try to start a new objective
                 if (GivenObjectiveNumber.Contains(objectiveNum)) {
+                    // Save our original propID when we started objective. Just to make sure it doesn't change.
+                    initPropID = initialPropID;
                     // Reference our attempting player locally on this script.
                     completingPlayerID = attemptingPlayerID;
                     // Reset the countdown to start again.
@@ -158,10 +170,7 @@ public class ObjectiveManager : MonoBehaviour {
                     roomObjectiveTryingToComplete = objectiveNum;
                     // Start the countdown, kronk.
                     InvokeRepeating("StartRoomObjectiveCountdown", 0.1f, 1f);
-                    Debug.Log("We DO have that objective. Starting it if possible.");
-                } else {
-                    Debug.Log("We don't have that objective.");
-                }
+                } 
             }
         }
     }
@@ -202,14 +211,32 @@ public class ObjectiveManager : MonoBehaviour {
 
     // The countdown timer for the room objectives.
     private void StartRoomObjectiveCountdown() {
-        //Countdown each second.
-        roomCountDownRemaining--;
-        // If we're done counting down:
-        if (roomCountDownRemaining == 0) {
-            // Let's try to complete the objective.
-            TryCompleteRoomObjective(roomObjectiveTryingToComplete, completingPlayerID);
-            // Stop the timer.
-            CancelInvoke("StartRoomObjectiveCountdown");
+
+        // Is our player reference null?
+        if (localPlayerRoot != null) {
+            // Unfortunately, we have to keep re-grabbing this reference because if a player DOES change, this will come back null.
+            PropInteraction rootPlayerPropPI = localPlayerRoot.transform.Find("PropHolder").GetChild(0).gameObject.GetComponent<PropInteraction>();
+            // Make sure PropInteration of the prop isn't null.
+            if (rootPlayerPropPI != null) {
+                // The initial PropID matches the current PropID.
+                if (rootPlayerPropPI.GetPropID() == initPropID) {
+                    //Countdown each second.
+                    roomCountDownRemaining--;
+                    // If we're done counting down:
+                    if (roomCountDownRemaining == 0) {
+                        // Let's try to complete the objective.
+                        TryCompleteRoomObjective(roomObjectiveTryingToComplete, completingPlayerID);
+                        // Stop the timer.
+                        CancelInvoke("StartRoomObjectiveCountdown");
+                    }
+                } else {
+                    Debug.Log("Looks like you've changed props. Cancelling your current objective.");
+                    // Try to cancel the objective because the player changed props.
+                    TryCancelRoomObjective(roomObjectiveTryingToComplete, completingPlayerID);
+                    // Stop the timer.
+                    CancelInvoke("StartRoomObjectiveCountdown");
+                }
+            }
         }
     }
 
@@ -235,10 +262,11 @@ public class ObjectiveManager : MonoBehaviour {
             if (numberOfCompletedObjectives == NumberOfObjectives) {
                 gController.UpdateGameplayState(4);
                 sController.ClearObjectiveList();
+                GivenObjectiveNumber.Clear();
             }
         }
 
-        Debug.LogError("OBJECTIVE COMPLETE: " + objectiveNumber.ToString() + ". Finished by player with viewID: " + completedPlayer + ".");
+        Debug.Log("OBJECTIVE COMPLETE: " + objectiveNumber.ToString() + ". Finished by player with viewID: " + completedPlayer + ".");
     }
 
 

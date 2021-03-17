@@ -8,6 +8,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
     public bool isAvailable = true;
     public bool isHostOnly = false;
     public bool isMapCartridge = false;
+    private int propID;
     private Rigidbody rb;
 
 
@@ -18,6 +19,10 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
     public void ResetRigidBodyAfterDetach() {
         rb = gameObject.GetComponent<Rigidbody>();
+    }
+
+    public int GetPropID() {
+        return propID;
     }
 
     private void FixedUpdate() {
