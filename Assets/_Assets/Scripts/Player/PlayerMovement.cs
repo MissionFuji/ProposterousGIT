@@ -423,12 +423,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
-        GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
-        if (propToDestroy != null) {
-            if (gController.gameObject.GetPhotonView().IsMine) { // We do this so we don't run this on other player's.
+        if (gameObject.tag == "LocalPlayer" && gameObject.GetPhotonView().IsMine) {
+            GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
+            if (propToDestroy != null) {
                 Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
-                gController.AddPropToDestroyOnRoundOver(propToDestroy);
+                if (gController != null) {
+                    gController.AddPropToDestroyOnRoundOver(propToDestroy);
+                }
             }
+        } else {
+            Debug.Log(gameObject.GetPhotonView().ViewID.ToString() + " is the view ID of the client-side instance of a player that tried to run.");
         }
     }
 
