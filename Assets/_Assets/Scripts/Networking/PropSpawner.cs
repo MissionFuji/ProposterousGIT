@@ -38,7 +38,7 @@ public class PropSpawner : MonoBehaviour
                 int r = Random.Range(0, possibleProps.Count);
                 GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", possibleProps[r].name), gameObject.transform.position, gameObject.transform.rotation, 0, instanceData);
                 //We add our newly spawned prop to our list of props to be destroy on map-switch.
-                gController.AddPropToDestroyOnRoundOver(newNetworkProp);
+                gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
             } else {
                 Invoke("DelaySpawn", delayTime);
             }
@@ -51,7 +51,7 @@ public class PropSpawner : MonoBehaviour
         int r = Random.Range(0, possibleProps.Count);
         GameObject newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", possibleProps[r].name), gameObject.transform.position, gameObject.transform.rotation, 0, instanceData);
         //We add our newly spawned prop to our list of props to be destroy on map-switch.
-        gController.AddPropToDestroyOnRoundOver(newNetworkProp);
+        gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
     }
 
 
