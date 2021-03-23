@@ -429,6 +429,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
                 if (gController != null) {
                     gController.AddPropToDestroyOnRoundOver(propToDestroy);
+                } else {
+                Debug.LogError("STILL NO WORKING?");
                 }
             }
     }
