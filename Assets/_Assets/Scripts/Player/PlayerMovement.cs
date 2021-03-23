@@ -40,6 +40,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private RaycastHit objectHit;
     private GameObject cursorObj;
     private GameObject pickupHolder;
+    [SerializeField]
     private GameplayController gController;
 
     //Used only to count # of seeker mistake destroys.
@@ -424,7 +425,12 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
         GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
         if (propToDestroy != null) {
-            gController.AddPropToDestroyOnRoundOver(propToDestroy);
+            Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
+            if (gController == null) {
+                Debug.Log("Our gController is null on MC when client player tries to possess a prop? WHy?....");
+            } else {
+                gController.AddPropToDestroyOnRoundOver(propToDestroy);
+            }
         }
     }
 
