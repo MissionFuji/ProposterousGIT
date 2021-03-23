@@ -425,10 +425,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
         GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
         if (propToDestroy != null) {
-            Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
-            if (gController == null) {
-                Debug.Log("Our gController is null on MC when client player tries to possess a prop? WHy?....");
-            } else {
+            if (gController.gameObject.GetPhotonView().IsMine) { // We do this so we don't run this on other player's.
+                Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
                 gController.AddPropToDestroyOnRoundOver(propToDestroy);
             }
         }
