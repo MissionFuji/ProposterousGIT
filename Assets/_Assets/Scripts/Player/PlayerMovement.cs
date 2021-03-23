@@ -87,7 +87,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             PPC = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
             mmc = Camera.main.gameObject;
             rootCanvas = GameObject.FindGameObjectWithTag("RootCanvas");
-            gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
             aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
             rotLockImg = rootCanvas.transform.Find("RoomUI/LockState").gameObject.GetComponent<Image>();
             pickupHolder = gameObject.transform.Find("PickupHolder").gameObject;
@@ -97,6 +96,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmcCamTransRef.GetComponent<CameraTarController>().SetCamFollowToPlayer(this.gameObject);
             cursorObj = mmc.transform.GetChild(0).gameObject;
         }
+
+        gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
     }
 
 
@@ -423,7 +424,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     [PunRPC]
     void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
-        if (gameObject.tag == "LocalPlayer" && gameObject.GetPhotonView().IsMine) {
             GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
             if (propToDestroy != null) {
                 Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
@@ -431,9 +431,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     gController.AddPropToDestroyOnRoundOver(propToDestroy);
                 }
             }
-        } else {
-            Debug.Log(gameObject.GetPhotonView().ViewID.ToString() + " is the view ID of the client-side instance of a player that tried to run.");
-        }
     }
 
     void BecomeProp(int plyID, int propID) {
