@@ -127,13 +127,23 @@ public class GameplayController : MonoBehaviour {
     public void RequestToKillPropPlayer(int killedPlyID) {
         gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
     }
+    
+    //Ran locally from any client when they takeover a prop in PlayerMovement.
+    public void TellMasterClientToAddPropToDestroyList(GameObject objToDestroy) {
+        // Make sure the GameObject we send is a PROP, or likewise.
+        if (objToDestroy.GetComponent<PropInteraction>()) {
 
-    //Ran locally by the masterclient from PlayerMovement.
-    public void AddPropToDestroyOnRoundOver(GameObject objToDestroy) {
-        if (PhotonNetwork.IsMasterClient) {
-            propsSpawnedDuringGame.Add(objToDestroy);
+            // Get a reference to the target PV.
+            PhotonView destroyObjPV = objToDestroy.GetPhotonView();
+
+            // Is target PV null?
+            if (destroyObjPV != null) {
+                gcpv.RPC("RPC_AddPropToDestroyOnRoundOver", RpcTarget.MasterClient, destroyObjPV.ViewID);
+            }
+
         }
     }
+
 
     //Ran locally by all clients. This runs when a map spawns in.
     public void GetObjectiveManagerReference() {
@@ -490,6 +500,17 @@ public class GameplayController : MonoBehaviour {
             Destroy(mp.seekerDoor);
         } else {
             Debug.LogError("Tried to destroy Seeker door. It was null?..");
+        }
+    }
+
+    //Ran on MasterClient. Adds object to list for destruction.
+    [PunRPC]
+    private void RPC_AddPropToDestroyOnRoundOver(int objToDestroyID) {
+        PhotonView objToDestroyPV = PhotonView.Find(objToDestroyID);
+        if (objToDestroyPV != null) {
+            propsSpawnedDuringGame.Add(objToDestroyPV.gameObject);
+        } else {
+            Debug.LogWarning("MasterClient tried to add object: " + objToDestroyPV.gameObject.name + " to the list of objects to destroy on map change, but object is null.");
         }
     }
 

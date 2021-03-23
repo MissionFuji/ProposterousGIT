@@ -422,19 +422,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         targetPlyRigidbody.isKinematic = false;
     }
 
-    [PunRPC]
-    void RPC_SendDestroyObjectListDataToMasterClient(int propToAddToDestroyListID) {
-            GameObject propToDestroy = PhotonView.Find(propToAddToDestroyListID).gameObject;
-            if (propToDestroy != null) {
-                Debug.Log(propToDestroy.name + "   _   " + propToAddToDestroyListID.ToString());
-                if (gController != null) {
-                    gController.AddPropToDestroyOnRoundOver(propToDestroy);
-                } else {
-                Debug.LogError("STILL NO WORKING?");
-                }
-            }
-    }
-
     void BecomeProp(int plyID, int propID) {
         PhotonView tarPly = PhotonView.Find(plyID);
         PhotonView prop = PhotonView.Find(propID);
@@ -518,7 +505,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
 
                 //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
-                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
+                gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         } else {
@@ -556,7 +543,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), gameObject.transform.position, Quaternion.identity, 0, instanceData);
 
                 //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
-                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
+                gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
             }
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
@@ -678,7 +665,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", propToSpawn), propTempPos, propTempRot, 0, instanceData);
 
                 //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
-                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
+                gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
             }
             //The rest gets handled on a callback from photon instantiation.
         } else {
@@ -759,7 +746,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 newNetworkProp = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", ourOldPropName.ToString()), gameObject.transform.position, Quaternion.identity, 0, instanceData);
 
                 //Send a message to our masterclient with the details of this prop so we can add it to the list to destroy on map-switch.
-                pv.RPC("RPC_SendDestroyObjectListDataToMasterClient", RpcTarget.MasterClient, newNetworkProp.GetPhotonView().ViewID);
+                gController.TellMasterClientToAddPropToDestroyList(newNetworkProp);
             }
 
             //The rest gets handled from the PropInteraction script on the object when it spawn. This will parent it to us.
