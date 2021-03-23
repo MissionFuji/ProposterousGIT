@@ -70,6 +70,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     [PunRPC]
     private void RPC_RemovePlayer() {
         sController.ClearObjectiveList();
+        sController.ForceCloseEscapeMenu(false); //Force-close any menu left open, and hidecursor = false.
         sController.RunLoadingScreen(2);
         Invoke("Invoke_RemovePlayer", 0.5f);
     }

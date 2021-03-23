@@ -222,8 +222,6 @@ public class ObjectiveManager : MonoBehaviour {
             PropInteraction rootPlayerPropPI = localPlayerRoot.transform.Find("PropHolder").GetChild(0).gameObject.GetComponent<PropInteraction>();
             // Make sure PropInteration of the prop isn't null.
             if (rootPlayerPropPI != null) {
-                // The initial PropID matches the current PropID.
-                if (rootPlayerPropPI.GetPropID() == initPropID) {
                     //Countdown each second.
                     roomCountDownRemaining--;
                     // If we're done counting down:
@@ -234,13 +232,6 @@ public class ObjectiveManager : MonoBehaviour {
                         // Stop the timer.
                         CancelInvoke("StartRoomObjectiveCountdown");
                     }
-                } else {
-                    Debug.Log("Looks like you've changed props. Cancelling your current objective.");
-                    // Try to cancel the objective because the player changed props.
-                    TryCancelRoomObjective(roomObjectiveTryingToComplete, completingPlayerID);
-                    // Stop the timer.
-                    CancelInvoke("StartRoomObjectiveCountdown");
-                }
             }
         }
     }

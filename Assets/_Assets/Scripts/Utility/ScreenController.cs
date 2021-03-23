@@ -123,7 +123,23 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     //Visually 'complete' a specific task on a specific line. Ran from oManager.
     public void VisualCompleteObjective(int line) {
         //For now we'll simply clear it, but later we can add effects.
-        GivenObjectiveNumber[line].text = "";
+        GivenObjectiveNumber[line].text = "-";
+    }
+
+    public void ForceCloseEscapeMenu(bool hideCursor) {
+        // Let's close any open screen.
+        if (ActiveMenuOnScreen != null) {
+            ActiveMenuOnScreen.SetActive(false);
+            ActiveMenuOnScreen = null;
+        }
+        // Let's modify out cursor state.
+        if (!hideCursor) {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        } else {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
     }
 
 
