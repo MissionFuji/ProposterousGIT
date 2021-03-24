@@ -129,6 +129,7 @@ MonoBehaviour:
   PropInteraction:
     serializedVersion: 2
     m_Bits: 10240
+  gController: {fileID: 0}
   outlinedObjectRef: {fileID: 0}
   mapToLoadName: 
   lockedSprite: {fileID: 21300000, guid: dea9d26b92fcca94ea4f54f069413504, type: 3}
