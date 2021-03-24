@@ -2,7 +2,6 @@ using Photon.Pun;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JacobGames.SuperInvoke;
 using UnityEngine;
 
 public class GameplayController : MonoBehaviour {
@@ -51,6 +50,22 @@ public class GameplayController : MonoBehaviour {
         sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
         aController = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioController>();
         ppc = GameObject.FindGameObjectWithTag("PPC").GetComponent<PlayerPropertiesController>();
+    }
+
+    private void Update() {
+
+        // Just a temporary lock/unlock cursor override button. P.
+        if (Input.GetKeyDown(KeyCode.P)) {
+            if (gameplayState == 0) { // If we're in the main menu.
+                if (Cursor.lockState == CursorLockMode.Locked) {
+                    Cursor.lockState = CursorLockMode.Confined;
+                    Cursor.visible = true;
+                } else {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+        }
     }
 
 

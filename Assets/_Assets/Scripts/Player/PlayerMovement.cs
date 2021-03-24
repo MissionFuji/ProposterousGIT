@@ -43,9 +43,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [SerializeField]
     private GameplayController gController;
 
-    //Used only to count # of seeker mistake destroys.
-    private int mistakeCount = 0;
-
     //used only for outline in update.
     [SerializeField]
     private GameObject outlinedObjectRef = null;
@@ -296,7 +293,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             }
 
                                         } else {
-                                        
+
                                             Debug.Log("Tried to take over a host-only prop as a non-host client.");
                                         }
                                     } else { // NOT host-only section.
@@ -315,25 +312,20 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     aController.PlayPropTakeoverFail();
                                 }
                             } else if (PPC.moveState == 3) { // if we're seeker.
-                                if (mistakeCount <= 5) { //We only get 5 mistakes. After that, you gotta reload somehow.
-                                    if (propInt.isAvailable) { // Targeting empty prop
-                                                               // Add a strike.
-                                                               // If this is third strike, play "ERRRR" noise.
-                                        PhotonView propPV = propInt.gameObject.GetPhotonView();
-                                        if (propPV != null) {
-                                            gController.RequestToDestroyVacantProp(propPV.ViewID);
-                                        }
-                                        mistakeCount++;
-                                    } else { // Targeting a prop takenover by a player.
-                                        PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
-                                        if (rootPlayerPV != null) {
-                                            gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
-                                        }
+
+                                if (propInt.isAvailable) { // Targeting an empty prop.
+                                    PhotonView propPV = propInt.gameObject.GetPhotonView();
+                                    if (propPV != null) {
+                                        gController.RequestToDestroyVacantProp(propPV.ViewID);
                                     }
-                                } else {
-                                    aController.PlayPropTakeoverFail();
-                                    Debug.LogWarning("Seems like you ran out of -ammo-. Not the sleuth you thought you were, eh?");
+
+                                } else { // Targeting a prop takenover by a player.
+                                    PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
+                                    if (rootPlayerPV != null) {
+                                        gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
+                                    }
                                 }
+
                             }
                         }
                     }
@@ -391,12 +383,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
         }
     }
-
-
-    public void ResetMistakeCount() {
-        mistakeCount = 5;
-    }
-
 
     [PunRPC]
     void RPC_UnlockRotationOverNetwork(int plyID) {
@@ -703,7 +689,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 if (!detachingProp.GetComponent<Rigidbody>()) {
 
                     //re-adding rb to detaching prop.
-                    detachingProp.AddComponent<Rigidbody>(); 
+                    detachingProp.AddComponent<Rigidbody>();
                     Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
                     //Re-enable networked movement/physics script on object.
                     PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
