@@ -177,6 +177,10 @@ public class GameplayController : MonoBehaviour {
                 if (objToDestroy != null) {
                     //If our prop doesn't have the AttachedProp tag or doesn't have a parent of any kind, we should be able to safely Net-Destroy it.
                     if (objToDestroy.tag != "AttachedProp" || objToDestroy.transform.parent == null) {
+
+                        // Make sure our MC owns it. (Causes empty network calls to object. MC should just be able to destroy.)
+                        //objToDestroy.GetPhotonView().RequestOwnership();
+
                         //Let's destroy that prop.
                         PhotonNetwork.Destroy(objToDestroy);
                     }
@@ -317,6 +321,9 @@ public class GameplayController : MonoBehaviour {
         PhotonView vacantProp = PhotonView.Find(vacantPropID);
         if (vacantProp != null) {
             Debug.Log("Seeker incorrectly chose to destroy: " + vacantProp.name + ", vacant prop destroyed over the network.");
+            // Make sure our MC owns it. (Causes empty network calls to object. MC should just be able to destroy.)
+            //objToDestroy.GetPhotonView().RequestOwnership();
+            // Destroy it.
             PhotonNetwork.Destroy(vacantProp.gameObject);
         } else {
             Debug.LogError("Request to kill prop player denied. It's null now?");

@@ -52,7 +52,7 @@ public class LobbySystem : MonoBehaviourPunCallbacks {
     
     public override void OnConnectedToMaster() {
         Debug.Log("Connected to Master. Pun 2.0.");
-        PhotonNetwork.LocalPlayer.NickName = "xX1337GamerXx" + Random.Range(1, 9999).ToString();
+        PhotonNetwork.LocalPlayer.NickName = "Playtester #" + Random.Range(1, 9999).ToString();
         PhotonNetwork.AutomaticallySyncScene = true;
         MMUIContainer.SetActive(true);
         submitRoomCodeButton.SetActive(false);
