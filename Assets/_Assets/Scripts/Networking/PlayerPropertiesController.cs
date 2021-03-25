@@ -35,6 +35,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     public void ClientDisconnecting(int plyID) {
         int refID = plyID;
         photonView.RPC("RPC_ClientDisconnected", RpcTarget.MasterClient, refID);
+        sController.DisplayHauntBar(false);
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.CurrentRoom != null) {
@@ -69,6 +70,7 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
     [PunRPC]
     private void RPC_RemovePlayer() {
         sController.ForceCloseEscapeMenu(false); //Force-close any menu left open, and hidecursor = false.
+        sController.DisplayHauntBar(false);
         sController.RunLoadingScreen(2);
         Invoke("Invoke_RemovePlayer", 0.5f);
     }

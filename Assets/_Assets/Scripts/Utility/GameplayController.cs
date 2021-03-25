@@ -278,6 +278,7 @@ public class GameplayController : MonoBehaviour {
     private void RPC_RunEndPhase(int loadingScreenRoutine) {
         PhotonView lpPV = GameObject.FindGameObjectWithTag("LocalPlayer").GetComponent<PhotonView>();
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
+        sController.DisplayHauntBar(false);
         CancelInvoke("Invoke_UpdateGameTimeLeft");
         CancelInvoke("Invoke_CountdownPrepPhase");
         sController.UpdateGameTimeLeft(0); // Try to clear timer text.
