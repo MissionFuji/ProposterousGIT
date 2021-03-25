@@ -297,7 +297,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                             Debug.Log("Tried to take over a host-only prop as a non-host client.");
                                         }
                                     } else { // NOT host-only section.
-                                        if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
+                                        if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) { // We did find HauntInteraction!
+                                            HauntInteraction hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
+                                            if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
+                                                if (pv.Owner.IsLocal) { // We already checked if we own it at the top of update, but let's make sure it's also local player.
+                                                    hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+                                                }
+                                            }
+                                        } else if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
                                             if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
                                                 BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             } else {
@@ -326,13 +333,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                     }
                                 }
 
-                            }
-                        } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) { // Didn't find prop interaction, BUT we did find HauntInteraction!
-                            HauntInteraction hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
-                            if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
-                                if (pv.Owner.IsLocal) { // We already checked if we own it at the top of update, but let's make sure it's also local player.
-                                    hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
-                                }
                             }
                         }
                     }
