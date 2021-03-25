@@ -29,7 +29,7 @@ public class ObjectiveManager : MonoBehaviour {
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.L)) {
-            sController.AddToHauntBar(Random.Range(0.05f, 1.5f));
+            sController.AddToHauntBar(Random.Range(0.05f, 0.15f));
         }
     }
 
