@@ -687,7 +687,7 @@ GameObject:
   - component: {fileID: 37906995472867130}
   - component: {fileID: 4631719438771845759}
   - component: {fileID: 1818457646348550813}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: DevMapInteractObj
   m_TagString: Untagged
   m_Icon: {fileID: 0}
