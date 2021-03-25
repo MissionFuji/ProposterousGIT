@@ -23,5 +23,15 @@ public class ObjectiveManager : MonoBehaviour {
         localPlayerRoot = (GameObject)PhotonNetwork.LocalPlayer.TagObject;
     }
 
+    private void Start() {
+        sController.DisplayHauntBar(true);
+    }
+
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.L)) {
+            sController.AddToHauntBar(Random.Range(0.05f, 1.5f));
+        }
+    }
+
 
 }
