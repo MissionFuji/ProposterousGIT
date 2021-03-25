@@ -25,8 +25,6 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private Text CountDownTimer;
     private Text GameTimeLeft;
     private Slider hauntBar;
-    [SerializeField]
-    private ParticleSystem hauntBarParticles; // Set through inspector.
     private float targetHauntValue; // used to lerp our progress bar.
     private float HauntBarLerpSpeed = 0.5f; // use to determine speed of interpolation of our Haunt Bar.
     public GameObject ActiveMenuOnScreen = null;
@@ -151,15 +149,9 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             if (hauntBar.value < targetHauntValue) {
                 // Lerp up until we get to or over our target value.
                 hauntBar.value += HauntBarLerpSpeed * Time.deltaTime;
-                // Is the particle system playing?
-                if (!hauntBarParticles.isPlaying) {
-                    hauntBarParticles.Play();
-                }
             } else if (hauntBar.value > targetHauntValue) {
                 // If we over-shoot our value, set it manually.
                 hauntBar.value = targetHauntValue;
-            } else {
-                hauntBarParticles.Stop();
             }
         }
         #endregion

@@ -327,6 +327,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                 }
 
                             }
+                        } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) { // Didn't find prop interaction, BUT we did find HauntInteraction!
+                            HauntInteraction hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
+                            if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
+                                if (pv.Owner.IsLocal) { // We already checked if we own it at the top of update, but let's make sure it's also local player.
+                                    hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+                                }
+                            }
                         }
                     }
                 }

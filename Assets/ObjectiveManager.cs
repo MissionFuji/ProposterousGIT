@@ -11,6 +11,9 @@ public class ObjectiveManager : MonoBehaviour {
     private GameplayController gController;
     private GameObject localPlayerRoot;
 
+    [SerializeField]
+    private float percentToCompleteHaunt = 0f;
+
 
 
 
@@ -30,6 +33,13 @@ public class ObjectiveManager : MonoBehaviour {
     private void Update() {
         if (Input.GetKeyDown(KeyCode.L)) {
             sController.AddToHauntBar(Random.Range(0.05f, 0.15f));
+        }
+    }
+
+    // Only our masterclient and influence this.
+    public void AddToHauntCounter(int hauntVal) {
+        if (PhotonNetwork.IsMasterClient) {
+
         }
     }
 
