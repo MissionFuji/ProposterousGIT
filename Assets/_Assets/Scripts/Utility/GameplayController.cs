@@ -160,16 +160,6 @@ public class GameplayController : MonoBehaviour {
     }
 
 
-    //Ran locally by all clients. This runs when a map spawns in.
-    public void GetObjectiveManagerReference() {
-        GameObject localPly = (GameObject)PhotonNetwork.LocalPlayer.TagObject;
-        PhotonView localPlyPV = localPly.GetPhotonView();
-        if (localPlyPV.IsMine && localPlyPV.Owner.IsLocal) {
-            PlayersAccessObjectiveManager(localPlyPV.ViewID);
-            Debug.Log("We got our map reference after it spawned.");
-        }
-    }
-
     private void DestroyObjectsOnMapSwitch() {
         if (PhotonNetwork.IsMasterClient) {
             foreach (GameObject objToDestroy in propsSpawnedDuringGame) {
@@ -247,26 +237,6 @@ public class GameplayController : MonoBehaviour {
         gcpv.RPC("RPC_MoveAllToFreshGame", RpcTarget.AllBuffered, loadingScreenRoutine);
     }
 
-    //Only runs on all players when a new map spawns on their client, locally.
-    private void PlayersAccessObjectiveManager(int LPID) {
-
-        //We should only be initializing this oManager if we're on the prop team.
-        if (CurrentTeam == 0) { //-1 is default, 0 is prop, 1 is seeker.
-
-            //Let's get our oManager off of the map prefab.
-            ObjectiveManager curMapObjMgr = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
-
-            //Let's also make sure we've got a successful reference.
-            if (curMapObjMgr != null) {
-                curMapObjMgr.InitiateObjectiveManager(LPID);
-                Debug.Log("Ghost players were told to initializeObjMgr");
-            } else {
-                Debug.LogError("Trying to utilize ObjectiveManager, but couldn't find it. Null Reference.");
-            }
-
-        }
-    }
-
     //RPC's **********************************************************************************************************************************************************************************
     #region
 
@@ -311,7 +281,6 @@ public class GameplayController : MonoBehaviour {
         CancelInvoke("Invoke_UpdateGameTimeLeft");
         CancelInvoke("Invoke_CountdownPrepPhase");
         sController.UpdateGameTimeLeft(0); // Try to clear timer text.
-        sController.ClearObjectiveList();
         Invoke("Invoke_EndPhaseBuffer", 1f);
     }
 
@@ -512,12 +481,6 @@ public class GameplayController : MonoBehaviour {
     //Runs on all clients.
     [PunRPC]
     private void RPC_OpenSeekerGate() {
-        mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
-        ObjectiveManager oMgr = mp.gameObject.GetComponent<ObjectiveManager>();
-        if (CurrentTeam == 0) { // If we're on the props team.
-            oMgr.DisplayObjectiveList();
-        }
-
         if (mp.seekerDoor != null) {
             Destroy(mp.seekerDoor);
         } else {

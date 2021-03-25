@@ -14,7 +14,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private LobbySystem lobbySys;
     #endregion
 
-    // Escape Menu References + Cursor Reference + Objectives.
+    // Escape Menu References + Cursor Reference + HauntBar.
     #region
     private GameObject cursorSprite;
     private GameObject canvas;
@@ -24,8 +24,9 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private GameObject OptionsMenu;
     private Text CountDownTimer;
     private Text GameTimeLeft;
-    private GameObject ObjectiveListContainer;
-    private List<Text> GivenObjectiveNumber = new List<Text>();
+    private Slider hauntBar;
+    private float targetHauntValue; // used to lerp our progress bar.
+    private float HauntBarLerpSpeed = 0.5f; // use to determine speed of interpolation of our Haunt Bar.
     public GameObject ActiveMenuOnScreen = null;
     #endregion
 
@@ -56,10 +57,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         canvas = GameObject.FindGameObjectWithTag("RootCanvas");
         CountDownTimer = canvas.gameObject.transform.Find("RoomUI/CountDownTimer").gameObject.GetComponent<Text>();
         GameTimeLeft = canvas.gameObject.transform.Find("RoomUI/GameTimeLeft").gameObject.GetComponent<Text>();
-        ObjectiveListContainer = canvas.gameObject.transform.Find("RoomUI/ObjectiveContainer").gameObject;
-        for (int i = 0; i < 6; i++) { // Let's get a list of our objective list text lines.
-            GivenObjectiveNumber.Add(ObjectiveListContainer.transform.GetChild(i).GetComponent<Text>());
-        }
+        hauntBar = canvas.gameObject.transform.Find("RoomUI/HauntBar").gameObject.GetComponent<Slider>();
         cursorSprite = canvas.gameObject.transform.Find("RoomUI/CursorImage").gameObject;
         targetBackgroundImg = canvas.transform.Find("BlankBackgroundScreen").gameObject.GetComponent<Image>();
         targetHoverImg = targetBackgroundImg.transform.GetChild(0).gameObject.GetComponent<Image>();
@@ -108,24 +106,6 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
-    //Populate our objective list line by line. Ran from oManager.
-    public void PopulateObjectiveList(string obj, int line) {
-        GivenObjectiveNumber[line].text = obj;
-    }
-
-    //Clear the visual objective list, but don't clear the back-end. Back-end automatically gets cleared when a new map spawns in. Ran from oManager.
-    public void ClearObjectiveList() {
-        foreach (Text line in GivenObjectiveNumber) {
-            line.text = "";
-        }
-    }
-
-    //Visually 'complete' a specific task on a specific line. Ran from oManager.
-    public void VisualCompleteObjective(int line) {
-        //For now we'll simply clear it, but later we can add effects.
-        GivenObjectiveNumber[line].text = "-";
-    }
-
     public void ForceCloseEscapeMenu(bool hideCursor) {
         // Let's close any open screen.
         if (ActiveMenuOnScreen != null) {
@@ -142,8 +122,39 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    public void DisplayHauntBar(bool intent) {
+        if (hauntBar.gameObject != null) {
+            hauntBar.gameObject.SetActive(intent);
+        } else {
+            Debug.LogError("We never caught a reference to our hauntBar object.");
+        }
+    }
+
+    public void AddToHauntBar(float amountToAdd) {
+        if (PhotonNetwork.IsMasterClient) {
+            // We SET the target value here, and lerp to it in update.
+            targetHauntValue = hauntBar.value + amountToAdd;
+        } else {
+            Debug.LogError("Non-Master client trying to manipulate client-side view of hauntBar.");
+        }
+    }
 
     void Update() {
+
+        // HauntBar Updates
+        #region
+        // Null ref check. This will be null if we're not in a game.
+        if (hauntBar != null) {
+            // Check if our shown value is less than new target value.
+            if (hauntBar.value < targetHauntValue) {
+                // Lerp up until we get to or over our target value.
+                hauntBar.value += HauntBarLerpSpeed * Time.deltaTime;
+            } else if (hauntBar.value > targetHauntValue) {
+                // If we over-shoot our value, set it manually.
+                hauntBar.value = targetHauntValue;
+            }
+        }
+        #endregion
 
         //Loading Screens
         #region
