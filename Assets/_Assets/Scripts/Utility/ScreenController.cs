@@ -138,6 +138,11 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
     }
 
+    public void ResetHauntValue() {
+        // Set our client-side
+        targetHauntValue = 0;
+    }
+
     void Update() {
 
         // HauntBar Updates

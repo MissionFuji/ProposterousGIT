@@ -694,7 +694,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     if (prtv != null) {
                         prtv.enabled = true;
                     } else {
-                        Debug.LogError("Detaching prop did not have a PRTV on it!");
+                        Debug.LogError("Detaching prop did not have a PRTV on it! GameObject:" + detachingProp.name + ", PVID: " + detachingProp.GetPhotonView().ViewID.ToString());
                     }
 
                     //Make a reference to the PV on the object.

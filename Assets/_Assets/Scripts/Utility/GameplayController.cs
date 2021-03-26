@@ -70,7 +70,7 @@ public class GameplayController : MonoBehaviour {
 
 
 
-    //Updates gameplayState and Logs it. //Anyone can run this func, but it only works on the MasterClient.
+    //Updates gameplayState and Logs it. Anyone can run this func, but it only works on the MasterClient.
     public void UpdateGameplayState(int newState) {
         gameplayState = newState;
         if (PhotonNetwork.InRoom) {
@@ -245,6 +245,7 @@ public class GameplayController : MonoBehaviour {
     [PunRPC]
     private void RPC_MoveAllToFreshGame(int loadingScreenRoutine) {
         sController.RunLoadingScreen(loadingScreenRoutine); // Start a loading screen.
+        sController.ResetHauntValue(); // Resets client-side value for the hauntBar.
         GameObject localPlayer = GameObject.FindGameObjectWithTag("LocalPlayer"); // Reference our localplayer.
         int myPV = localPlayer.GetPhotonView().ViewID; // Reference our localPlayer's ViewID to send it to MasterClient for PlayerList.
         gcpv.RPC("RPC_HelpMasterBuildPlayerList", RpcTarget.MasterClient, myPV);
@@ -398,22 +399,25 @@ public class GameplayController : MonoBehaviour {
     [PunRPC] // All we're doing here is spawning the map if we're host, then all players will set their moveState accoring to what the master told them.
     private void RPC_SpawnSortedPlayersIntoFreshGame(int[] playerList, int[] seekerList, int[] propList) {
 
-        //We'll send the already packed ID lists to the map's instantiationData to move players to correct locations after they spawn.
+        // We'll send the already packed ID lists to the map's instantiationData to move players to correct locations after they spawn.
         object[] listData = new object[3];
         listData[0] = seekerList;
         listData[1] = propList;
 
-        //Unpack our int[] arrays to List<int>. 
+        // Unpack our int[] arrays to List<int>. 
         List<int> allPlayerList = playerList.ToList<int>();
         List<int> allSeekerList = seekerList.ToList<int>();
         List<int> allPropList = propList.ToList<int>();
 
         int myID = -1;
 
-        //Destroy all props being controller by players.
+        // Destroy all props being controller by players.
         foreach (int plyID in allPlayerList) {
             PhotonView plyIDPV = PhotonView.Find(plyID);
-            Destroy(plyIDPV.gameObject.transform.Find("PropHolder").transform.GetChild(0).gameObject);
+            // Destroy all children of PropHolder.
+            foreach (Transform child in plyIDPV.gameObject.transform.Find("PropHolder").transform) {
+                Destroy(child.gameObject);
+            }
             if (plyIDPV.IsMine) { // When we found our player's prop, let's save the viewID.
                 myID = plyIDPV.ViewID;
             }
@@ -463,18 +467,6 @@ public class GameplayController : MonoBehaviour {
             }
         }
 
-        List<GameObject> oppositeTeamNameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
-
-        //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
-        if (allSeekerList.Contains(myID)) { // If we're on the Seeker team
-            foreach (int propPlayerID in PropPlayerList) {
-                foreach (GameObject nt in oppositeTeamNameTagList) {
-                    if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
-                        nt.GetComponent<CanvasGroup>().alpha = 0;
-                    }
-                }
-            }
-        }
 
         Invoke("Invoke_MoveAllToFreshGame", 0.5f);
     }
@@ -489,6 +481,22 @@ public class GameplayController : MonoBehaviour {
         } else {
             Debug.LogError("Tried to destroy Seeker door. It was null?..");
         }
+
+
+        List<GameObject> oppositeTeamNameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
+
+        //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
+
+        if (CurrentTeam == 1) { // If we're on the Seeker team
+            foreach (int propPlayerID in PropPlayerList) {
+                foreach (GameObject nt in oppositeTeamNameTagList) {
+                    if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
+                        nt.GetComponent<CanvasGroup>().alpha = 0;
+                    }
+                }
+            }
+        }
+
     }
 
     //Ran on MasterClient. Adds object to list for destruction.
