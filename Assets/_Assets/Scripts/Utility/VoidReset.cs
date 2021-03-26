@@ -17,8 +17,13 @@ public class VoidReset : MonoBehaviour
                 if (other.gameObject.transform.parent != null) { //Let's see if it's an attached prop. (Prop, ghost, seeker OR pre-prop.)
                     voidPV.RPC("RPC_VoidResetPosition", RpcTarget.AllBuffered, other.gameObject.transform.root.GetComponent<PhotonView>().ViewID);
                 } else { // Unattached prop.
+
+                    // Must set KOS tag in order to be deleted over the network.
                     other.gameObject.tag = "KOS";
-                    other.gameObject.GetPhotonView().TransferOwnership(0);
+
+                    // Transfer ownership to the MC.
+                    other.gameObject.GetPhotonView().TransferOwnership(PhotonNetwork.MasterClient);
+                    // OwnershipTransfer Callback in PropInteraction will handle the deletion of this object.
                 }
             } else {// No PropInteraction
                 if (!other.gameObject.GetComponent<PhotonView>()) { // No PhotonView
