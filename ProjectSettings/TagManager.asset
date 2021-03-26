@@ -26,6 +26,7 @@ TagManager:
   - AudioController
   - NameTag
   - RoomController
+  - KOS
   layers:
   - Default
   - TransparentFX
