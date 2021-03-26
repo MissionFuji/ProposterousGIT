@@ -168,8 +168,8 @@ public class GameplayController : MonoBehaviour {
                     //If our prop doesn't have the AttachedProp tag or doesn't have a parent of any kind, we should be able to safely Net-Destroy it.
                     if (objToDestroy.tag != "AttachedProp" || objToDestroy.transform.parent == null) {
 
-                        // Make sure our MC owns it. (Causes empty network calls to object. MC should just be able to destroy.)
-                        //objToDestroy.GetPhotonView().RequestOwnership();
+                        // Make sure it becomes a SCENE OBJECT so our MasterClient can remove it.
+                        objToDestroy.GetPhotonView().TransferOwnership(0); // 0 = scene.
 
                         //Let's destroy that prop.
                         PhotonNetwork.Destroy(objToDestroy);
