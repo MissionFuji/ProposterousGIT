@@ -168,12 +168,16 @@ public class GameplayController : MonoBehaviour {
                     //If our prop doesn't have the AttachedProp tag or doesn't have a parent of any kind, we should be able to safely Net-Destroy it.
                     if (objToDestroy.tag != "AttachedProp" || objToDestroy.transform.parent == null) {
 
-                        objToDestroy.tag = "KOS";
+                        PhotonView objToDstryPV = objToDestroy.GetPhotonView();
 
-                        // Make sure it gets owned by the master client before removal.
-                        objToDestroy.GetPhotonView().TransferOwnership(PhotonNetwork.MasterClient);
+                        if (objToDstryPV != null) {
+                            if (objToDstryPV.IsMine) {
+                                PhotonNetwork.Destroy(objToDestroy);
+                            } else {
+                                gcpv.RPC("RPC_TellClientToDestroyTheirObject", objToDstryPV.Owner, objToDstryPV.ViewID);
+                            }
+                        }
 
-                        //OwnershipTransfered Callback on PropInteraction will handle the rest.
                     }
                 }
             }
@@ -508,6 +512,21 @@ public class GameplayController : MonoBehaviour {
             propsSpawnedDuringGame.Add(objToDestroyPV.gameObject);
         } else {
             Debug.LogWarning("MasterClient tried to add object: " + objToDestroyPV.gameObject.name + " to the list of objects to destroy on map change, but object is null.");
+        }
+    }
+
+    //Only runs on clients told to delete something by the MC.
+    [PunRPC]
+    private void RPC_TellClientToDestroyTheirObject(int objToDestroyID) {
+        PhotonView objToDestroyPV = PhotonView.Find(objToDestroyID);
+        if (objToDestroyPV != null) {
+            if (objToDestroyPV.IsMine) {
+                PhotonNetwork.Destroy(objToDestroyPV.gameObject);
+            } else {
+                Debug.LogError("MasterClient told me to destroy something that is no longer mine?");
+            }
+        } else {
+            Debug.LogError("MasterClient told me to destroy something that no longer has a valid PV?");
         }
     }
 

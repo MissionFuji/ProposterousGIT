@@ -12,25 +12,20 @@ public class VoidReset : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other) {
-        if (PhotonNetwork.IsMasterClient) {
             if (other.gameObject.GetComponent<PropInteraction>()) {
                 if (other.gameObject.transform.parent != null) { //Let's see if it's an attached prop. (Prop, ghost, seeker OR pre-prop.)
                     voidPV.RPC("RPC_VoidResetPosition", RpcTarget.AllBuffered, other.gameObject.transform.root.GetComponent<PhotonView>().ViewID);
                 } else { // Unattached prop.
-
-                    // Must set KOS tag in order to be deleted over the network.
-                    other.gameObject.tag = "KOS";
-
-                    // Transfer ownership to the MC.
-                    other.gameObject.GetPhotonView().TransferOwnership(PhotonNetwork.MasterClient);
-                    // OwnershipTransfer Callback in PropInteraction will handle the deletion of this object.
+                    if (other.gameObject.GetPhotonView().IsMine) {
+                        PhotonNetwork.Destroy(other.gameObject);
+                    }
                 }
             } else {// No PropInteraction
                 if (!other.gameObject.GetComponent<PhotonView>()) { // No PhotonView
                     Destroy(other.gameObject);
+                Debug.LogWarning("Object with no photonview destroy client-side from void. Should look into this.");
                 }
             }
-        }
     }
     
     [PunRPC]
