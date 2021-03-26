@@ -770,9 +770,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78fedeccdffbd0d4bbac090afd75a84f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canHaunt: 1
-  hauntValue: 5
+  hauntValue: 7
+  hauntOverTimeValue: 1
   hauntCooldown: 5
+  hauntOverTime: 1
 --- !u!65 &1818457646348550813
 BoxCollider:
   m_ObjectHideFlags: 0

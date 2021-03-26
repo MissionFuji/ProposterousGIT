@@ -26,6 +26,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [SerializeField]
     private Color seekerHoverColor;
     [SerializeField]
+    private Color seekerHauntRepairColor;
+    [SerializeField]
+    private Color hauntInteractColor;
+    [SerializeField]
+    private Color currentlyHauntingColor;
+    [SerializeField]
+    private Color hauntingCooldownColor;
+    [SerializeField]
     private LayerMask PropInteraction;
 
     private PhotonView pv;
@@ -47,6 +55,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     [SerializeField]
     private GameObject outlinedObjectRef = null;
     private PropInteraction outlinePropInt = null;
+    private HauntInteraction outlineHauntInt = null;
     private Outline ol = null;
     private List<GameObject> highlightList = new List<GameObject>();
 
@@ -153,68 +162,115 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                             outlinedObjectRef = hoveredObject;
                             highlightList.Add(outlinedObjectRef);
                             outlinePropInt = hoveredObject.GetComponent<PropInteraction>();
+                            outlineHauntInt = hoveredObject.GetComponent<HauntInteraction>();
                             AddDescendantsWithTag(outlinedObjectRef.transform, highlightList);
                         }
 
 
+                        // Highlight all children objects of main hovered object.
                         foreach (GameObject obj in highlightList) {
                             if (obj != null) {
                                 ol = obj.GetComponent<Outline>();
-                                if (outlinePropInt.isAvailable) {
-                                    if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
-                                        if (ol.OutlineColor != seekerHoverColor) {
-                                            ol.OutlineColor = seekerHoverColor;
-                                        }
-                                    }
-                                    if (ol.enabled != true) {
-                                        ol.enabled = true;
-                                    }
-
-                                    //host only?
-                                    if (!outlinePropInt.isHostOnly) {
-                                        if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
-                                            if (ol.OutlineColor != seekerHoverColor) {
-                                                ol.OutlineColor = seekerHoverColor;
+                                if (ol != null) {
+                                    // Prop Interaction
+                                    if (outlinePropInt != null) {
+                                        if (outlinePropInt.isAvailable) {
+                                            if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
+                                                if (ol.OutlineColor != seekerHoverColor) {
+                                                    ol.OutlineColor = seekerHoverColor;
+                                                }
                                             }
-                                        } else {
-                                            if (ol.OutlineColor != Color.white) {
-                                                ol.OutlineColor = Color.white;
+                                            if (ol.enabled != true) {
+                                                ol.enabled = true;
+                                            }
+
+                                            //host only?
+                                            if (!outlinePropInt.isHostOnly) {
+                                                if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
+                                                    if (ol.OutlineColor != seekerHoverColor) {
+                                                        ol.OutlineColor = seekerHoverColor;
+                                                    }
+                                                } else {
+                                                    if (ol.OutlineColor != Color.white) {
+                                                        ol.OutlineColor = Color.white;
+                                                    }
+                                                }
+                                            } else {
+                                                if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                                                    if (ol.OutlineColor != Color.white) {
+                                                        ol.OutlineColor = Color.white;
+                                                    }
+                                                } else {
+                                                    if (ol.OutlineColor != Color.red) {
+                                                        ol.OutlineColor = Color.red;
+                                                    }
+                                                }
+                                            }
+
+
+                                        } else { // Prop int, but isAvailable = false.
+                                            if (PPC.moveState == 3) { // if we're a seeker, ol = yellow.
+                                                if (ol.OutlineColor != seekerHoverColor) {
+                                                    ol.OutlineColor = seekerHoverColor;
+                                                }
+                                            } else {
+                                                if (ol.OutlineColor != Color.red) {
+                                                    ol.OutlineColor = Color.red;
+                                                }
+                                            }
+                                            if (ol.enabled != true) {
+                                                ol.enabled = true;
                                             }
                                         }
                                     } else {
-                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) {
-                                            if (ol.OutlineColor != Color.white) {
-                                                ol.OutlineColor = Color.white;
+                                        // HauntInteraction
+                                        if (outlineHauntInt != null) {
+
+                                            //-------<Select A Outline Color>-------\\
+                                            if (outlineHauntInt.GetState() == 0) { // Ready to be haunted.
+                                                if (PPC.moveState == 3) { // if we're a seeker, white outline.
+                                                    if (ol.OutlineColor != Color.white) {
+                                                        ol.OutlineColor = Color.white;
+                                                    }
+                                                } else {
+                                                    if (ol.OutlineColor != hauntInteractColor) { // Non-seeker outline color.
+                                                        ol.OutlineColor = hauntInteractColor;
+                                                    }
+                                                }
+                                            } else if (outlineHauntInt.GetState() == 1)  { // Haunted, waiting to be fixed.
+                                                if (PPC.moveState == 3) { // if we're a seeker, ol = repair color.
+                                                    if (ol.OutlineColor != seekerHauntRepairColor) {
+                                                        ol.OutlineColor = seekerHauntRepairColor;
+                                                    }
+                                                } else {
+                                                    if (ol.OutlineColor != currentlyHauntingColor) { // Non-seeker outline color.
+                                                        ol.OutlineColor = currentlyHauntingColor;
+                                                    }
+                                                }
+                                            } else if (outlineHauntInt.GetState() == 2) { // Fixed, but still on cooldown.
+                                                if (PPC.moveState == 3) { // if we're a seeker, white.
+                                                    if (ol.OutlineColor != Color.white) {
+                                                        ol.OutlineColor = Color.white;
+                                                    }
+                                                } else {
+                                                    if (ol.OutlineColor != hauntingCooldownColor) { // Non-seeker outline color.
+                                                        ol.OutlineColor = hauntingCooldownColor;
+                                                    }
+                                                }
                                             }
-                                        } else {
-                                            if (ol.OutlineColor != Color.red) {
-                                                ol.OutlineColor = Color.red;
+                                            //-------<Display Outline>-------\\
+                                            if (ol.enabled != true) {
+                                                ol.enabled = true;
                                             }
                                         }
                                     }
-
-
                                 } else {
-                                    if (PPC.moveState == 3) { // of we're a seeker, ol = yellow.
-                                        if (ol.OutlineColor != seekerHoverColor) {
-                                            ol.OutlineColor = seekerHoverColor;
-                                        }
-                                    } else {
-                                        if (ol.OutlineColor != Color.red) {
-                                            ol.OutlineColor = Color.red;
-                                        }
-                                    }
-                                    if (ol.enabled != true) {
-                                        ol.enabled = true;
-                                    }
+                                    Debug.LogError("Outline component missing on target object.. All props on PropInt layer need outline.");
                                 }
                             }
                         }
-
-
-
                     }
-                } else {
+                } else { // We're not in highlight range, clear highlight on our old object.
                     if (outlinedObjectRef != null) {
                         foreach (GameObject obj in highlightList) {
                             if (obj != null)
@@ -222,7 +278,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         }
                     }
                 }
-            } else {
+            } else { // We're hovering a highlightable object, clear highlight on our old object.
                 if (outlinedObjectRef != null) {
                     foreach (GameObject obj in highlightList) {
                         if (obj != null)
@@ -272,22 +328,32 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 }
             }
             if (Input.GetKeyDown(KeyCode.E)) {
-                Debug.DrawRay(cursorObj.transform.position, fwd * 120f, Color.green);
-                if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) {
-                    if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) {
+                if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) { // Object hit on our layers?
+                    if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) { // Object close enough?
+                        
+                        // Setup our vars.
                         PropInteraction propInt;
+                        HauntInteraction hauntInt;
+
+                        //-----------------<PROP INTERACTION>-----------------\\
+
+
                         if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
                             propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
-                            if (PPC.moveState == 1 || PPC.moveState == 2) {
-                                if (propInt.isAvailable) { // let's see if prop is available.
-                                    if (propInt.isHostOnly) { // Are we the host for this host-only selection?
-                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) {
 
+                            if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
+
+                                if (propInt.isAvailable) { // Let's see if prop is available.
+                                    if (propInt.isHostOnly) { // Is this a host-only selection?
+                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) { //Are we the host for this host-only selection?
+
+                                            // Is this object a map cartridge?
                                             if (propInt.isMapCartridge) {
                                                 mapToLoadName = propInt.gameObject.name;
                                                 Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
                                             }
 
+                                            // If we're the host, become this object.
                                             if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
                                                 BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             }
@@ -306,11 +372,16 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                         }
                                     }
 
+                                    // Play a success sound.
                                     aController.PlayPropTakeoverSuccess();
+
                                 } else if (!propInt.isAvailable) {
                                     Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+
+                                    // Play a failure sound.
                                     aController.PlayPropTakeoverFail();
                                 }
+
                             } else if (PPC.moveState == 3) { // if we're seeker.
 
                                 if (propInt.isAvailable) { // Targeting an empty prop.
@@ -327,6 +398,40 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                 }
 
                             }
+
+                            //-----------------<END OF PROP INTERACTION>-----------------\\
+
+                        } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) {
+
+                            //-----------------<HAUNT INTERACTION>-----------------\\
+
+                            hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
+                            if (PPC.moveState == 1 || PPC.moveState == 2) { // If we're pre-prop/prop
+                                if (hauntInt.GetState() == 0) { // let's see if prop is hauntable.
+
+                                    // Send our haunt request.
+                                    hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+
+                                    // Play a sound.
+                                    aController.PlayCountDownTick();
+
+                                }
+                            } else if (PPC.moveState == 3) { // if we're seeker.
+
+                                if (hauntInt.GetState() == 1) { // let's see if prop is hauntable.
+
+                                    // Send our haunt request.
+                                    hauntInt.TryToRepairHauntInteraction(pv.ViewID);
+
+                                    // Play a sound.
+                                    aController.PlayCountDownLastTick();
+
+                                }
+
+                            }
+
+                            //-----------------<END OF HAUNT INTERACTION>-----------------\\
+
                         }
                     }
                 }
