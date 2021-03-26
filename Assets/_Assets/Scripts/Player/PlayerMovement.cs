@@ -548,7 +548,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
-
     [PunRPC]
     void RPC_BecomePropFromPreProp(int propID, int changingPlyID, int targetPropBackup) {
         PhotonView tarPropPV = PhotonView.Find(propID);
@@ -639,7 +638,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             // The rest gets handled from the callback created by instantiating this object. This code is on the PropInteraction Script on prop object.
         }
     }
-
 
     [PunRPC]
     void RPC_BecomePropFromProp(int propID, int changingPlyID, int ourOldPropName) {

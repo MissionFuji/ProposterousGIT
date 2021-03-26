@@ -125,11 +125,11 @@ MonoBehaviour:
   rotForce: 30
   RotLocked: 0
   takeOverRange: 20
-  seekerHoverColor: {r: 0, g: 1, b: 0.9890847, a: 0.56078434}
-  seekerHauntRepairColor: {r: 0, g: 0, b: 0, a: 0}
-  hauntInteractColor: {r: 0, g: 0, b: 0, a: 0}
-  currentlyHauntingColor: {r: 0, g: 0, b: 0, a: 0}
-  hauntingCooldownColor: {r: 0, g: 0, b: 0, a: 0}
+  seekerHoverColor: {r: 0.3066038, g: 1, b: 0.6812948, a: 0.68235296}
+  seekerHauntRepairColor: {r: 1, g: 0.7618865, b: 0, a: 1}
+  hauntInteractColor: {r: 1, g: 0.7154994, b: 0, a: 1}
+  currentlyHauntingColor: {r: 1, g: 0.0931927, b: 0, a: 1}
+  hauntingCooldownColor: {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
   PropInteraction:
     serializedVersion: 2
     m_Bits: 10240
