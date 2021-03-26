@@ -130,13 +130,12 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
         }
     }
 
+    // It's public, yes--- BUT it's only the client-side of the HauntBar. Cheaters gonna cheat, but be hella lonely.
     public void AddToHauntBar(float amountToAdd) {
-        if (PhotonNetwork.IsMasterClient) {
-            // We SET the target value here, and lerp to it in update.
-            targetHauntValue = hauntBar.value + amountToAdd;
-        } else {
-            Debug.LogError("Non-Master client trying to manipulate client-side view of hauntBar.");
-        }
+
+        // We SET the target value here, and lerp to it in update.
+        targetHauntValue = hauntBar.value + amountToAdd;
+
     }
 
     void Update() {
