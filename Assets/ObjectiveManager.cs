@@ -11,6 +11,7 @@ public class ObjectiveManager : MonoBehaviour {
     private GameplayController gController;
     private GameObject localPlayerRoot;
     private PhotonView omPV;
+    private bool GameFinished = false;
 
     [SerializeField]
     private int percentToCompleteHaunt = 0;
@@ -41,8 +42,11 @@ public class ObjectiveManager : MonoBehaviour {
 
         if (percentToCompleteHaunt >= 100) {
             if (PhotonNetwork.IsMasterClient) {
-                gController.UpdateGameplayState(4);
-                Debug.Log("TEMPORARY: Haunt Value reached max. Ghosts win.");
+                if (!GameFinished) {
+                    gController.UpdateGameplayState(4);
+                    GameFinished = true;
+                    Debug.Log("TEMPORARY: Haunt Value reached max. Ghosts win.");
+                }
             }
         }
     }
