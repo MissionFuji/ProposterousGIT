@@ -171,8 +171,7 @@ public class GameplayController : MonoBehaviour {
                         // Make sure it becomes a SCENE OBJECT so our MasterClient can remove it.
                         objToDestroy.GetPhotonView().TransferOwnership(0); // 0 = scene.
 
-                        //Let's destroy that prop.
-                        PhotonNetwork.Destroy(objToDestroy);
+                        //OwnershipTransfered Callback on PropInteraction will handle the rest.
                     }
                 }
             }

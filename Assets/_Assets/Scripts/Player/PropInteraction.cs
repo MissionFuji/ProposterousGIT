@@ -3,7 +3,7 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback {
+public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback, IPunOwnershipCallbacks {
 
     [Header("PropInteraction Settings")]
     [Tooltip("The ID associated with this prop.")]
@@ -132,5 +132,21 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 plyRB.isKinematic = false;
             }
         }
+    }
+
+    void IPunOwnershipCallbacks.OnOwnershipTransfered(PhotonView targetView, Player previousOwner) {
+
+        if (PhotonNetwork.IsMasterClient) {
+            // Kill on sight? We likely transfered ownership to master to destroy these over the network.
+            if (targetView.gameObject.tag == "KOS") {
+                //Let's destroy that prop.
+                PhotonNetwork.Destroy(targetView.gameObject);
+                Debug.LogWarning("DESTROYED OBJECT FROM LIST");
+            }
+        }
+    }
+
+    void IPunOwnershipCallbacks.OnOwnershipRequest(PhotonView targetView, Player requestingPlayer) {
+        throw new System.NotImplementedException();
     }
 }
