@@ -707,6 +707,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         detachPropPV.RequestOwnership();
                     }
 
+                    if (detachPropPV) {
+                        //We need re-allow other players to takeover this prop after we detach it.
+                        detachPropPV.OwnershipTransfer = OwnershipOption.Takeover;
+                    }
+
                     //Run a function on the PropInteraction Script to make sure RigidBody is enabled.
                     detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
                     //Apply RB momentum and velocities and unfreeze RB before we do that.

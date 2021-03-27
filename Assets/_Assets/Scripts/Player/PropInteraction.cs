@@ -62,6 +62,7 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 Rigidbody plyRB = plyObject.GetComponent<Rigidbody>();
                 PropRigidbodyTransformView prtv = gameObject.GetComponent<PropRigidbodyTransformView>();
                 PropInteraction pInt = gameObject.GetComponent<PropInteraction>();
+                PhotonView thisPropPV = gameObject.GetComponent<PhotonView>();
 
                 //We need to destroy the rigidbody, disable proprigidbodytransformview, and clear observed components on photonview.
                 Destroy(gameObject.GetComponent<Rigidbody>());
@@ -79,6 +80,9 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
                 } else {
                     gameObject.layer = 11;
                 }
+
+                //We need to restrict ownership transfer so other players can't take over our PV on our prop.
+                thisPropPV.OwnershipTransfer = OwnershipOption.Fixed;
 
                 //Prop takeover, parent, then apply transforms to it.
                 gameObject.transform.parent = plyObject.transform.Find("PropHolder");
