@@ -404,30 +404,34 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) {
 
                             //-----------------<HAUNT INTERACTION>-----------------\\
+                                hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
 
-                            hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
-                            if (PPC.moveState == 1 || PPC.moveState == 2) { // If we're pre-prop/prop
-                                if (hauntInt.GetState() == 0) { // let's see if prop is hauntable.
+                            // Make sure it's enabled for use.
+                            if (hauntInt != null && hauntInt.enabled == true) {
 
-                                    // Send our haunt request.
-                                    hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+                                if (PPC.moveState == 1 || PPC.moveState == 2) { // If we're pre-prop/prop
+                                    if (hauntInt.GetState() == 0) { // let's see if prop is hauntable.
 
-                                    // Play a sound.
-                                    aController.PlayCountDownTick();
+                                        // Send our haunt request.
+                                        hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+
+                                        // Play a sound.
+                                        aController.PlayCountDownTick();
+
+                                    }
+                                } else if (PPC.moveState == 3) { // if we're seeker.
+
+                                    if (hauntInt.GetState() == 1) { // let's see if prop is hauntable.
+
+                                        // Send our haunt request.
+                                        hauntInt.TryToRepairHauntInteraction(pv.ViewID);
+
+                                        // Play a sound.
+                                        aController.PlayCountDownLastTick();
+
+                                    }
 
                                 }
-                            } else if (PPC.moveState == 3) { // if we're seeker.
-
-                                if (hauntInt.GetState() == 1) { // let's see if prop is hauntable.
-
-                                    // Send our haunt request.
-                                    hauntInt.TryToRepairHauntInteraction(pv.ViewID);
-
-                                    // Play a sound.
-                                    aController.PlayCountDownLastTick();
-
-                                }
-
                             }
 
                             //-----------------<END OF HAUNT INTERACTION>-----------------\\

@@ -478,13 +478,27 @@ public class GameplayController : MonoBehaviour {
 
     //Runs on all clients.
     [PunRPC]
-    private void RPC_OpenSeekerGate() {
-        mp = GameObject.FindGameObjectWithTag("Map").GetComponent<MapProperties>();
+    private void RPC_StartActivePhase() {
+        GameObject curMap = GameObject.FindGameObjectWithTag("Map");
+        mp = curMap.GetComponent<MapProperties>();
+        ObjectiveManager oMgr = curMap.GetComponent<ObjectiveManager>();
 
-        if (mp.seekerDoor != null) {
-            Destroy(mp.seekerDoor);
+        if (mp != null && oMgr != null) {
+
+            // Set haunt-interaction objects to active for everyone IF we're the master client.
+            if (PhotonNetwork.IsMasterClient) {
+                oMgr.InitializeHauntInteractions();
+            }
+
+            // Open the seeker door.
+            if (mp.seekerDoor != null) {
+                Destroy(mp.seekerDoor);
+            } else {
+                Debug.LogError("Tried to destroy Seeker door. It was null?..");
+            }
+
         } else {
-            Debug.LogError("Tried to destroy Seeker door. It was null?..");
+            Debug.LogError("Objective Manager or Map Properties on map prefab couldn't be referenced?..");
         }
 
 
@@ -557,7 +571,7 @@ public class GameplayController : MonoBehaviour {
             aController.PlayCountDownLastTick();
             if (PhotonNetwork.IsMasterClient) {
                 UpdateGameplayState(3); // Move game to active phase.
-                gcpv.RPC("RPC_OpenSeekerGate", RpcTarget.AllBuffered);
+                gcpv.RPC("RPC_StartActivePhase", RpcTarget.AllBuffered);
             }
             CancelInvoke("Invoke_CountdownPrepPhase");
             InvokeRepeating("Invoke_UpdateGameTimeLeft", 0.1f, 1f);

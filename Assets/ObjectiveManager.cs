@@ -15,6 +15,8 @@ public class ObjectiveManager : MonoBehaviour {
 
     [SerializeField]
     private int percentToCompleteHaunt = 0;
+    [SerializeField]
+    private List<HauntInteraction> listOfHauntInts = new List<HauntInteraction>();
 
 
 
@@ -59,12 +61,43 @@ public class ObjectiveManager : MonoBehaviour {
         }
     }
 
+    // Ran by the master client when we open the gate and when the activeGame phase begins.
+    public void InitializeHauntInteractions() {
+        if (PhotonNetwork.IsMasterClient) {
+            omPV.RPC("RPC_ActivateHauntInteractionsOverNetwork", RpcTarget.AllBuffered);
+        }
+    }
+
     [PunRPC]
     private void RPC_AddToHauntCounter(int hauntVal) {
         percentToCompleteHaunt += hauntVal;
 
         float result = hauntVal * 0.01f; // This turns our int into a %.
         sController.AddToHauntBar(result);
+    }
+
+    // Runs on all clients. Sent from masterclient because we don't want client players running this public function via cheating.
+    [PunRPC]
+    private void RPC_ActivateHauntInteractionsOverNetwork() {
+
+        // Our counter.
+        int hiCounter = 0;
+
+        // Interate through our preset list of haunt interaction objects.
+        foreach (HauntInteraction hi in listOfHauntInts) {
+            // Enable if disabled.
+            if (hi.enabled == false) {
+                hi.enabled = true;
+            }
+
+            // Count iteration.
+            hiCounter++;
+
+            if (hiCounter == listOfHauntInts.Count) {
+                Debug.Log("TEMPORARY: Finished initializing all haunt interactions on this client. # Init'd: " + hiCounter.ToString());
+            }
+
+        }
     }
 
 
