@@ -145,7 +145,7 @@ public class GameplayController : MonoBehaviour {
     public void RequestToKillPropPlayer(int killedPlyID) {
         gcpv.RPC("RPC_RequestToKillPropPlayer", RpcTarget.MasterClient, PhotonView.Find(killedPlyID).ViewID); //We'll be vacuuming props into cannisters. So we can afford a RPC round-trip.
     }
-    
+
     //Ran locally from any client when they takeover a prop in PlayerMovement.
     public void TellMasterClientToAddPropToDestroyList(GameObject objToDestroy) {
         // Make sure the GameObject we send is a PROP, or likewise.
@@ -280,6 +280,19 @@ public class GameplayController : MonoBehaviour {
         ppc.moveState = 1; // pre-prop moveState.
         CurrentTeam = -1; // -1 default, 0 prop, 1 seeker. TeamNumber only goes above -1 if we're in an active game.
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Player_Ghost"), localPlayer.gameObject.transform.position, localPlayer.gameObject.transform.rotation, 0, newRoomFromOldRoomInstData);
+
+        // Make a nameTagList.
+        List<GameObject> nameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
+
+        // Re-enable all nametags except our own.
+        foreach (GameObject nt in nameTagList) {
+            // If it's not ours.
+            if (!nt.GetPhotonView().IsMine) {
+                // Enable it. ( Our nametag should always be invisible. )
+                nt.GetComponent<CanvasGroup>().alpha = 1;
+            }
+        }
+
     }
 
     // Runs on all clients.
@@ -509,19 +522,14 @@ public class GameplayController : MonoBehaviour {
         }
 
 
-        List<GameObject> oppositeTeamNameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
+        List<GameObject> nameTagList = GameObject.FindGameObjectsWithTag("NameTag").ToList<GameObject>();
 
         //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
-
         if (CurrentTeam == 1) { // If we're on the Seeker team
-            Debug.Log("We detected that LocalPlayer is a seeker via CurrentTeam.");
             foreach (int propPlayerID in clientSideAllPropPlayerList) {
-                Debug.Log("Iterating through clientSideAllPropPlayerList on localPlayer. # items in list: " + clientSideAllPropPlayerList.Count.ToString());
-                foreach (GameObject nt in oppositeTeamNameTagList) {
-                    Debug.Log("Check nameTag to see if ownerID: " + nt.GetComponent<NameTagHolder>().ownerID.ToString() + "matches this player: " + propPlayerID.ToString());
+                foreach (GameObject nt in nameTagList) {
                     if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
                         nt.GetComponent<CanvasGroup>().alpha = 0;
-                        Debug.Log("NAMETAGS. We managed to set one to transparent??");
                     }
                 }
             }
