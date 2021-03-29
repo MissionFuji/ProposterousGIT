@@ -41,6 +41,8 @@ public class GameplayController : MonoBehaviour {
     private int CurrentCountDownTimer = 20;
     private int CurrentGameTimeLeftTimer = 300;
     [SerializeField]
+    private List<int> clientSideAllPropPlayerList = new List<int>();
+    [SerializeField]
     private int CurrentTeam = -1; // -1 default, 0 is props, 1 is seeker.
     #endregion
 
@@ -96,6 +98,7 @@ public class GameplayController : MonoBehaviour {
         Debug.Log("Gameplay State Updated! " + newState.ToString());
     }
 
+    //Ran by local player from PPC. Just telling MC they left.
     //This is run from PPC when the MC detects a player left unexpectedly. Gotta remove leavingPlayers from the playerLists.
     public void MasterClientRemovesPlayerFromListOnDisconnect(int plyID) {
         Debug.Log("Trying to remove this ID from all lists: " + plyID.ToString());
@@ -414,6 +417,10 @@ public class GameplayController : MonoBehaviour {
         List<int> allSeekerList = seekerList.ToList<int>();
         List<int> allPropList = propList.ToList<int>();
 
+        // We save a client-side copy of the prop list locally so we can remove nametags if we're the seeker.
+        clientSideAllPropPlayerList.Clear(); // Clear it first.
+        clientSideAllPropPlayerList = allPropList;
+
         int myID = -1;
 
         // Destroy all props being controller by players.
@@ -507,7 +514,9 @@ public class GameplayController : MonoBehaviour {
         //After all lists are searched for my id, let's disable nametags of props if we're a seeker.
 
         if (CurrentTeam == 1) { // If we're on the Seeker team
-            foreach (int propPlayerID in PropPlayerList) {
+            Debug.Log("We detected that LocalPlayer is a seeker via CurrentTeam.");
+            foreach (int propPlayerID in clientSideAllPropPlayerList) {
+                Debug.Log("Iterating through clientSideAllPropPlayerList on localPlayer. # items in list: " + clientSideAllPropPlayerList.Count.ToString());
                 foreach (GameObject nt in oppositeTeamNameTagList) {
                     Debug.Log("Check nameTag to see if ownerID: " + nt.GetComponent<NameTagHolder>().ownerID.ToString() + "matches this player: " + propPlayerID.ToString());
                     if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
@@ -515,7 +524,6 @@ public class GameplayController : MonoBehaviour {
                         Debug.Log("NAMETAGS. We managed to set one to transparent??");
                     }
                 }
-                Debug.Log(oppositeTeamNameTagList.Count.ToString());
             }
         }
 
