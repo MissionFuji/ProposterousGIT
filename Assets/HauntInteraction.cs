@@ -26,7 +26,7 @@ public class HauntInteraction : MonoBehaviour
     private ObjectiveManager oMgr;
     private int remainingHauntCooldown;
 
-    private void Awake() {
+    private void Start() {
         hiPV = GetComponent<PhotonView>();
         oMgr = GameObject.FindGameObjectWithTag("Map").GetComponent<ObjectiveManager>();
         hauntState = 0;
