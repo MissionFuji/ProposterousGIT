@@ -509,10 +509,13 @@ public class GameplayController : MonoBehaviour {
         if (CurrentTeam == 1) { // If we're on the Seeker team
             foreach (int propPlayerID in PropPlayerList) {
                 foreach (GameObject nt in oppositeTeamNameTagList) {
+                    Debug.Log("Check nameTag to see if ownerID: " + nt.GetComponent<NameTagHolder>().ownerID.ToString() + "matches this player: " + propPlayerID.ToString());
                     if (nt.GetComponent<NameTagHolder>().ownerID == propPlayerID) {
                         nt.GetComponent<CanvasGroup>().alpha = 0;
+                        Debug.Log("NAMETAGS. We managed to set one to transparent??");
                     }
                 }
+                Debug.Log(oppositeTeamNameTagList.Count.ToString());
             }
         }
 

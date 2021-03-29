@@ -39,7 +39,7 @@ public class ObjectiveManager : MonoBehaviour {
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.L)) {
-            sController.AddToHauntBar(Random.Range(0.05f, 0.15f));
+            AddToHauntCounter(Random.Range(3, 25));
         }
 
         if (percentToCompleteHaunt >= 100) {
