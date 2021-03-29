@@ -12,6 +12,8 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private LayerMask layerToHit;
     [SerializeField]
     private Vector3 nameTagOffset;
+    [SerializeField]
+    private float ntLerpSpeed;
 
     // Update is called once per frame
     void Update()
@@ -26,11 +28,9 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             Vector3 originPoint = new Vector3(tarPlayer.transform.position.x, tarPlayer.transform.position.y + 100f, tarPlayer.transform.position.z);
             // Are we hitting prop Interaction Layer? Are we also hitting a prop interaction layer on our TARGET client player?
             if (Physics.Raycast(originPoint, -gameObject.transform.up, out hit, 200f, layerToHit) && (hit.collider.gameObject.transform.root == tarPlayer.transform)) {
-                gameObject.transform.position = hit.point + nameTagOffset;
-                Debug.Log("TESTING NAMETAG HOLDER: " + hit.collider.transform.root.gameObject.name);
+                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (hit.point + nameTagOffset), Time.deltaTime * ntLerpSpeed);
             } else {
                 gameObject.transform.position = tarPlayer.transform.position + nameTagOffset;
-                Debug.Log("NAMETAG BROKEN HOLDER POSITION BROKEN");
             }
         }
     }
