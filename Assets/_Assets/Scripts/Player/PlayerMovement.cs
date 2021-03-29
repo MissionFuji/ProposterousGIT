@@ -683,61 +683,66 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             GameObject detachingProp = null;
 
             foreach (Transform child in propHolder.transform) {
-                //Unparent Object.
-                child.parent = null;
-                //Add reference to detaching object.
-                detachingProp = child.gameObject;
-                //re-add the object to propInteraction layer for highlights.
-                detachingProp.layer = 11;
-                //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
-                detachingProp.tag = "Untagged";
-                // Check to see if the prop doesn't have a rigidbody before we fully detach. (At this point, prop SHOULD NOT have a rigidbody. We should add one before detach) 
-                if (!detachingProp.GetComponent<Rigidbody>()) {
+                if (!child.name.Contains("Player")) { // If it's a detachable child.
+                    //Unparent Object.
+                    child.parent = null;
+                    //Add reference to detaching object.
+                    detachingProp = child.gameObject;
+                    //re-add the object to propInteraction layer for highlights.
+                    detachingProp.layer = 11;
+                    //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
+                    detachingProp.tag = "Untagged";
+                    // Check to see if the prop doesn't have a rigidbody before we fully detach. (At this point, prop SHOULD NOT have a rigidbody. We should add one before detach) 
+                    if (!detachingProp.GetComponent<Rigidbody>()) {
 
-                    //re-adding rb to detaching prop.
-                    detachingProp.AddComponent<Rigidbody>();
-                    Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
+                        //re-adding rb to detaching prop.
+                        detachingProp.AddComponent<Rigidbody>();
+                        Rigidbody detPropRB = detachingProp.GetComponent<Rigidbody>();
 
-                    //Make sure we re-enable the networking script directly.
-                    PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
-                    if (prtv != null) {
-                        prtv.enabled = true;
+                        //Make sure we re-enable the networking script directly.
+                        PropRigidbodyTransformView prtv = detPropRB.GetComponent<PropRigidbodyTransformView>();
+                        if (prtv != null) {
+                            prtv.enabled = true;
+                        } else {
+                            Debug.LogError("Detaching prop did not have a PRTV on it! GameObject:" + detachingProp.name + ", PVID: " + detachingProp.GetPhotonView().ViewID.ToString());
+                        }
+
+                        //Make a reference to the PV on the object.
+                        PhotonView detachPropPV = detPropRB.GetComponent<PhotonView>();
+                        //Ensure the prop's PV is observing and update position/rot/physics over the network.
+                        detachPropPV.ObservedComponents.Add(prtv);
+
+                        //We need to make sure the masterclient "owns" these detached props via PhotonView. So we can have better cleanup when the round ends.
+                        if (PhotonNetwork.LocalPlayer.IsMasterClient) {
+                            detachPropPV.RequestOwnership();
+                        }
+
+                        if (detachPropPV) {
+                            //We need re-allow other players to takeover this prop after we detach it.
+                            detachPropPV.OwnershipTransfer = OwnershipOption.Takeover;
+                        }
+
+                        //Run a function on the PropInteraction Script to make sure RigidBody is enabled.
+                        detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
+                        //Apply RB momentum and velocities and unfreeze RB before we do that.
+                        detPropRB.isKinematic = false;
+                        detPropRB.mass = massRef;
+                        detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
+                        detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
                     } else {
-                        Debug.LogError("Detaching prop did not have a PRTV on it! GameObject:" + detachingProp.name + ", PVID: " + detachingProp.GetPhotonView().ViewID.ToString());
+                        Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
                     }
 
-                    //Make a reference to the PV on the object.
-                    PhotonView detachPropPV = detPropRB.GetComponent<PhotonView>();
-                    //Ensure the prop's PV is observing and update position/rot/physics over the network.
-                    detachPropPV.ObservedComponents.Add(prtv);
-
-                    //We need to make sure the masterclient "owns" these detached props via PhotonView. So we can have better cleanup when the round ends.
-                    if (PhotonNetwork.LocalPlayer.IsMasterClient) {
-                        detachPropPV.RequestOwnership();
+                    //Set prop to be available for takeover across the network.
+                    detachingProp.GetComponent<PropInteraction>().isAvailable = true;
+                    //Track how many children we detach. If we find ourselves detaching more than one child, that's an issue.
+                    childrenDetached++;
+                    if (childrenDetached > 1) {
+                        Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
                     }
-
-                    if (detachPropPV) {
-                        //We need re-allow other players to takeover this prop after we detach it.
-                        detachPropPV.OwnershipTransfer = OwnershipOption.Takeover;
-                    }
-
-                    //Run a function on the PropInteraction Script to make sure RigidBody is enabled.
-                    detPropRB.gameObject.GetComponent<PropInteraction>().ResetRigidBodyAfterDetach();
-                    //Apply RB momentum and velocities and unfreeze RB before we do that.
-                    detPropRB.isKinematic = false;
-                    detPropRB.mass = massRef;
-                    detPropRB.AddForce(velRef * detPropRB.mass, ForceMode.Impulse);
-                    detPropRB.AddTorque(velAngRef * detPropRB.mass, ForceMode.Impulse);
                 } else {
-                    Debug.LogError("The prop we're trying to detach already has a rigidbody. This is an issue that needs to be fixed.");
-                }
-
-                //Set prop to be available for takeover across the network.
-                detachingProp.GetComponent<PropInteraction>().isAvailable = true;
-                //Track how many children we detach. If we find ourselves detaching more than one child, that's an issue.
-                childrenDetached++;
-                if (childrenDetached > 1) {
-                    Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
+                    child.gameObject.SetActive(false);
+                    Debug.Log("A non-detachable player object was detected. Instead of PRTV not found, we try to simple disable it on all clients instead.");
                 }
 
             }
