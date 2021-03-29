@@ -28,6 +28,9 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             if (Physics.Raycast(originPoint, -gameObject.transform.up, out hit, 200f, layerToHit) && (hit.collider.gameObject.transform.root == tarPlayer.transform)) {
                 gameObject.transform.position = hit.point + nameTagOffset;
                 Debug.Log("TESTING NAMETAG HOLDER: " + hit.collider.transform.root.gameObject.name);
+            } else {
+                gameObject.transform.position = tarPlayer.transform.position + nameTagOffset;
+                Debug.Log("NAMETAG BROKEN HOLDER POSITION BROKEN");
             }
         }
     }

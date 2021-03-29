@@ -93,9 +93,6 @@ public class ObjectiveManager : MonoBehaviour {
             // Count iteration.
             hiCounter++;
 
-            if (hiCounter == listOfHauntInts.Count) {
-                Debug.Log("TEMPORARY: Finished initializing all haunt interactions on this client. # Init'd: " + hiCounter.ToString());
-            }
 
         }
     }

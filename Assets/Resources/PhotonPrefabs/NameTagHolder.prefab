@@ -48,6 +48,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ownerID: -1
   tarPlayer: {fileID: 0}
+  layerToHit:
+    serializedVersion: 2
+    m_Bits: 2048
+  nameTagOffset: {x: 0, y: 2, z: 0}
 --- !u!114 &6110572502738521599
 MonoBehaviour:
   m_ObjectHideFlags: 0
