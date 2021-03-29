@@ -18,6 +18,9 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
     private void Awake() {
         ResetRigidBodyAfterDetach();
+        if (transform.parent != null) { // If we SPAWN this object with our parent over it already (aka, initial pre-game lobby spawn.)
+            gameObject.layer = 0;
+        }
     }
 
     public void ResetRigidBodyAfterDetach() {
