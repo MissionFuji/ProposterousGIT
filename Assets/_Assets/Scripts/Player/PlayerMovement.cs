@@ -101,11 +101,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform; // this is what gives us accurate y rotation for player.
             mmcCamTransRef.GetComponent<CameraTarController>().SetCamFollowToPlayer(this.gameObject);
             cursorObj = mmc.transform.GetChild(0).gameObject;
-
-            if (transform.parent != null) { // If we SPAWN this object with our parent over it already (first player spawn of the session is the only time this happens.)
-                gameObject.layer = 0;
-            }
-
         }
 
         gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();

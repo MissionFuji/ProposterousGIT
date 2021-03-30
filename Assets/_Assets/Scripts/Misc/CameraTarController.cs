@@ -10,6 +10,7 @@ public class CameraTarController : MonoBehaviour {
     [SerializeField]
     private bool lerpMovement = false;
 
+    // PlayerMovement uses this script.
     
     public void SetCamFollowToPlayer(GameObject ply) {
         ourPlayer = ply;

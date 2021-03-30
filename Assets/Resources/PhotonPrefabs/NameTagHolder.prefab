@@ -52,7 +52,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   nameTagOffset: {x: 0, y: 0.5, z: 0}
-  ntLerpSpeed: 5
+  ntLerpSpeed: 33
 --- !u!114 &6110572502738521599
 MonoBehaviour:
   m_ObjectHideFlags: 0

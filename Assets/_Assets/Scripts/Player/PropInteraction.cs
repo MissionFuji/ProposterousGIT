@@ -1,9 +1,8 @@
 using Photon.Pun;
 using Photon.Realtime;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback { 
+public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPunInstantiateMagicCallback {
     [SerializeField]
     private int propID = -1;
     [Tooltip("Is this prop available for takeover?")]
@@ -18,6 +17,11 @@ public class PropInteraction : MonoBehaviourPunCallbacks, IInRoomCallbacks, IPun
 
     private void Awake() {
         ResetRigidBodyAfterDetach();
+        if (transform.parent != null) { // If we SPAWN this object with our parent over it already (first player spawn of the session is the only time this happens.)
+            if (gameObject.transform.root.gameObject.tag == "LocalPlayer") { // Make sure it's our localPlayer object.
+                gameObject.layer = 0;
+            }
+        }
     }
 
     public void ResetRigidBodyAfterDetach() {

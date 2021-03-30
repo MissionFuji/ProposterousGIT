@@ -2309,7 +2309,6 @@ MonoBehaviour:
   mapList:
   - {fileID: 5848880358997482796, guid: 701cb8bc465d8134d86e51085c9a1896, type: 3}
   propsSpawnedDuringGame: []
-  CurrentTeam: -1
 --- !u!114 &629534985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3184,14 +3183,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mouseSensitivity: 1.5
   target: {fileID: 0}
-  dstFromTarget: 32
+  dstFromTarget: 0
   pitchMinMax: {x: -40, y: 85}
-  rotationSmoothTime: 0.04
+  rotationSmoothTime: 0.01
   CameraPositionWhenNotInGameFailsafe: {x: 0, y: 6.5, z: -53}
-  CameraOffsetWhenInGame: {x: 0, y: 10, z: 0}
   scrollSpeed: 1
-  minDist: 6
+  minDist: 8
   maxDist: 32
+  layerToHit:
+    serializedVersion: 2
+    m_Bits: 1
+  propYOffset: {x: 0, y: 0, z: 0}
+  camLerpSpeed: 0.05
+  mostRecentHit: {x: 0, y: 0, z: 0}
+  yFollowOffset: {x: 0, y: 0.75, z: 0}
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4048,7 +4053,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -20.000366, y: -40}
+  m_AnchoredPosition: {x: -20.000305, y: -40}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1168658250
