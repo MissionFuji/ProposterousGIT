@@ -3181,11 +3181,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 385946b06844dfc40b1d0583e2a825f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseSensitivity: 1.5
+  mouseSensitivity: 1
   target: {fileID: 0}
-  dstFromTarget: 0
-  pitchMinMax: {x: -40, y: 85}
-  rotationSmoothTime: 0.01
+  dstFromTarget: 20
+  pitchMinMax: {x: -30, y: 80}
+  rotationSmoothTime: 0.025
   CameraPositionWhenNotInGameFailsafe: {x: 0, y: 6.5, z: -53}
   scrollSpeed: 1
   minDist: 8
@@ -3194,9 +3194,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   propYOffset: {x: 0, y: 0, z: 0}
-  camLerpSpeed: 0.05
+  camLerpSpeed: 0.02
   mostRecentHit: {x: 0, y: 0, z: 0}
-  yFollowOffset: {x: 0, y: 0.75, z: 0}
+  yFollowOffset: {x: 0, y: 0.3, z: 0}
+  lerpBetweenSpeed: 0.5
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0

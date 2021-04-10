@@ -32,6 +32,13 @@ public class CameraController : MonoBehaviour
     private Vector3 mostRecentHit;
     [SerializeField]
     private Vector3 yFollowOffset;
+
+    [SerializeField]
+    private float lerpBetweenSpeed; //Lerp between pre raycast and new one. Trying to stop the camera stutter.
+    private Vector3 lastHitPosPlusOffset = Vector3.zero;
+    private Vector3 tarHitPosPlusOffset;
+    private Vector3 newCombinedRaycastTarget;
+
     private Vector3 moveSmoothVel;
 
     public void ReadyCamera(Transform tar, bool result) {
@@ -62,6 +69,8 @@ public class CameraController : MonoBehaviour
             dstFromTarget =  Mathf.Clamp(dstFromTarget += wheelVal * scrollSpeed, minDist, maxDist);
         }
 
+
+
     }
 
     void LateUpdate() {
@@ -78,8 +87,26 @@ public class CameraController : MonoBehaviour
                 Vector3 originPoint = new Vector3(target.position.x, target.position.y + 100f, target.position.z);
                 // Are we hitting default layer? (LocalPlayer will always be on default layer.) Is our tag also LocalPlayer?
                 if (Physics.Raycast(originPoint, -Vector3.up, out hit, 200f, layerToHit) && (hit.collider.gameObject.transform.root.tag == "LocalPlayer")) {
-                    Vector3 smoothMovesStud = Vector3.SmoothDamp(transform.position, (hit.point + yFollowOffset) - transform.forward * dstFromTarget , ref moveSmoothVel, camLerpSpeed);
+
+                    tarHitPosPlusOffset = hit.point + yFollowOffset;
+
+                    // If it's our first frame cycle, we want to lerp from a relative position. NOT Vec3.zero.
+                    if (lastHitPosPlusOffset == Vector3.zero) {
+                        lastHitPosPlusOffset = gameObject.transform.position + yFollowOffset;
+                    }
+
+                    // We lerp between our raycasts.
+                    newCombinedRaycastTarget = Vector3.Lerp(lastHitPosPlusOffset, tarHitPosPlusOffset, Time.smoothDeltaTime * lerpBetweenSpeed);
+                    
+                    // We lerp between our current pos and target (combined) pos.
+                    Vector3 smoothMovesStud = Vector3.SmoothDamp(transform.position, newCombinedRaycastTarget - transform.forward * dstFromTarget , ref moveSmoothVel, camLerpSpeed);
+                    
+                    // We set the position manually.
                     transform.position = smoothMovesStud;
+
+                    // We set our lasthit point to the current hit point, so next cycle we'll have that info.
+                    lastHitPosPlusOffset = tarHitPosPlusOffset;
+
                     Debug.Log("yes");
                 } else {
                     Debug.Log("No?");
