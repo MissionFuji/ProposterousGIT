@@ -86,7 +86,7 @@ public class CameraController : MonoBehaviour {
 
                 if (ourRendererBeforeLateUpdate == null) {
                     Debug.LogWarning("Caught instance where our renderer was null on root object. Going one level deeper for a meshrenderer.");
-                    ourRendererBeforeLateUpdate = ourTransBeforeLateUpdate.GetChild(0).gameObject.GetComponent<MeshRenderer>();
+                    ourRendererBeforeLateUpdate = ourTransBeforeLateUpdate.GetChild(0).gameObject.GetComponent<Renderer>();
                 }
 
                 Debug.Log("Prop changed?");
