@@ -208,14 +208,18 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     //There's already a screen up, is it the confirm exit screen?
                     if (ActiveMenuOnScreen == ConfirmExitMenu) {
                         MainMenuItems.SetActive(true);
+
+                        ActiveMenuOnScreen.SetActive(false);
+                        ActiveMenuOnScreen = MainMenuItems;
+                    } else {
+
+                        Cursor.visible = false;
+                        Cursor.lockState = CursorLockMode.Locked;
+
+                        // Let's close any open screen.
+                        ActiveMenuOnScreen.SetActive(false);
+                        ActiveMenuOnScreen = null;
                     }
-
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-
-                    // Let's close any open screen.
-                    ActiveMenuOnScreen.SetActive(false);
-                    ActiveMenuOnScreen = null;
                 }
             }
         }
@@ -225,7 +229,7 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             if (cursorSprite.activeSelf == true) {
                 cursorSprite.SetActive(false); // disables cursor object.
             }
-            if (ppc != null && ppc.playerIsFrozen) {
+            if (ppc != null && !ppc.playerIsFrozen) {
                 ppc.playerIsFrozen = true; // freezes our player.
             }
         } else {

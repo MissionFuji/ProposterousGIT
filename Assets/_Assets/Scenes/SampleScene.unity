@@ -3197,6 +3197,10 @@ MonoBehaviour:
   camLerpSpeed: 0.02
   mostRecentHit: {x: 0, y: 0, z: 0}
   yFollowOffset: {x: 0, y: 0.3, z: 0}
+  hitBlockingObjectLerpSpeed: 33
+  layersToIgnorePhysCam:
+    serializedVersion: 2
+    m_Bits: 1
   lerpBetweenSpeed: 0.5
 --- !u!114 &963194232
 MonoBehaviour:
@@ -4054,7 +4058,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -20.000305, y: -40}
+  m_AnchoredPosition: {x: -20.000427, y: -40}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1168658250
@@ -4601,7 +4605,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.50040054, g: 0.52425706, b: 0.6132076, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

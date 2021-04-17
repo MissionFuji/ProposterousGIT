@@ -48,8 +48,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private RaycastHit objectHit;
     private GameObject cursorObj;
     private GameObject pickupHolder;
-    [SerializeField]
     private GameplayController gController;
+    private ScreenController sController;
 
     //used only for outline in update.
     [SerializeField]
@@ -101,8 +101,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             mmcCamTransRef = GameObject.FindGameObjectWithTag("mmcCamHelper").transform; // this is what gives us accurate y rotation for player.
             mmcCamTransRef.GetComponent<CameraTarController>().SetCamFollowToPlayer(this.gameObject);
             cursorObj = mmc.transform.GetChild(0).gameObject;
+            sController = GameObject.FindGameObjectWithTag("ScreenController").GetComponent<ScreenController>();
         }
-
         gController = GameObject.FindGameObjectWithTag("GameplayController").GetComponent<GameplayController>();
     }
 
@@ -112,8 +112,13 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             //Prop Y Rotation Code
             #region
-            xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
-            yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
+            if (!PPC.playerIsFrozen) {
+                xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
+                yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
+            } else {
+                xDir = 0f;
+                yDir = 0f;
+            }
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
             if (PPC.moveState == 1 || PPC.moveState == 3) { // If we are a pre-prop ghost or seeker:
@@ -301,141 +306,145 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             } //temporary force-lock rot? This was placed here to remedy the issue where ghost/seeker would spawn with wrong rotation over the network.
 
             if (Input.GetKeyDown(KeyCode.R)) {
-                if (PPC.moveState == 2) { // If we are a prop:
-                    if (RotLocked) {
-                        RotLocked = false;
-                        gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = false;
-                        rotLockImg.sprite = unlockedSprite;
-                        photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                    } else {
-                        RotLocked = true;
-                        gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = true;
-                        rotLockImg.sprite = lockedSprite;
-                        photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
-                    }
+                if (PPC.moveState == 2 && !PPC.playerIsFrozen) { // If we are a prop:
+                        if (RotLocked) {
+                            RotLocked = false;
+                            gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = false;
+                            rotLockImg.sprite = unlockedSprite;
+                            photonView.RPC("RPC_UnlockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                        } else {
+                            RotLocked = true;
+                            gameObject.GetComponent<RigidbodyTransformView>().isRotLocked = true;
+                            rotLockImg.sprite = lockedSprite;
+                            photonView.RPC("RPC_LockRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                        }
                 }
             }
             if (Input.GetKeyDown(KeyCode.Z)) {
                 if (RotLocked) {
-                    photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    if (!PPC.playerIsFrozen) {
+                        photonView.RPC("RPC_ResetRotationOverNetwork", RpcTarget.AllBuffered, gameObject.GetPhotonView().ViewID);
+                    }
                 }
             }
             if (Input.GetKeyDown(KeyCode.Space)) {
-                if (!PPC.playerIsFrozen || PPC.moveState != 4) { // Make sure we're not frozen or a spectating ghost.
+                if (!PPC.playerIsFrozen && PPC.moveState != 4) { // Make sure we're not frozen or a spectating ghost.
                     rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z); // Jump Code. This had to go into Update due to Input.GetKeyDown.
                     rb.AddTorque(new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), ForceMode.Impulse);
                     Debug.Log("JUMP!");
                 }
             }
             if (Input.GetKeyDown(KeyCode.E)) {
-                if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) { // Object hit on our layers?
-                    if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) { // Object close enough?
-                        
-                        // Setup our vars.
-                        PropInteraction propInt;
-                        HauntInteraction hauntInt;
+                if (!PPC.playerIsFrozen) {
+                    if (Physics.Raycast(cursorObj.transform.position, fwd, out objectHit, 120f, PropInteraction)) { // Object hit on our layers?
+                        if (Vector3.Distance(objectHit.collider.gameObject.transform.position, gameObject.transform.position) <= takeOverRange) { // Object close enough?
 
-                        //-----------------<PROP INTERACTION>-----------------\\
+                            // Setup our vars.
+                            PropInteraction propInt;
+                            HauntInteraction hauntInt;
+
+                            //-----------------<PROP INTERACTION>-----------------\\
 
 
-                        if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
-                            propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
+                            if (objectHit.collider.gameObject.GetComponent<PropInteraction>()) {
+                                propInt = objectHit.collider.gameObject.GetComponent<PropInteraction>();
 
-                            if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
+                                if (PPC.moveState == 1 || PPC.moveState == 2) { // Are we pre-prop/prop?
 
-                                if (propInt.isAvailable) { // Let's see if prop is available.
-                                    if (propInt.isHostOnly) { // Is this a host-only selection?
-                                        if (PhotonNetwork.LocalPlayer.IsMasterClient) { //Are we the host for this host-only selection?
+                                    if (propInt.isAvailable) { // Let's see if prop is available.
+                                        if (propInt.isHostOnly) { // Is this a host-only selection?
+                                            if (PhotonNetwork.LocalPlayer.IsMasterClient) { //Are we the host for this host-only selection?
 
-                                            // Is this object a map cartridge?
-                                            if (propInt.isMapCartridge) {
-                                                mapToLoadName = propInt.gameObject.name;
-                                                Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
-                                            }
+                                                // Is this object a map cartridge?
+                                                if (propInt.isMapCartridge) {
+                                                    mapToLoadName = propInt.gameObject.name;
+                                                    Debug.Log("Looks like you've become a map cartridge. Map: " + mapToLoadName + ".");
+                                                }
 
-                                            // If we're the host, become this object.
-                                            if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
-                                                BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
-                                            }
+                                                // If we're the host, become this object.
+                                                if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
+                                                    BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                                }
 
-                                        } else {
-
-                                            Debug.Log("Tried to take over a host-only prop as a non-host client.");
-                                        }
-                                    } else { // NOT host-only section.
-                                        if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
-                                            if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
-                                                BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
                                             } else {
-                                                Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+
+                                                Debug.Log("Tried to take over a host-only prop as a non-host client.");
+                                            }
+                                        } else { // NOT host-only section.
+                                            if (!PPC.playerIsFrozen && ((PPC.moveState == 1) || (PPC.moveState == 2))) { // Make sure we're not frozen and that we are a preprop ghost or prop.
+                                                if (pv.ViewID != 0 && propInt.gameObject.GetPhotonView() != null && propInt.gameObject != null) {
+                                                    BecomeProp(pv.ViewID, propInt.gameObject.GetPhotonView().ViewID);
+                                                } else {
+                                                    Debug.LogError("When performing takeover, the target prop became unavailable for unexpected reasons.");
+                                                }
                                             }
                                         }
+
+                                        // Play a success sound.
+                                        aController.PlayPropTakeoverSuccess();
+
+                                    } else if (!propInt.isAvailable) {
+                                        Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+
+                                        // Play a failure sound.
+                                        aController.PlayPropTakeoverFail();
                                     }
 
-                                    // Play a success sound.
-                                    aController.PlayPropTakeoverSuccess();
-
-                                } else if (!propInt.isAvailable) {
-                                    Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
-
-                                    // Play a failure sound.
-                                    aController.PlayPropTakeoverFail();
-                                }
-
-                            } else if (PPC.moveState == 3) { // if we're seeker.
-
-                                if (propInt.isAvailable) { // Targeting an empty prop.
-                                    PhotonView propPV = propInt.gameObject.GetPhotonView();
-                                    if (propPV != null) {
-                                        gController.RequestToDestroyVacantProp(propPV.ViewID);
-                                    }
-
-                                } else { // Targeting a prop takenover by a player.
-                                    PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
-                                    if (rootPlayerPV != null) {
-                                        gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
-                                    }
-                                }
-
-                            }
-
-                            //-----------------<END OF PROP INTERACTION>-----------------\\
-
-                        } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) {
-
-                            //-----------------<HAUNT INTERACTION>-----------------\\
-                                hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
-
-                            // Make sure it's enabled for use.
-                            if (hauntInt != null && hauntInt.enabled == true) {
-
-                                if (PPC.moveState == 1 || PPC.moveState == 2) { // If we're pre-prop/prop
-                                    if (hauntInt.GetState() == 0) { // let's see if prop is hauntable.
-
-                                        // Send our haunt request.
-                                        hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
-
-                                        // Play a sound.
-                                        aController.PlayCountDownTick();
-
-                                    }
                                 } else if (PPC.moveState == 3) { // if we're seeker.
 
-                                    if (hauntInt.GetState() == 1) { // let's see if prop is hauntable.
+                                    if (propInt.isAvailable) { // Targeting an empty prop.
+                                        PhotonView propPV = propInt.gameObject.GetPhotonView();
+                                        if (propPV != null) {
+                                            gController.RequestToDestroyVacantProp(propPV.ViewID);
+                                        }
 
-                                        // Send our haunt request.
-                                        hauntInt.TryToRepairHauntInteraction(pv.ViewID);
-
-                                        // Play a sound.
-                                        aController.PlayCountDownLastTick();
-
+                                    } else { // Targeting a prop takenover by a player.
+                                        PhotonView rootPlayerPV = propInt.gameObject.transform.parent.transform.parent.gameObject.GetPhotonView();
+                                        if (rootPlayerPV != null) {
+                                            gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
+                                        }
                                     }
 
                                 }
+
+                                //-----------------<END OF PROP INTERACTION>-----------------\\
+
+                            } else if (objectHit.collider.gameObject.GetComponent<HauntInteraction>()) {
+
+                                //-----------------<HAUNT INTERACTION>-----------------\\
+                                hauntInt = objectHit.collider.gameObject.GetComponent<HauntInteraction>();
+
+                                // Make sure it's enabled for use.
+                                if (hauntInt != null && hauntInt.enabled == true) {
+
+                                    if (PPC.moveState == 1 || PPC.moveState == 2) { // If we're pre-prop/prop
+                                        if (hauntInt.GetState() == 0) { // let's see if prop is hauntable.
+
+                                            // Send our haunt request.
+                                            hauntInt.TryToTriggerHauntInteraction(pv.ViewID);
+
+                                            // Play a sound.
+                                            aController.PlayCountDownTick();
+
+                                        }
+                                    } else if (PPC.moveState == 3) { // if we're seeker.
+
+                                        if (hauntInt.GetState() == 1) { // let's see if prop is hauntable.
+
+                                            // Send our haunt request.
+                                            hauntInt.TryToRepairHauntInteraction(pv.ViewID);
+
+                                            // Play a sound.
+                                            aController.PlayCountDownLastTick();
+
+                                        }
+
+                                    }
+                                }
+
+                                //-----------------<END OF HAUNT INTERACTION>-----------------\\
+
                             }
-
-                            //-----------------<END OF HAUNT INTERACTION>-----------------\\
-
                         }
                     }
                 }
@@ -451,7 +460,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             // Movement Code.
             #region
-            if (!PPC.playerIsFrozen) { // 0 = Frozen
                 if (PPC.moveState == 1) { // 1 = Pre-Prop Ghost
                     rb.AddForce(Physics.gravity * (rb.mass * rb.mass));
                     Vector3 movePos = mmcCamTransRef.right * xDir + mmcCamTransRef.forward * yDir;
@@ -487,7 +495,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
                     rb.velocity = newMovePos;
                 }
-            }
             #endregion
 
         }
