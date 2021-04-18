@@ -18,6 +18,8 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private Renderer propRenderer;
 
     private Vector3 propMeshCenterPosition;
+    private PhotonView ntPV;
+
 
     // Update is called once per frame
     void Update() {
@@ -36,7 +38,8 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             RaycastHit hit;
             Vector3 originPoint = new Vector3(tarPlayer.transform.position.x, tarPlayer.transform.position.y + 100f, tarPlayer.transform.position.z);
 
-            // Are we hitting our prop? If we are, just update the information required to move the prop.
+            // Are we hitting OTHER PLAYER's props? If we are, just update the information required to move the prop.
+            // REMEMBER. LocalPlayer props will NOT be on the layerToHit layermask (PropInteraction) layer. So our blank/hidden nametag won't update position locally.
             if (Physics.Raycast(originPoint, -gameObject.transform.up, out hit, 200f, layerToHit) && (hit.collider.gameObject.transform.root == tarPlayer.transform)) {
 
                 // Do we have access to our propHolder?
@@ -59,9 +62,11 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             // Let's move the nametag.
             if (propRenderer != null) {
+                // This will move non-local players' nametags. NOT local player.
                 gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (propMeshCenterPosition + nameTagOffset), Time.deltaTime * ntLerpSpeed);
             } else {
-                Debug.Log("Couldn't find propRenderer to use in order to calculate next nameTag position.");
+                // This will move local player nametag. It's blank anyways, but we have to keep it because it has a photonview.
+                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (hit.point + nameTagOffset), Time.deltaTime * ntLerpSpeed);
             }
 
         }
