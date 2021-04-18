@@ -682,14 +682,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
             //Now we detach our current prop and unparent it.
             int childrenDetached = 0;
-            GameObject detachingProp = null;
+            GameObject detachingProp = propHolder.transform.GetChild(0).gameObject;
 
-            foreach (Transform child in propHolder.transform) {
-                if (!child.name.Contains("Player")) { // If it's a detachable child.
-                    //Unparent Object.
-                    child.parent = null;
+           // foreach (Transform child in propHolder.transform) {
+                if (!detachingProp.name.Contains("Player")) { // If it's a detachable child.
+                                                              //Unparent Object.
+                    detachingProp.transform.parent = null;
                     //Add reference to detaching object.
-                    detachingProp = child.gameObject;
+                    //detachingProp = child.gameObject;
                     //re-add the object to propInteraction layer for highlights.
                     detachingProp.layer = 11;
                     //Reset the tag to untagged. Because if it was attached, the tag is likely "AttachedProp" which we don't want on a detached prop.
@@ -743,11 +743,11 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         Debug.LogWarning("We detached all children from the player's PropHolder. But there was more than one?");
                     }
                 } else {
-                    child.gameObject.SetActive(false);
+                    detachingProp.gameObject.SetActive(false);
                     Debug.Log("A non-detachable player object was detected. Instead of PRTV not found, we try to simple disable it on all clients instead.");
                 }
 
-            }
+            //}
             //Now we move our player to the target prop location. Player has already been "frozen".
             changingPly.transform.position = targetProp.transform.position;
             //Gotta have ref to prop name after it is destroyed.
