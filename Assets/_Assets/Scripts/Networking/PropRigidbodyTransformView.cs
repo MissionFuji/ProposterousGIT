@@ -18,6 +18,10 @@ public class PropRigidbodyTransformView : MonoBehaviour, IPunObservable {
 
     void ResetRB() {
         rb = GetComponent<Rigidbody>();
+
+        if (rb == null) {
+            gameObject.AddComponent<Rigidbody>();
+        }
     }
 
     private void Awake() {
