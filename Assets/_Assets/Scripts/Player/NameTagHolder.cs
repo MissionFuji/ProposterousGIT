@@ -66,7 +66,7 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                 gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (propMeshCenterPosition + nameTagOffset), Time.deltaTime * ntLerpSpeed);
             } else {
                 // This will move local player nametag. It's blank anyways, but we have to keep it because it has a photonview.
-                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (hit.point + nameTagOffset), Time.deltaTime * ntLerpSpeed);
+                gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, (tarPlayer.transform.position + nameTagOffset), Time.deltaTime * ntLerpSpeed);
             }
 
         }
