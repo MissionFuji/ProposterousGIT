@@ -58,6 +58,7 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private HauntInteraction outlineHauntInt = null;
     private Outline ol = null;
     private List<GameObject> highlightList = new List<GameObject>();
+    private bool PossessingStasisProp = false;
 
     //used for map loading
     public string mapToLoadName;
@@ -75,6 +76,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     public Sprite unlockedSprite;
     private GameObject rootCanvas;
     private Image rotLockImg;
+
+    //use for stasis Detection on possessed prop.
+    private PropInteraction PI;
+
+    // Gets our PossessingStasisStatus
+    public bool GetPossessingStasisStatus() {
+        return PossessingStasisProp;
+    }
 
 
     // recursive search for children of children for highlighting.
@@ -110,25 +119,28 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private void Update() {
         if (pv.IsMine) {
 
+
             //Prop Y Rotation Code
             #region
             if (!PPC.playerIsFrozen) {
                 xDir = Input.GetAxisRaw("Horizontal") * playerSpeed;
                 yDir = Input.GetAxisRaw("Vertical") * playerSpeed;
+                Debug.Log("I'm NOT frozen");
             } else {
                 xDir = 0f;
                 yDir = 0f;
+                Debug.Log("I'm ABSOLUTELY frozen");
             }
             mmcCamTransRef.eulerAngles = new Vector3(0, mmc.transform.eulerAngles.y, 0);
             targetAngle = Mathf.Atan2(xDir, yDir) * Mathf.Rad2Deg + mmc.transform.eulerAngles.y;
             if (PPC.moveState == 1 || PPC.moveState == 3) { // If we are a pre-prop ghost or seeker:
-                if (xDir != 0f || yDir != 0f) {
+                //if (xDir != 0f || yDir != 0f) { // This makes it so we must be moving to rotate with camera direction..
                     if (rotPropHolder.transform.childCount > 0) {
                         GameObject prop = rotPropHolder.transform.GetChild(0).gameObject;
                         Quaternion tarRot = Quaternion.Euler(prop.transform.rotation.x, mmcCamTransRef.eulerAngles.y, prop.transform.rotation.z);
                         prop.transform.rotation = Quaternion.Slerp(prop.transform.rotation, tarRot, yPropRotSpeed * Time.deltaTime);
                     }
-                }
+                //}
             } else if (PPC.moveState == 2) { // If we are a prop:
                 if (rotPropHolder.transform.childCount > 0) {
                     if (RotLocked) {
@@ -304,7 +316,6 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     }
                 }
             } //temporary force-lock rot? This was placed here to remedy the issue where ghost/seeker would spawn with wrong rotation over the network.
-
             if (Input.GetKeyDown(KeyCode.R)) {
                 if (PPC.moveState == 2 && !PPC.playerIsFrozen) { // If we are a prop:
                     if (RotLocked) {
@@ -383,8 +394,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                         // Play a success sound.
                                         aController.PlayPropTakeoverSuccess();
 
-                                    } else if (!propInt.isAvailable) {
-                                        Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player.");
+                                    } else if (!propInt.isAvailable || propInt.GetStasisStatus() == true) {
+                                        Debug.Log("As a pre-prop, you tried to possess: " + objectHit.collider.gameObject.name + ", failed takeover. Prop already posessed by another player or is in stasis.");
 
                                         // Play a failure sound.
                                         aController.PlayPropTakeoverFail();
@@ -392,6 +403,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
 
                                 } else if (PPC.moveState == 3) { // if we're seeker.
 
+                                    // This is going to be the ghost-vac siphoning section after testing is over.
+                                    /*
                                     if (propInt.isAvailable) { // Targeting an empty prop.
                                         PhotonView propPV = propInt.gameObject.GetPhotonView();
                                         if (propPV != null) {
@@ -403,8 +416,14 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                                         if (rootPlayerPV != null) {
                                             gController.RequestToKillPropPlayer(rootPlayerPV.ViewID);
                                         }
-                                    }
+                                    }*/
 
+                                        PhotonView propPV = propInt.gameObject.GetPhotonView();
+                                        if (propPV != null) {
+                                            if (propInt.GetStasisStatus() == false) {
+                                                propInt.TrySetStasis(gameObject.GetPhotonView().ViewID, propPV.ViewID);
+                                            }
+                                        }
                                 }
 
                                 //-----------------<END OF PROP INTERACTION>-----------------\\
@@ -497,8 +516,28 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             }
             #endregion
 
+            // PossessingStasis Check.
+            #region
+            if (GetPossessingStasisStatus() == false) {
+
+                Transform curProp = rotPropHolder.transform.GetChild(0);
+
+                PI = curProp.gameObject.GetComponent<PropInteraction>();
+                if (PI != null) {
+                    if (PI.GetStasisStatus() == true) {
+                        PPC.playerIsFrozen = true;
+                    } else {
+                        PPC.playerIsFrozen = false;
+                    }
+                }
+                // Get propholder child and check if its stasis
+                //if it's stasis, set a "frozen" bool in PPC to true.
+            }
+            #endregion
         }
     }
+
+
 
     [PunRPC]
     void RPC_UnlockRotationOverNetwork(int plyID) {

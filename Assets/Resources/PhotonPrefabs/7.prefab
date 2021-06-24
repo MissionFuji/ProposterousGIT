@@ -159,10 +159,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f62bf4fe9d7f6c449bf555adc27c7c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  propID: 7
   isAvailable: 1
   isHostOnly: 0
   isMapCartridge: 0
+  isStasisActive: 0
+  stasisDuration: 5
+  stasisMat: {fileID: 2100000, guid: b18f21df8b6bfa2469dc3361e058af6a, type: 2}
+  stasisParticles: {fileID: 8523283179060485468, guid: 43f7c159753effd49b69aab06f0b1ee7, type: 3}
 --- !u!65 &2377229661786771740
 BoxCollider:
   m_ObjectHideFlags: 0

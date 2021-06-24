@@ -55,9 +55,11 @@ public class NameTagHolder : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                     propRenderer = updatedTransform.GetComponent<Renderer>();
                 }
 
+            }
+
+            if (propRenderer != null) {
                 // Update our next nametag position.
                 propMeshCenterPosition = propRenderer.bounds.center;
-
             }
 
             // Let's move the nametag.

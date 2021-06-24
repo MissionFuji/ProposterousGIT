@@ -19,7 +19,6 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
         pv = gameObject.GetComponent<PhotonView>();
     }
 
-
     // ALL OF THESE ARE LOCALPLAYER
     public void HostConnected(int plyID) {
         
@@ -52,6 +51,8 @@ public class PlayerPropertiesController : MonoBehaviourPunCallbacks, IInRoomCall
         }
     }
     // END OF LOCALPLAYER
+
+
 
     //RPC's *******
 

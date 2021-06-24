@@ -229,15 +229,15 @@ public class ScreenController : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             if (cursorSprite.activeSelf == true) {
                 cursorSprite.SetActive(false); // disables cursor object.
             }
-            if (ppc != null && !ppc.playerIsFrozen) {
-                ppc.playerIsFrozen = true; // freezes our player.
+
+            // We only hard-set this when any menu is open.
+            if (ppc.playerIsFrozen == false) {
+                ppc.playerIsFrozen = true;
             }
+
         } else {
             if (cursorSprite.activeSelf == false) {
                 cursorSprite.SetActive(true); // enables cursor object.
-            }
-            if (ppc != null && ppc.playerIsFrozen) {
-                ppc.playerIsFrozen = false; // unfreezes our player.
             }
         }
         #endregion
