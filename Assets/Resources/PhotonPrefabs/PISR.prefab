@@ -14,8 +14,7 @@ GameObject:
   - component: {fileID: 1230160275985258009}
   - component: {fileID: 4115016545922321599}
   - component: {fileID: 7643953212070347416}
-  - component: {fileID: 2922367894820051583}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: PISR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -120,7 +119,7 @@ MonoBehaviour:
   OwnershipTransfer: 1
   observableSearch: 0
   ObservedComponents:
-  - {fileID: 2922367894820051583}
+  - {fileID: 0}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -138,17 +137,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: bb331f0d0beaf85459452c620965dba4, type: 2}
---- !u!114 &2922367894820051583
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230160275985258003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b713282856f26e4eb1b64ecc2f68b00, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lerpSpeed: 20
-  isRotLocked: 0
