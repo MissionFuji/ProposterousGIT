@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1230160275985258004}
   - component: {fileID: 1230160275985258009}
   - component: {fileID: 4115016545922321599}
-  - component: {fileID: 7643953212070347416}
+  - component: {fileID: 4898365275740816824}
   m_Layer: 0
   m_Name: PISR
   m_TagString: Untagged
@@ -123,17 +123,16 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!64 &7643953212070347416
-MeshCollider:
+--- !u!135 &4898365275740816824
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230160275985258003}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: bb331f0d0beaf85459452c620965dba4, type: 2}
+  serializedVersion: 2
+  m_Radius: 1
+  m_Center: {x: 0, y: 0, z: 0}
