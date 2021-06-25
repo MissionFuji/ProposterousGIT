@@ -35,6 +35,8 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
     private Color hauntingCooldownColor;
     [SerializeField]
     private LayerMask PropInteraction;
+    [SerializeField]
+    private int remainingPISRCooldown = 0;
 
     private PhotonView pv;
     private PlayerPropertiesController PPC;
@@ -467,6 +469,33 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
                         }
                     }
                 }
+            }
+            if (Input.GetMouseButtonDown(0)) {
+
+                // Are we a seeker?
+                if (PPC.moveState == 3) {
+                    if (remainingPISRCooldown <= 0) {
+                        // shoot pisr
+                        // start cooldown
+
+
+                        GameObject PISR;
+                        PISR = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PISR"), gameObject.transform.position, gameObject.transform.rotation, 0);
+                        Rigidbody pisrRB = PISR.GetComponent<Rigidbody>();
+                        pisrRB.AddForce(gameObject.transform.forward * 2f, ForceMode.Impulse);
+                        StartPISRCooldown();
+                    }
+                }
+
+                /*
+                PhotonView propPV = propInt.gameObject.GetPhotonView();
+                if (propPV != null) {
+                    if (propInt.GetStasisStatus() == false) {
+                        propInt.TrySetStasis(gameObject.GetPhotonView().ViewID, propPV.ViewID);
+                    }
+                }
+                */
+
             }
         }
 
@@ -904,6 +933,19 @@ public class PlayerMovement : MonoBehaviourPunCallbacks, IInRoomCallbacks {
             //The rest gets handled from the PropInteraction script on the object when it spawn. This will parent it to us.
         }
     }
+
+    private void StartPISRCooldown() {
+        remainingPISRCooldown = 5;
+        InvokeRepeating("Invoke_PISRCooldown", 1f, 1f);
+    }
+
+    private void Invoke_PISRCooldown() {
+        remainingPISRCooldown--;
+        if (remainingPISRCooldown <= 0) {
+            CancelInvoke("Invoke_PISRCooldown");
+        }
+    }
+
 }
 
 
